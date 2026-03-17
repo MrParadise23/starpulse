@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import type { Establishment, GoogleReview } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Star, Sparkles, Copy, Check, RefreshCw, Send, Inbox, Link2, AlertTriangle, Clock, CheckCircle2, X, Edit3, EyeOff } from 'lucide-react'
+import { Star, Sparkles, Copy, Check, RefreshCw, Send, Inbox, Link2, AlertTriangle, Clock, CheckCircle2, X, Edit3, EyeOff, MapPin, Download } from 'lucide-react'
 
 interface DashboardContext { establishment: Establishment | null; session: Session }
 
@@ -17,6 +17,13 @@ export default function ReviewsPage() {
   const [generatingId, setGeneratingId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<ReviewFilter>('all')
+
+  // Import Google Maps
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState('')
+  const [importSuccess, setImportSuccess] = useState('')
 
   // Etat d'edition pour chaque avis
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -41,7 +48,87 @@ export default function ReviewsPage() {
     return 'not_connected'
   }
 
-  // CDC 5.7 : generation IA declenchee uniquement par le commercant
+  // Extraire le Place ID depuis une URL Google Maps
+  function extractPlaceId(url: string): string | null {
+    if (url.startsWith('ChIJ') || url.startsWith('GhIJ')) {
+      return url.trim()
+    }
+    const placeIdMatch = url.match(/place_id=([^&]+)/)
+    if (placeIdMatch) return placeIdMatch[1]
+    const longMatch = url.match(/!1s([^!]+)/)
+    if (longMatch) return longMatch[1]
+    const dataMatch = url.match(/data=[^!]*!1s([^!&]+)/)
+    if (dataMatch) return dataMatch[1]
+    return null
+  }
+
+  // Importer les avis depuis Google Maps
+  async function importFromGoogleMaps() {
+    setImporting(true)
+    setImportError('')
+    setImportSuccess('')
+
+    const placeId = extractPlaceId(googleMapsUrl)
+    
+    if (!placeId) {
+      setImportError("Impossible d'extraire le Place ID. Copiez l'URL complète de votre fiche Google Maps ou entrez directement le Place ID.")
+      setImporting(false)
+      return
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('import-google-reviews', {
+        body: {
+          place_id: placeId,
+          establishment_id: establishment!.id
+        }
+      })
+
+      if (error) throw error
+
+      if (data.reviews && data.reviews.length > 0) {
+        for (const review of data.reviews) {
+          await supabase
+            .from('google_reviews')
+            .upsert({
+              ...review,
+              establishment_id: establishment!.id
+            }, {
+              onConflict: 'google_review_id',
+              ignoreDuplicates: true
+            })
+        }
+
+        await supabase
+          .from('establishments')
+          .update({
+            google_place_id: placeId,
+            google_connection_status: 'connected',
+            google_last_sync: new Date().toISOString()
+          })
+          .eq('id', establishment!.id)
+
+        setImportSuccess(`${data.reviews.length} avis importés avec succès !${data.mode === 'demo' ? ' (Mode démo)' : ''}`)
+        
+        await loadReviews()
+        
+        setTimeout(() => {
+          setShowImportModal(false)
+          setGoogleMapsUrl('')
+          setImportSuccess('')
+        }, 2000)
+      } else {
+        setImportError("Aucun avis trouvé pour cet établissement.")
+      }
+
+    } catch (err: any) {
+      console.error('Erreur import:', err)
+      setImportError(err.message || "Erreur lors de l'import. Vérifiez l'URL et réessayez.")
+    }
+
+    setImporting(false)
+  }
+
   async function generateAiReply(review: GoogleReview) {
     setGeneratingId(review.id)
 
@@ -49,7 +136,6 @@ export default function ReviewsPage() {
     const est = establishment!
 
     try {
-      // Appel Edge Function Supabase
       const { data, error } = await supabase.functions.invoke('generate-review-reply', {
         body: {
           review_text: review.comment,
@@ -58,12 +144,6 @@ export default function ReviewsPage() {
           establishment_name: est.name,
           ai_tone: est.ai_tone,
           ai_instructions: est.ai_instructions,
-          ai_preferred_expressions: (est as any).ai_preferred_expressions,
-          ai_avoid_expressions: (est as any).ai_avoid_expressions,
-          ai_response_length: (est as any).ai_response_length || 'medium',
-          ai_positive_style: (est as any).ai_positive_style,
-          ai_negative_style: (est as any).ai_negative_style,
-          ai_rules: (est as any).ai_rules,
         }
       })
 
@@ -73,7 +153,6 @@ export default function ReviewsPage() {
         throw new Error('Edge Function non disponible')
       }
     } catch {
-      // Fallback si Edge Function pas encore deployee
       const isPositive = review.rating && review.rating >= 4
       const name = review.author_name || ''
       replyText = isPositive
@@ -99,13 +178,11 @@ export default function ReviewsPage() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  // Commencer l'edition manuelle de la reponse
   function startEditing(review: GoogleReview) {
     setEditingId(review.id)
     setEditText(review.final_reply || review.ai_suggested_reply || '')
   }
 
-  // Sauvegarder la modification
   async function saveEdit(reviewId: string) {
     if (!editText.trim()) return
     await supabase.from('google_reviews').update({
@@ -118,19 +195,9 @@ export default function ReviewsPage() {
     setEditText('')
   }
 
-  // CDC 7.7 : publier directement sur Google depuis le SaaS
   async function publishReply(review: GoogleReview) {
     const replyText = review.final_reply || review.ai_suggested_reply || ''
     if (!replyText) return
-
-    // TODO: Appel API Google Business Profile pour publier
-    // await supabase.functions.invoke('publish-google-reply', {
-    //   body: {
-    //     establishment_id: establishment!.id,
-    //     google_review_id: review.google_review_id,
-    //     reply_text: replyText
-    //   }
-    // })
 
     await supabase.from('google_reviews').update({
       reply_status: 'published',
@@ -143,7 +210,6 @@ export default function ReviewsPage() {
     ))
   }
 
-  // CDC 7.7 : le commercant peut choisir de ne pas repondre
   async function ignoreReview(reviewId: string) {
     await supabase.from('google_reviews').update({ reply_status: 'ignored' }).eq('id', reviewId)
     setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply_status: 'ignored' } : r))
@@ -152,15 +218,14 @@ export default function ReviewsPage() {
   const googleStatus = getGoogleStatus()
 
   const statusConfig = {
-    not_connected: { icon: Link2, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-200', label: 'Non connecte', desc: 'Connectez votre fiche Google Business Profile pour synchroniser vos avis.' },
-    connected: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'Connecte', desc: `Fiche liee : ${establishment?.google_business_name || 'N/A'}` },
+    not_connected: { icon: Link2, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-200', label: 'Non connecte', desc: 'Importez vos avis Google en collant le lien de votre fiche.' },
+    connected: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'Connecte', desc: `Fiche liee : ${establishment?.google_business_name || establishment?.name || 'N/A'}` },
     pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', label: 'Synchronisation en cours', desc: 'La connexion est en cours de configuration.' },
     error: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Erreur de connexion', desc: 'La connexion a echoue. Veuillez reconnecter votre compte.' },
   }
 
   const status = statusConfig[googleStatus]
 
-  // Libelle des statuts (CDC 7.7)
   function getStatusBadge(s: string) {
     switch (s) {
       case 'pending': return { label: 'Non traite', cls: 'bg-amber-100 text-amber-700' }
@@ -198,30 +263,121 @@ export default function ReviewsPage() {
               {googleStatus === 'connected' && establishment?.google_last_sync && (
                 <p className="text-xs text-gray-400 mt-1">Derniere synchronisation : {new Date(establishment.google_last_sync).toLocaleString('fr-FR')}</p>
               )}
-              {googleStatus === 'connected' && establishment?.google_account_email && (
-                <p className="text-xs text-gray-400">Compte : {establishment.google_account_email}</p>
-              )}
             </div>
           </div>
-          <button className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-            googleStatus === 'connected'
-              ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}>
-            {googleStatus === 'connected' ? 'Reconnecter' : 'Connecter Google Business Profile'}
+          <button 
+            onClick={() => setShowImportModal(true)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 ${
+              googleStatus === 'connected'
+                ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}>
+            <Download className="w-4 h-4" />
+            {googleStatus === 'connected' ? 'Importer de nouveaux avis' : 'Importer mes avis Google'}
           </button>
         </div>
         {googleStatus === 'not_connected' && (
           <div className="mt-4 pt-3 border-t border-gray-200/50">
             <p className="text-xs text-gray-500">
-              Structure prete. La synchronisation automatique des avis Google est en cours d'implementation.
-              En attendant, vous pouvez utiliser les reponses IA sur les avis existants.
+              💡 Collez le lien de votre fiche Google Maps pour importer automatiquement vos avis.
             </p>
           </div>
         )}
       </div>
 
-      {/* Filtres (CDC 7.7 : statuts pending / ai_generated / published / ignored) */}
+      {/* Modal Import Google Maps */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-display font-semibold text-gray-900">Importer vos avis Google</h2>
+              <button onClick={() => { setShowImportModal(false); setGoogleMapsUrl(''); setImportError(''); setImportSuccess('') }}
+                className="p-2 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-3">Pour importer vos avis :</p>
+              <ol className="text-sm text-gray-600 space-y-2 mb-4">
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-medium">1</span>
+                  <span>Allez sur <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Maps</a></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-medium">2</span>
+                  <span>Recherchez votre établissement</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-medium">3</span>
+                  <span>Copiez l'URL complète depuis la barre d'adresse</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-medium">4</span>
+                  <span>Collez-la ci-dessous</span>
+                </li>
+              </ol>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Lien Google Maps ou Place ID</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={googleMapsUrl}
+                  onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                  placeholder="https://www.google.com/maps/place/..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {importError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-700">{importError}</p>
+              </div>
+            )}
+
+            {importSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <p className="text-sm text-emerald-700 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {importSuccess}
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowImportModal(false); setGoogleMapsUrl(''); setImportError(''); setImportSuccess('') }}
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={importFromGoogleMaps}
+                disabled={!googleMapsUrl.trim() || importing}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {importing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Import en cours...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Importer les avis
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filtres */}
       <div className="flex gap-2 mb-6 flex-wrap">
         {([
           { key: 'all' as const, label: 'Tous' },
@@ -245,11 +401,14 @@ export default function ReviewsPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
           <Inbox className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-600 font-medium">Aucun avis</p>
-          <p className="text-gray-400 text-sm mt-1">
-            {googleStatus === 'connected'
-              ? 'Les avis Google seront synchronises automatiquement.'
-              : 'Connectez votre fiche Google pour synchroniser vos avis.'}
-          </p>
+          <p className="text-gray-400 text-sm mt-1 mb-4">Importez vos avis Google pour commencer à les gérer.</p>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700"
+          >
+            <Download className="w-4 h-4" />
+            Importer mes avis
+          </button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -261,7 +420,6 @@ export default function ReviewsPage() {
 
             return (
               <div key={review.id} className="bg-white rounded-2xl border border-gray-200 p-5">
-                {/* En-tete avis */}
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -283,10 +441,8 @@ export default function ReviewsPage() {
                   </div>
                 </div>
 
-                {/* Texte de l'avis */}
                 {review.comment && <p className="text-sm text-gray-700 mb-4 leading-relaxed">{review.comment}</p>}
 
-                {/* Suggestion IA (quand generee et pas encore publiee) */}
                 {review.ai_suggested_reply && review.reply_status !== 'published' && !isEditing && (
                   <div className="bg-blue-50/50 rounded-xl p-4 mb-3">
                     <div className="flex items-center gap-1.5 mb-2">
@@ -297,7 +453,6 @@ export default function ReviewsPage() {
                   </div>
                 )}
 
-                {/* Zone d'edition manuelle (CDC 7.7 : modifier la reponse avant publication) */}
                 {isEditing && (
                   <div className="bg-blue-50/50 rounded-xl p-4 mb-3">
                     <div className="flex items-center justify-between mb-2">
@@ -327,7 +482,6 @@ export default function ReviewsPage() {
                   </div>
                 )}
 
-                {/* Reponse publiee */}
                 {review.reply_status === 'published' && replyText && (
                   <div className="bg-emerald-50/50 rounded-xl p-4 mb-3">
                     <div className="flex items-center gap-1.5 mb-2">
@@ -341,10 +495,8 @@ export default function ReviewsPage() {
                   </div>
                 )}
 
-                {/* Actions (CDC 7.7 : generer / modifier / publier / ignorer) */}
                 {canAct && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    {/* 1. Generer une reponse IA (CDC 5.7 : jamais automatique) */}
                     {!review.ai_suggested_reply && review.reply_status !== 'ignored' && (
                       <button onClick={() => generateAiReply(review)} disabled={generatingId === review.id}
                         className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 disabled:opacity-50">
@@ -355,27 +507,22 @@ export default function ReviewsPage() {
                       </button>
                     )}
 
-                    {/* Actions apres generation */}
                     {review.ai_suggested_reply && !isEditing && (
                       <>
-                        {/* Modifier */}
                         <button onClick={() => startEditing(review)}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100">
                           <Edit3 className="w-3.5 h-3.5" />Modifier
                         </button>
-                        {/* Copier */}
                         <button onClick={() => copyReply(review)}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100">
                           {copiedId === review.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                           Copier
                         </button>
-                        {/* Regenerer */}
                         <button onClick={() => generateAiReply(review)} disabled={generatingId === review.id}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 disabled:opacity-50">
                           <RefreshCw className={`w-3.5 h-3.5 ${generatingId === review.id ? 'animate-spin' : ''}`} />
                           Regenerer
                         </button>
-                        {/* Publier sur Google */}
                         <button onClick={() => publishReply(review)}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">
                           <Send className="w-3.5 h-3.5" />Publier sur Google
@@ -383,7 +530,6 @@ export default function ReviewsPage() {
                       </>
                     )}
 
-                    {/* Ignorer (CDC 7.7 : le commercant peut choisir de ne pas repondre) */}
                     {review.reply_status !== 'ignored' && (
                       <button onClick={() => ignoreReview(review.id)}
                         className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg">
