@@ -82,9 +82,89 @@ export default function ReviewsPage() {
     return null
   }
 
-  // Importer les avis depuis Google Maps
+// Importer les avis depuis Google Maps
   async function importFromGoogleMaps() {
     setImporting(true)
+    setImportError('')
+    setImportSuccess('')
+
+    const placeId = extractPlaceId(googleMapsUrl)
+    
+    if (!placeId) {
+      setImportError("Impossible d'extraire le Place ID. Copiez l'URL complète de votre fiche Google Maps ou entrez directement le Place ID.")
+      setImporting(false)
+      return
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('import-google-reviews', {
+        body: {
+          place_id: placeId,
+          establishment_id: establishment!.id
+        }
+      })
+
+      if (error) throw error
+
+      if (data.reviews && data.reviews.length > 0) {
+        // Insérer les avis un par un avec INSERT simple
+        let insertedCount = 0
+        for (const review of data.reviews) {
+          const { error: insertError } = await supabase
+            .from('google_reviews')
+            .insert({
+              establishment_id: establishment!.id,
+              google_review_id: review.google_review_id,
+              author_name: review.author_name,
+              rating: review.rating,
+              comment: review.comment,
+              review_date: review.review_date,
+              reply_status: 'pending'
+            })
+          
+          if (insertError) {
+            console.error('Erreur insertion:', insertError)
+          } else {
+            insertedCount++
+          }
+        }
+
+        // Mettre à jour l'établissement avec le place_id
+        await supabase
+          .from('establishments')
+          .update({
+            google_place_id: placeId,
+            google_connection_status: 'connected',
+            google_last_sync: new Date().toISOString()
+          })
+          .eq('id', establishment!.id)
+
+        if (insertedCount > 0) {
+          setImportSuccess(`${insertedCount} avis importés avec succès !${data.mode === 'demo' ? ' (Mode démo)' : ''}`)
+        } else {
+          setImportSuccess(`Connexion réussie ! Les avis existaient déjà.`)
+        }
+        
+        // Recharger les avis
+        await loadReviews()
+        
+        // Fermer la modal après 2s
+        setTimeout(() => {
+          setShowImportModal(false)
+          setGoogleMapsUrl('')
+          setImportSuccess('')
+        }, 2000)
+      } else {
+        setImportError("Aucun avis trouvé pour cet établissement.")
+      }
+
+    } catch (err: any) {
+      console.error('Erreur import:', err)
+      setImportError(err.message || "Erreur lors de l'import. Vérifiez l'URL et réessayez.")
+    }
+
+    setImporting(false)
+  }    setImporting(true)
     setImportError('')
     setImportSuccess('')
 
