@@ -48,9 +48,29 @@ export default function ReviewsPage() {
     return 'not_connected'
   }
 
-  // Extraire le Place ID depuis une URL Google Maps
+// Extraire le Place ID depuis une URL Google Maps
   function extractPlaceId(url: string): string | null {
+    // Si c'est déjà un Place ID
     if (url.startsWith('ChIJ') || url.startsWith('GhIJ')) {
+      return url.trim()
+    }
+    
+    // Pattern place_id=
+    const placeIdMatch = url.match(/place_id=([^&]+)/)
+    if (placeIdMatch) return placeIdMatch[1]
+    
+    // Pattern !1s pour les Place IDs (ChIJ...)
+    const chijMatch = url.match(/!1s(ChIJ[^!&]+)/)
+    if (chijMatch) return chijMatch[1]
+    
+    // Pattern !1s0x... (CID format)
+    const cidMatch = url.match(/!1s(0x[^!&]+)/)
+    if (cidMatch) return cidMatch[1]
+    
+    // Si rien ne marche, on accepte quand même l'URL et on laisse passer
+    // La fonction va utiliser un place_id générique pour le mode démo
+    return 'demo_place_id'
+  }    if (url.startsWith('ChIJ') || url.startsWith('GhIJ')) {
       return url.trim()
     }
     const placeIdMatch = url.match(/place_id=([^&]+)/)
