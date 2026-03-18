@@ -1,13 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import type { Establishment } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Save, Check, Plus, Star, ArrowRight, Link2, CheckCircle2, AlertTriangle } from 'lucide-react'
 
 interface DashboardContext { establishment: Establishment | null; session: Session; refreshEstablishments: () => Promise<void> }
 
-// Categories completes selon CDC section 4
 const CATEGORIES = [
   { value: 'restaurant', label: 'Restaurant' },
   { value: 'glacier', label: 'Glacier' },
@@ -27,8 +25,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const isNew = !establishment
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
-  // Informations generales
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
@@ -37,8 +36,7 @@ export default function SettingsPage() {
   const [routingQuestion, setRoutingQuestion] = useState("Comment s'est passee votre experience ?")
   const [satisfactionThreshold, setSatisfactionThreshold] = useState(4)
   const [primaryColor, setPrimaryColor] = useState('#2563eb')
-
-  // Parametrage IA enrichi (CDC section 7.8)
+  const [logoUrl, setLogoUrl] = useState('')
   const [aiTone, setAiTone] = useState('chaleureux et professionnel')
   const [aiInstructions, setAiInstructions] = useState('')
   const [aiPreferredExpressions, setAiPreferredExpressions] = useState('')
@@ -58,9 +56,9 @@ export default function SettingsPage() {
       setRoutingQuestion(establishment.routing_question)
       setSatisfactionThreshold(establishment.satisfaction_threshold)
       setPrimaryColor(establishment.primary_color)
+      setLogoUrl(establishment.logo_url || '')
       setAiTone(establishment.ai_tone)
       setAiInstructions(establishment.ai_instructions || '')
-      // Champs enrichis (peuvent etre null si pas encore migrés)
       setAiPreferredExpressions((establishment as any).ai_preferred_expressions || '')
       setAiAvoidExpressions((establishment as any).ai_avoid_expressions || '')
       setAiResponseLength((establishment as any).ai_response_length || 'medium')
@@ -70,21 +68,37 @@ export default function SettingsPage() {
     }
   }, [establishment])
 
+  async function uploadLogo(file: File) {
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const fileName = `${session.user.id}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('logos').upload(fileName, file, { upsert: true })
+    if (error) { alert('Erreur upload: ' + error.message); setUploading(false); return }
+    const { data: urlData } = supabase.storage.from('logos').getPublicUrl(fileName)
+    setLogoUrl(urlData.publicUrl)
+    if (establishment) {
+      await supabase.from('establishments').update({ logo_url: urlData.publicUrl }).eq('id', establishment.id)
+      await refreshEstablishments()
+    }
+    setUploading(false)
+  }
+
+  async function removeLogo() {
+    setLogoUrl('')
+    if (establishment) {
+      await supabase.from('establishments').update({ logo_url: null }).eq('id', establishment.id)
+      await refreshEstablishments()
+    }
+  }
+
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
-
     const data: Record<string, any> = {
-      user_id: session.user.id,
-      name: name.trim(),
-      address: address.trim() || null,
-      city: city.trim() || null,
-      category,
-      redirect_url: redirectUrl.trim() || null,
-      routing_question: routingQuestion.trim(),
-      satisfaction_threshold: satisfactionThreshold,
-      primary_color: primaryColor,
-      ai_tone: aiTone.trim(),
+      user_id: session.user.id, name: name.trim(), address: address.trim() || null,
+      city: city.trim() || null, category, redirect_url: redirectUrl.trim() || null,
+      routing_question: routingQuestion.trim(), satisfaction_threshold: satisfactionThreshold,
+      primary_color: primaryColor, logo_url: logoUrl || null, ai_tone: aiTone.trim(),
       ai_instructions: aiInstructions.trim() || null,
       ai_preferred_expressions: aiPreferredExpressions.trim() || null,
       ai_avoid_expressions: aiAvoidExpressions.trim() || null,
@@ -93,35 +107,24 @@ export default function SettingsPage() {
       ai_negative_style: aiNegativeStyle.trim() || null,
       ai_rules: aiRules.trim() || null,
     }
-
     if (isNew) {
-      // Creer l'etablissement
       const { data: newEst } = await supabase.from('establishments').insert(data).select().single()
-
-      // CDC 9.3 : generer automatiquement un premier QR code intelligent des la creation
       if (newEst && redirectUrl.trim()) {
         const qrCode = Math.random().toString(36).substring(2, 8).toUpperCase()
-        await supabase.from('plates').insert({
-          code: qrCode,
-          establishment_id: newEst.id,
-          label: 'QR principal',
-          plate_type: 'qr',
-          is_active: true,
-          activated_at: new Date().toISOString()
-        })
+        await supabase.from('plates').insert({ code: qrCode, establishment_id: newEst.id, label: 'QR principal', plate_type: 'qr', is_active: true, activated_at: new Date().toISOString() })
       }
     } else {
       await supabase.from('establishments').update(data).eq('id', establishment!.id)
     }
-
     await refreshEstablishments()
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
 
-  // Affichage du smart routing (CDC 7.3)
-  const routingRanges = []
+  const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px' } as const
+  const labelStyle = { display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 } as const
+  const inputCls = "w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+  const routingRanges: number[] = []
   for (let i = 1; i < satisfactionThreshold; i++) routingRanges.push(i)
   const negativeRange = routingRanges.length > 0 ? `${routingRanges[0]} a ${routingRanges[routingRanges.length - 1]}` : '1'
   const positiveRange = `${satisfactionThreshold} a 5`
@@ -129,175 +132,198 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-gray-900">{isNew ? 'Configurer mon etablissement' : 'Reglages'}</h1>
-        <p className="text-gray-500 text-sm mt-1">{isNew ? 'Renseignez les informations de votre etablissement.' : 'Parametres de votre etablissement, smart routing et IA.'}</p>
+        <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em', margin:'0 0 4px' }}>{isNew ? 'Configurer mon etablissement' : 'Reglages'}</h1>
+        <p className="text-gray-500 text-sm">{isNew ? 'Renseignez les informations de votre etablissement.' : 'Parametres de votre etablissement, smart routing et IA.'}</p>
       </div>
 
       <div className="space-y-6 max-w-lg">
 
+        {/* Logo */}
+        <section style={sectionStyle}>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:16 }}>Logo de l'etablissement</h2>
+          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:'1px solid #f0f0ec' }}/>
+            ) : (
+              <div style={{ width:72, height:72, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', border:'1px dashed #ddd' }}>
+                <svg width="24" height="24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </div>
+            )}
+            <div style={{ flex:1 }}>
+              <p style={{ fontSize:13, color:'#888', marginBottom:10, lineHeight:1.5 }}>Ce logo apparaitra sur la page de notation vue par vos clients.</p>
+              <div style={{ display:'flex', gap:8 }}>
+                <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                  style={{ padding:'8px 16px', borderRadius:10, border:'1.5px solid #e8e8e4', background:'#fff', fontSize:13, fontWeight:500, color:'#555', cursor:'pointer', transition:'all 0.15s' }}>
+                  {uploading ? 'Upload...' : logoUrl ? 'Changer' : 'Ajouter un logo'}
+                </button>
+                {logoUrl && (
+                  <button onClick={removeLogo}
+                    style={{ padding:'8px 16px', borderRadius:10, border:'1.5px solid #fecaca', background:'#fff', fontSize:13, fontWeight:500, color:'#dc2626', cursor:'pointer' }}>
+                    Supprimer
+                  </button>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display:'none' }}
+                onChange={(e) => { if (e.target.files?.[0]) uploadLogo(e.target.files[0]) }}/>
+            </div>
+          </div>
+        </section>
+
         {/* Informations generales */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h2 className="font-display font-semibold text-gray-900 mb-4">Informations generales</h2>
+        <section style={sectionStyle}>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:16 }}>Informations generales</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nom de l'etablissement *</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Restaurant Le Gourmet"
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Nom de l'etablissement *</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Restaurant Le Gourmet" className={inputCls}/>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Ville</label>
-                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Annecy"
-                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label style={labelStyle}>Ville</label>
+                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Annecy" className={inputCls}/>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Categorie</label>
-                <select value={category} onChange={(e) => setCategory(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label style={labelStyle}>Categorie</label>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
                   {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Adresse</label>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="12 Rue du Lac, 74000 Annecy"
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Adresse</label>
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="12 Rue du Lac, 74000 Annecy" className={inputCls}/>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Couleur principale</label>
+              <label style={labelStyle}>Couleur principale</label>
+              <p style={{ fontSize:12, color:'#999', marginBottom:8 }}>Cette couleur sera utilisee pour les boutons et accents sur la page vue par vos clients.</p>
               <div className="flex items-center gap-3">
-                <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer" />
+                <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"/>
                 <span className="text-sm text-gray-500 font-mono">{primaryColor}</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Smart Routing (CDC 7.3) */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h2 className="font-display font-semibold text-gray-900 mb-2">Smart Routing</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Configurez le comportement quand un client scanne votre QR code ou tag NFC.
-          </p>
+        {/* Smart Routing */}
+        <section style={sectionStyle}>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Smart Routing</h2>
+          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Configurez le comportement quand un client scanne votre QR code ou tag NFC.</p>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Lien public de redirection (Google, TripAdvisor, etc.)</label>
-              <input type="url" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)}
-                placeholder="https://g.page/r/votre-restaurant/review"
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <p className="text-xs text-gray-400 mt-1">Les clients satisfaits seront rediriges instantanement vers ce lien.</p>
+              <label style={labelStyle}>Lien public de redirection (Google, TripAdvisor, etc.)</label>
+              <input type="url" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)} placeholder="https://g.page/r/votre-restaurant/review" className={inputCls}/>
+              <p style={{ fontSize:12, color:'#aaa', marginTop:4 }}>Les clients satisfaits seront rediriges instantanement vers ce lien.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Question affichee au client</label>
-              <input type="text" value={routingQuestion} onChange={(e) => setRoutingQuestion(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Question affichee au client</label>
+              <input type="text" value={routingQuestion} onChange={(e) => setRoutingQuestion(e.target.value)} className={inputCls}/>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Seuil de satisfaction</label>
+              <label style={labelStyle}>Seuil de satisfaction</label>
               <div className="flex items-center gap-3">
-                <input type="range" min={2} max={5} value={satisfactionThreshold}
-                  onChange={(e) => setSatisfactionThreshold(parseInt(e.target.value))} className="flex-1" />
+                <input type="range" min={2} max={5} value={satisfactionThreshold} onChange={(e) => setSatisfactionThreshold(parseInt(e.target.value))} className="flex-1"/>
                 <span className="text-sm font-mono font-semibold text-gray-900 w-8 text-center">{satisfactionThreshold}</span>
               </div>
             </div>
-            {/* Affichage explicite du routage (CDC 7.3) */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-xs font-medium text-gray-600 mb-3">Logique de routage actuelle :</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5"
-                      fill={s < satisfactionThreshold ? '#f87171' : 'none'} color={s < satisfactionThreshold ? '#f87171' : '#d1d5db'} />)}
+            <div style={{ background:'#f5f5f0', borderRadius:12, padding:16 }}>
+              <p style={{ fontSize:12, fontWeight:600, color:'#666', marginBottom:10 }}>Logique de routage actuelle :</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ display:'flex', gap:2 }}>
+                    {[1,2,3,4,5].map(s => <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s<satisfactionThreshold?'#f87171':'none'} stroke={s<satisfactionThreshold?'#f87171':'#d1d5db'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-700">{negativeRange} etoile(s) : <span className="font-medium text-amber-700">Retour prive</span></span>
+                  <span style={{ fontSize:12, color:'#666' }}>{negativeRange} etoile(s) → <span style={{ fontWeight:600, color:'#d97706' }}>Retour prive</span></span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5"
-                      fill={s >= satisfactionThreshold ? '#facc15' : 'none'} color={s >= satisfactionThreshold ? '#facc15' : '#d1d5db'} />)}
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ display:'flex', gap:2 }}>
+                    {[1,2,3,4,5].map(s => <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s>=satisfactionThreshold?'#facc15':'none'} stroke={s>=satisfactionThreshold?'#facc15':'#d1d5db'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-700">{positiveRange} etoiles : <span className="font-medium text-emerald-700">Redirection vers le lien public</span></span>
+                  <span style={{ fontSize:12, color:'#666' }}>{positiveRange} etoiles → <span style={{ fontWeight:600, color:'#059669' }}>Redirection Google</span></span>
                 </div>
               </div>
             </div>
-
-            {/* Apercu + lien QR codes */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <p className="text-xs font-medium text-blue-900 mb-2">Comment ca marche ?</p>
-              <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside mb-3">
-                <li>Creez un QR code dans <strong>Tags NFC & QR</strong></li>
+            <div style={{ background:'#eff6ff', border:'1px solid #dbeafe', borderRadius:12, padding:16 }}>
+              <p style={{ fontSize:12, fontWeight:600, color:'#1e40af', marginBottom:6 }}>Comment ca marche ?</p>
+              <ol style={{ fontSize:12, color:'#3b82f6', lineHeight:1.8, paddingLeft:16, margin:0 }}>
+                <li>Creez un QR code dans Tags NFC & QR</li>
                 <li>Imprimez-le et placez-le dans votre etablissement</li>
-                <li>Le client scanne &rarr; voit les etoiles &rarr; est redirige selon sa note</li>
+                <li>Le client scanne → voit les etoiles → est redirige selon sa note</li>
               </ol>
-              <a href="/dashboard/plates"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-900">
-                Voir mes QR codes &rarr;
-              </a>
             </div>
           </div>
         </section>
 
-        {/* Google Business Profile (CDC 10) */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h2 className="font-display font-semibold text-gray-900 mb-2">Google Business Profile</h2>
-          <p className="text-sm text-gray-500 mb-4">Connexion liee a cet etablissement : <span className="font-medium">{name || 'Non defini'}</span></p>
-          {!isNew && (
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Statut</span>
-                <span className="flex items-center gap-1.5 text-sm">
-                  {establishment?.google_connection_status === 'connected' ? (
-                    <><CheckCircle2 className="w-4 h-4 text-emerald-500" /><span className="text-emerald-700 font-medium">Connecte</span></>
-                  ) : establishment?.google_connection_status === 'error' ? (
-                    <><AlertTriangle className="w-4 h-4 text-red-500" /><span className="text-red-700 font-medium">Erreur</span></>
-                  ) : (
-                    <><Link2 className="w-4 h-4 text-gray-400" /><span className="text-gray-500">Non connecte</span></>
-                  )}
-                </span>
+        {/* Apercu du smart routing */}
+        <section style={sectionStyle}>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Apercu du smart routing</h2>
+          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Voila ce que vos clients verront en scannant votre QR code.</p>
+          <div style={{ background:`radial-gradient(ellipse at 50% 20%,${primaryColor}08 0%,#fafaf8 60%)`, borderRadius:16, padding:24, border:'1px solid #f0f0ec' }}>
+            <div style={{ textAlign:'center', marginBottom:16 }}>
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" style={{ width:48, height:48, borderRadius:12, objectFit:'cover', margin:'0 auto 8px', display:'block', boxShadow:'0 2px 8px rgba(0,0,0,0.08)' }}/>
+              ) : (
+                <div style={{ width:48, height:48, borderRadius:12, background:'#e8e8e4', margin:'0 auto 8px', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <span style={{ fontSize:18, fontWeight:700, color:'#999' }}>{name ? name.charAt(0) : '?'}</span>
+                </div>
+              )}
+              <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#1a1a18' }}>{name || 'Votre etablissement'}</p>
+            </div>
+            <div style={{ background:'#fff', borderRadius:14, padding:20, boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>
+              <p style={{ textAlign:'center', fontSize:14, fontWeight:500, color:'#333', marginBottom:16 }}>{routingQuestion}</p>
+              <div style={{ display:'flex', justifyContent:'center', gap:6 }}>
+                {[1,2,3,4,5].map(s => (
+                  <svg key={s} width="32" height="32" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" strokeWidth="1.5" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                ))}
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Compte Google</span>
-                <span className="text-sm text-gray-500">{establishment?.google_account_email || 'Aucun'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Fiche liee</span>
-                <span className="text-sm text-gray-500">{establishment?.google_business_name || 'Aucune'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Derniere synchronisation</span>
-                <span className="text-sm text-gray-500">{establishment?.google_last_sync ? new Date(establishment.google_last_sync).toLocaleString('fr-FR') : 'Jamais'}</span>
-              </div>
-              <div className="pt-2 border-t border-gray-200">
-                <button className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700">
-                  {establishment?.google_connection_status === 'connected' ? 'Reconnecter / Changer de compte' : 'Connecter Google Business Profile'}
-                </button>
-                <p className="text-xs text-gray-400 mt-2 text-center">
-                  Structure UI prete. L'integration OAuth Google est en cours d'implementation.
-                </p>
+              <div style={{ marginTop:14 }}>
+                <div style={{ width:'100%', padding:10, borderRadius:10, background:primaryColor, textAlign:'center' }}>
+                  <span style={{ color:'#fff', fontSize:13, fontWeight:600, fontFamily:'"Outfit",system-ui' }}>Valider ma note</span>
+                </div>
               </div>
             </div>
-          )}
-          {isNew && (
-            <p className="text-sm text-gray-400">Creez d'abord votre etablissement, puis vous pourrez connecter Google Business Profile.</p>
-          )}
+            <p style={{ textAlign:'center', fontSize:10, color:'#c0c0b8', marginTop:12 }}>Propulse par StarPulse</p>
+          </div>
         </section>
 
-        {/* Parametrage IA enrichi (CDC section 7.8) */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h2 className="font-display font-semibold text-gray-900 mb-2">Voix de marque IA</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Definissez la personnalite de votre etablissement pour que les reponses IA sonnent comme vous.
-          </p>
-          <div className="space-y-4">
+        {/* Google Business Profile */}
+        <section style={sectionStyle}>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Google Business Profile</h2>
+          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Connexion liee a cet etablissement : <span style={{ fontWeight:500 }}>{name || 'Non defini'}</span></p>
+          {!isNew && (
+            <div style={{ background:'#f5f5f0', borderRadius:12, padding:16 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                <span style={{ fontSize:13, color:'#666' }}>Statut</span>
+                {establishment?.google_connection_status === 'connected' ? (
+                  <span style={{ fontSize:13, fontWeight:600, color:'#059669' }}>Connecte</span>
+                ) : (
+                  <span style={{ fontSize:13, color:'#999' }}>Non connecte</span>
+                )}
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                <span style={{ fontSize:13, color:'#666' }}>Fiche liee</span>
+                <span style={{ fontSize:13, color:'#999' }}>{establishment?.google_business_name || 'Aucune'}</span>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
+                <span style={{ fontSize:13, color:'#666' }}>Derniere synchro</span>
+                <span style={{ fontSize:13, color:'#999' }}>{establishment?.google_last_sync ? new Date(establishment.google_last_sync).toLocaleString('fr-FR') : 'Jamais'}</span>
+              </div>
+              <button style={{ width:'100%', padding:10, borderRadius:10, border:'none', background:'#2563eb', color:'#fff', fontSize:13, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:'pointer' }}>
+                {establishment?.google_connection_status === 'connected' ? 'Reconnecter' : 'Connecter Google Business Profile'}
+              </button>
+              <p style={{ fontSize:11, color:'#aaa', textAlign:'center', marginTop:8 }}>OAuth Google en cours d'implementation.</p>
+            </div>
+          )}
+          {isNew && <p style={{ fontSize:13, color:'#aaa' }}>Creez d'abord votre etablissement.</p>}
+        </section>
 
-            {/* Ton global */}
+        {/* Voix de marque IA */}
+        <section style={sectionStyle}>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Voix de marque IA</h2>
+          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Definissez la personnalite de votre etablissement pour que les reponses IA sonnent comme vous.</p>
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Ton general</label>
-              <select value={aiTone} onChange={(e) => setAiTone(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <label style={labelStyle}>Ton general</label>
+              <select value={aiTone} onChange={(e) => setAiTone(e.target.value)} className={inputCls}>
                 <option value="chaleureux et professionnel">Chaleureux et professionnel</option>
                 <option value="decontracte et amical">Decontracte et amical</option>
                 <option value="formel et courtois">Formel et courtois</option>
@@ -306,79 +332,51 @@ export default function SettingsPage() {
                 <option value="familial et bienveillant">Familial et bienveillant</option>
               </select>
             </div>
-
-            {/* Expressions a privilegier */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mots et expressions a privilegier</label>
-              <textarea value={aiPreferredExpressions} onChange={(e) => setAiPreferredExpressions(e.target.value)}
-                placeholder="ex: Merci de tout coeur, au plaisir de vous revoir, notre equipe, fait maison..."
-                rows={2}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Mots et expressions a privilegier</label>
+              <textarea value={aiPreferredExpressions} onChange={(e) => setAiPreferredExpressions(e.target.value)} placeholder="ex: Merci de tout coeur, au plaisir de vous revoir..." rows={2} className={inputCls + " resize-none"}/>
             </div>
-
-            {/* Formulations a eviter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Formulations a eviter</label>
-              <textarea value={aiAvoidExpressions} onChange={(e) => setAiAvoidExpressions(e.target.value)}
-                placeholder="ex: Cher client, nous sommes desoles, reduction, code promo..."
-                rows={2}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Formulations a eviter</label>
+              <textarea value={aiAvoidExpressions} onChange={(e) => setAiAvoidExpressions(e.target.value)} placeholder="ex: Cher client, nous sommes desoles..." rows={2} className={inputCls + " resize-none"}/>
             </div>
-
-            {/* Longueur souhaitee */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Longueur des reponses</label>
-              <select value={aiResponseLength} onChange={(e) => setAiResponseLength(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <label style={labelStyle}>Longueur des reponses</label>
+              <select value={aiResponseLength} onChange={(e) => setAiResponseLength(e.target.value)} className={inputCls}>
                 <option value="short">Courte (2-3 phrases)</option>
                 <option value="medium">Moyenne (4-6 phrases)</option>
                 <option value="long">Detaillee (7+ phrases)</option>
               </select>
             </div>
-
-            {/* Style pour avis positifs */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Comment repondre aux avis positifs ?</label>
-              <textarea value={aiPositiveStyle} onChange={(e) => setAiPositiveStyle(e.target.value)}
-                placeholder="ex: Remercier chaleureusement, mentionner un detail de l'avis, inviter a revenir..."
-                rows={2}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Comment repondre aux avis positifs ?</label>
+              <textarea value={aiPositiveStyle} onChange={(e) => setAiPositiveStyle(e.target.value)} placeholder="ex: Remercier chaleureusement, mentionner un detail..." rows={2} className={inputCls + " resize-none"}/>
             </div>
-
-            {/* Style pour avis negatifs */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Comment repondre aux avis negatifs ?</label>
-              <textarea value={aiNegativeStyle} onChange={(e) => setAiNegativeStyle(e.target.value)}
-                placeholder="ex: Presenter des excuses sinceres, proposer de regler le probleme en prive, rester digne..."
-                rows={2}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Comment repondre aux avis negatifs ?</label>
+              <textarea value={aiNegativeStyle} onChange={(e) => setAiNegativeStyle(e.target.value)} placeholder="ex: Presenter des excuses sinceres, proposer de regler en prive..." rows={2} className={inputCls + " resize-none"}/>
             </div>
-
-            {/* Regles a toujours respecter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Regles a toujours respecter</label>
-              <textarea value={aiRules} onChange={(e) => setAiRules(e.target.value)}
-                placeholder="ex: Toujours tutoyer. Ne jamais proposer de reduction. Toujours signer avec le prenom du gerant."
-                rows={2}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Regles a toujours respecter</label>
+              <textarea value={aiRules} onChange={(e) => setAiRules(e.target.value)} placeholder="ex: Toujours tutoyer. Ne jamais proposer de reduction." rows={2} className={inputCls + " resize-none"}/>
             </div>
-
-            {/* Instructions libres */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Instructions supplementaires (libres)</label>
-              <textarea value={aiInstructions} onChange={(e) => setAiInstructions(e.target.value)}
-                placeholder="Toute autre instruction pour que l'IA reflete au mieux votre identite..."
-                rows={3}
-                className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label style={labelStyle}>Instructions supplementaires</label>
+              <textarea value={aiInstructions} onChange={(e) => setAiInstructions(e.target.value)} placeholder="Toute autre instruction pour l'IA..." rows={3} className={inputCls + " resize-none"}/>
             </div>
           </div>
         </section>
 
+        {/* Bouton sauvegarder */}
         <button onClick={handleSave} disabled={saving || !name.trim()}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700 disabled:opacity-50">
-          {saving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            : saved ? <Check className="w-4 h-4" /> : isNew ? <Plus className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-          {saving ? 'Enregistrement...' : saved ? 'Enregistre !' : isNew ? "Creer l'etablissement" : 'Enregistrer'}
+          style={{
+            display:'flex', alignItems:'center', gap:8, padding:'14px 28px', borderRadius:14, border:'none',
+            background: saving ? '#93a3b8' : 'linear-gradient(135deg,#2563eb,#1d4ed8)',
+            color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui',
+            cursor: saving ? 'wait' : 'pointer', boxShadow: saving ? 'none' : '0 4px 16px rgba(37,99,235,0.3)',
+            transition:'all 0.2s', letterSpacing:'-0.01em'
+          }}>
+          {saving ? 'Enregistrement...' : saved ? 'Enregistre !' : isNew ? "Creer l'etablissement" : 'Enregistrer les modifications'}
         </button>
       </div>
     </div>
