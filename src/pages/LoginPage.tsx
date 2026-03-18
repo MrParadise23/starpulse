@@ -51,7 +51,7 @@ export default function LoginPage() {
           </button>
         </form>
         <p style={{ textAlign:'center', fontSize:14, color:'#888', marginTop:24, animation:'fadeUp 0.5s ease-out 0.2s both' }}>Pas encore de compte ? <Link to="/register" style={{ color:'#2563eb', fontWeight:600, textDecoration:'none' }}>Créer un compte</Link></p>
-        <p style={{ textAlign:'center', fontSize:11, color:'#c0c0b8', marginTop:40, letterSpacing:'0.02em' }}>StarPulse — Gérez vos avis, boostez votre réputation.</p>
+        <p style={{ textAlign:'center', fontSize:11, color:'#c0c0b8', marginTop:40, letterSpacing:'0.02em' }}>StarPulse · Gérez vos avis, boostez votre réputation.</p>
       </div>
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{margin:0;padding:0;box-sizing:border-box}input::placeholder{color:#bbb}`}</style>
     </div>

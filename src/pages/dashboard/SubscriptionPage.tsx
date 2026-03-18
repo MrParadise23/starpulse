@@ -138,9 +138,9 @@ export default function SubscriptionPage() {
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
                 <span style={{ fontSize:13, color:'#666' }}>Periode actuelle</span>
                 <span style={{ fontSize:13, color:'#555' }}>
-                  {subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleDateString('fr-FR') : '—'}
+                  {subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleDateString('fr-FR') : '-'}
                   {' → '}
-                  {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR') : '—'}
+                  {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR') : '-'}
                 </span>
               </div>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
@@ -162,7 +162,7 @@ export default function SubscriptionPage() {
             {subscription.status === 'canceling' && (
               <div style={{ background:'#fef3c7', borderRadius:12, padding:'12px 16px', marginBottom:16 }}>
                 <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
-                  Votre abonnement reste actif jusqu'au {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—'}. Vous pouvez le réactiver à tout moment.
+                  Votre abonnement reste actif jusqu'au {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '-'}. Vous pouvez le réactiver à tout moment.
                 </p>
               </div>
             )}

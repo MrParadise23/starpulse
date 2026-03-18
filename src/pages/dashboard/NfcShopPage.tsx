@@ -119,7 +119,7 @@ export default function NfcShopPage() {
         <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>Questions fréquentes</h2>
         {[
           { q: 'Les tags sont-ils compatibles avec tous les téléphones ?', a: 'Oui, tous les smartphones récents (iPhone XS+ et Android avec NFC) peuvent lire nos tags sans application.' },
-          { q: 'Comment activer un tag NFC ?', a: 'Les tags arrivent pré-encodés. Collez-les et ils sont immédiatement opérationnels — aucune configuration nécessaire.' },
+          { q: 'Comment activer un tag NFC ?', a: 'Les tags arrivent pré-encodés. Collez-les et ils sont immédiatement opérationnels , aucune configuration nécessaire.' },
           { q: 'Puis-je commander pour plusieurs établissements ?', a: 'Oui, vous pouvez passer plusieurs commandes. Chaque tag sera lié à votre compte et configurable depuis le dashboard.' },
           { q: 'Quel est le délai de livraison ?', a: '3 à 5 jours ouvrés en France métropolitaine. Livraison également disponible en Belgique, Suisse et Luxembourg.' },
         ].map((item, i) => (

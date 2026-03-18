@@ -16,7 +16,7 @@ const CATEGORIES = [
   { value: 'cabinet', label: 'Cabinet' },
   { value: 'concession', label: 'Concession' },
   { value: 'boutique', label: 'Boutique / Magasin' },
-  { value: 'commerce', label: 'Commerce de proximite' },
+  { value: 'commerce', label: 'Commerce de proximité' },
   { value: 'autre', label: 'Autre' },
 ]
 

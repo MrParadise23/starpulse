@@ -153,10 +153,10 @@ export default function AffiliatePage() {
       </section>
 
       {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:12, marginBottom:20 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:12, marginBottom:20 }}>
         <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'20px' }}>
           <div style={{ width:36, height:36, borderRadius:10, background:'rgba(37,99,235,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           </div>
           <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{activeReferrals}</p>
           <p style={{ fontSize:12, color:'#888', margin:0 }}>Filleul(s) actif(s)</p>
@@ -167,23 +167,15 @@ export default function AffiliatePage() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           </div>
           <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{pendingCommissions.toFixed(2)} €</p>
-          <p style={{ fontSize:12, color:'#888', margin:0 }}>En attente de paiement</p>
+          <p style={{ fontSize:12, color:'#888', margin:0 }}>Commissions à encaisser</p>
         </div>
 
         <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'20px' }}>
           <div style={{ width:36, height:36, borderRadius:10, background:'rgba(5,150,105,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
           </div>
           <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{paidCommissions.toFixed(2)} €</p>
-          <p style={{ fontSize:12, color:'#888', margin:0 }}>Total versé</p>
-        </div>
-
-        <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'20px' }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:'rgba(124,58,237,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          </div>
-          <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{affiliate.total_earned.toFixed(2)} €</p>
-          <p style={{ fontSize:12, color:'#888', margin:0 }}>Total gagné</p>
+          <p style={{ fontSize:12, color:'#888', margin:0 }}>Déjà encaissé</p>
         </div>
       </div>
 

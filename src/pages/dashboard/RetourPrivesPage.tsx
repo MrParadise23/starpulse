@@ -40,12 +40,12 @@ export default function RetourPrivesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-gray-900">Retours prives</h1>
-        <p className="text-gray-500 text-sm mt-1">Les retours des clients insatisfaits, visibles uniquement par vous. Ces retours ne sont jamais publies.</p>
+        <h1 className="text-2xl font-display font-bold text-gray-900">Retours privés</h1>
+        <p className="text-gray-500 text-sm mt-1">Les retours des clients insatisfaits, visibles uniquement par vous. Ces retours ne sont jamais publiés.</p>
       </div>
 
       <div className="flex gap-2 mb-6">
-        {([['all', 'Tous'], ['unread', 'Non lus'], ['treated', 'Traites']] as const).map(([key, label]) => (
+        {([['all', 'Tous'], ['unread', 'Non lus'], ['treated', 'Traités']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setFilter(key)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${filter === key ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
             {label}
@@ -74,7 +74,7 @@ export default function RetourPrivesPage() {
                   )}
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     fb.status === 'unread' ? 'bg-amber-100 text-amber-700' : fb.status === 'treated' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
-                  }`}>{fb.status === 'unread' ? 'Non lu' : fb.status === 'treated' ? 'Traite' : 'Lu'}</span>
+                  }`}>{fb.status === 'unread' ? 'Non lu' : fb.status === 'treated' ? 'Traité' : 'Lu'}</span>
                 </div>
                 <span className="text-xs text-gray-400">{timeAgo(fb.created_at)}</span>
               </div>
@@ -84,7 +84,7 @@ export default function RetourPrivesPage() {
               {/* Informations de contact */}
               {(fb.client_first_name || fb.client_email || fb.client_phone) ? (
                 <div className="bg-gray-50 rounded-xl p-3 mb-3">
-                  <p className="text-xs font-medium text-gray-500 mb-2">Le client souhaite etre recontacte</p>
+                  <p className="text-xs font-medium text-gray-500 mb-2">Le client souhaite être recontacté</p>
                   <div className="flex items-center gap-3 flex-wrap">
                     {fb.client_first_name && (
                       <span className="flex items-center gap-1 text-xs text-gray-700"><User className="w-3.5 h-3.5 text-gray-400" />{fb.client_first_name}</span>
