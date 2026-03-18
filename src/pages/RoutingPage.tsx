@@ -135,7 +135,7 @@ export default function RoutingPage() {
     <div style={{ minHeight:'100dvh', display:'flex', flexDirection:'column' as const, alignItems:'center', justifyContent:'center', background:`radial-gradient(ellipse at 50% 20%,rgba(${rgb.r},${rgb.g},${rgb.b},0.05) 0%,#fafaf8 60%)`, padding:'32px 20px', fontFamily:'"DM Sans",system-ui,sans-serif' }}>
       <div style={{ width:'100%', maxWidth:380 }}>
         <div style={{ textAlign:'center' as const, marginBottom:32, animation:'fadeUp 0.5s ease-out' }}>
-          {establishment?.logo_url && <img src={establishment.logo_url} alt={establishment.name} style={{ width:80, height:80, borderRadius:20, objectFit:'cover' as const, margin:'0 auto 12px', display:'block', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}/>}
+          {establishment?.logo_url && <img src={establishment.logo_url} alt={establishment.name} style={{ width:100, height:100, borderRadius:24, objectFit:'cover' as const, margin:'0 auto 12px', display:'block', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}/>}
           <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', margin:'0 0 4px', letterSpacing:'-0.02em' }}>{establishment?.name}</h1>
         </div>
 
