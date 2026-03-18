@@ -44,7 +44,7 @@ export default function RoutingPage() {
         plate_id: plate.id, establishment_id: establishment.id,
         rating_given: rating, result: 'redirect', plate_type: plate.plate_type
       })
-      setTimeout(() => { if (establishment.redirect_url) window.location.href = establishment.redirect_url }, 400)
+      if (establishment.redirect_url) window.location.href = establishment.redirect_url
     }
   }
 
@@ -135,34 +135,28 @@ export default function RoutingPage() {
     <div style={{ minHeight:'100dvh', display:'flex', flexDirection:'column' as const, alignItems:'center', justifyContent:'center', background:`radial-gradient(ellipse at 50% 20%,rgba(${rgb.r},${rgb.g},${rgb.b},0.05) 0%,#fafaf8 60%)`, padding:'32px 20px', fontFamily:'"DM Sans",system-ui,sans-serif' }}>
       <div style={{ width:'100%', maxWidth:380 }}>
         <div style={{ textAlign:'center' as const, marginBottom:32, animation:'fadeUp 0.5s ease-out' }}>
-          {establishment?.logo_url && <img src={establishment.logo_url} alt={establishment.name} style={{ width:56, height:56, borderRadius:16, objectFit:'cover' as const, margin:'0 auto 12px', display:'block', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}/>}
+          {establishment?.logo_url && <img src={establishment.logo_url} alt={establishment.name} style={{ width:60, height:60, borderRadius:16, objectFit:'cover' as const, margin:'0 auto 12px', display:'block', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}/>}
           <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', margin:'0 0 4px', letterSpacing:'-0.02em' }}>{establishment?.name}</h1>
         </div>
 
         {step === 'rating' && (
           <div style={{ background:'#fff', borderRadius:20, padding:'28px 24px', boxShadow:'0 1px 3px rgba(0,0,0,0.04),0 8px 32px rgba(0,0,0,0.06)', animation:'fadeUp 0.5s ease-out 0.1s both' }}>
             <p style={{ textAlign:'center' as const, fontWeight:500, fontSize:16, color:'#333', margin:'0 0 24px', lineHeight:1.5 }}>{establishment?.routing_question}</p>
-            <div style={{ display:'flex', justifyContent:'center', gap:6 }}>
+            <div className="star-row" style={{ display:'flex', justifyContent:'center', gap:8 }}>
               {[1,2,3,4,5].map((star) => {
                 const display = hoveredRating || selectedRating
                 const active = display >= star
                 return (
                   <button key={star} onClick={() => handleStarClick(star)} onMouseEnter={() => !confirmed && setHoveredRating(star)} onMouseLeave={() => setHoveredRating(0)} disabled={confirmed}
-                    style={{ background:'none', border:'none', padding:4, cursor:confirmed?'default':'pointer', transform:active?'scale(1.1)':'scale(1)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s', filter:confirmed&&selectedRating!==star?'opacity(0.3)':'none' }}>
-                    <svg width="42" height="42" viewBox="0 0 24 24" style={{ display:'block' }}>
-                      <defs>
-                        <linearGradient id={`sg${star}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={active?'#FCD34D':'#E5E5E0'}/>
-                          <stop offset="100%" stopColor={active?'#F59E0B':'#D4D4CD'}/>
-                        </linearGradient>
-                      </defs>
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill={`url(#sg${star})`} stroke={active?'#E8A308':'#CCCCC6'} strokeWidth="0.5"/>
+                    className="star-btn"
+                    style={{ background:'none', border:'none', padding:4, cursor:confirmed?'default':'pointer', transition:'transform 0.15s ease' }}>
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill={active?'#facc15':'none'} stroke={active?'#facc15':'#d1d5db'} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" style={{ display:'block' }}>
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                   </button>
                 )
               })}
             </div>
-            {/* Bouton valider seulement pour note negative */}
             {isNegative && !confirmed && (
               <button onClick={confirmNegative} style={{
                 display:'block', width:'100%', marginTop:20, padding:'13px 0', borderRadius:14, border:'none',
@@ -175,9 +169,6 @@ export default function RoutingPage() {
                 Valider ma note
               </button>
             )}
-            {confirmed && (
-              <p style={{ textAlign:'center' as const, fontSize:13, color:'#999', marginTop:16, animation:'fadeUp 0.3s ease-out' }}>Redirection en cours...</p>
-            )}
           </div>
         )}
 
@@ -187,8 +178,8 @@ export default function RoutingPage() {
               <span style={{ fontSize:13, color:'#999' }}>Votre note</span>
               <div style={{ display:'flex', gap:2 }}>
                 {[1,2,3,4,5].map(s => (
-                  <svg key={s} width="16" height="16" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill={s<=selectedRating?'#F59E0B':'#E5E5E0'} stroke="none"/>
+                  <svg key={s} width="16" height="16" viewBox="0 0 24 24" fill={s<=selectedRating?'#facc15':'none'} stroke={s<=selectedRating?'#facc15':'#d1d5db'} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
                 ))}
               </div>
@@ -223,7 +214,15 @@ export default function RoutingPage() {
 
         <p style={{ textAlign:'center' as const, fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>Propulse par StarPulse</p>
       </div>
-      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{margin:0;padding:0;box-sizing:border-box}input::placeholder,textarea::placeholder{color:#bbb}input:focus,textarea:focus{border-color:${color} !important}`}</style>
+      <style>{`
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        *{margin:0;padding:0;box-sizing:border-box}
+        input::placeholder,textarea::placeholder{color:#bbb}
+        input:focus,textarea:focus{border-color:${color} !important}
+        .star-btn{transition:transform 0.15s ease}
+        .star-btn:hover{transform:scale(1.2)}
+      `}</style>
     </div>
   )
 }
