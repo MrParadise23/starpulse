@@ -16,7 +16,7 @@ export default function ReviewsPage() {
   const [loading, setLoading] = useState(true)
   const [generatingId, setGeneratingId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [filter, setFilter] = useState<ReviewFilter>('all')
+  const [filter, setFilter] = useState<ReviewFilter>('pending')
 
   // Import Google Maps
   const [showImportModal, setShowImportModal] = useState(false)
@@ -448,7 +448,7 @@ export default function ReviewsPage() {
             const badge = getStatusBadge(review.reply_status)
             const isEditing = editingId === review.id
             const replyText = review.final_reply || review.ai_suggested_reply || ''
-            const canAct = true
+            const canAct = review.reply_status !== 'published'
 
             return (
               <div key={review.id} className="bg-white rounded-2xl border border-gray-200 p-5">
@@ -553,7 +553,7 @@ export default function ReviewsPage() {
                         <button onClick={() => generateAiReply(review)} disabled={generatingId === review.id}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 disabled:opacity-50">
                           <RefreshCw className={`w-3.5 h-3.5 ${generatingId === review.id ? 'animate-spin' : ''}`} />
-                          Regénérer
+                          Regénèrer
                         </button>
                         <button onClick={() => publishReply(review)}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">
@@ -568,7 +568,7 @@ export default function ReviewsPage() {
                         <EyeOff className="w-3.5 h-3.5" />Ignorer
                       </button>
                     )}
-                    {(review.reply_status === 'ignored' || review.reply_status === 'published') && (
+                    {review.reply_status === 'ignored' && (
                       <button onClick={() => resetReview(review.id)}
                         className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg">
                         <RotateCcw className="w-3.5 h-3.5" />Remettre en attente

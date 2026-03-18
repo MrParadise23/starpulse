@@ -8,17 +8,17 @@ export default function LandingPage() {
 
       {/* NAV */}
       <nav style={{ position:'sticky', top:0, zIndex:50, background:'rgba(250,250,248,0.85)', backdropFilter:'blur(12px)', borderBottom:'1px solid #f0f0ec' }}>
-        <div style={{ maxWidth:1080, margin:'0 auto', padding:'14px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div className="nav-inner" style={{ maxWidth:1080, margin:'0 auto', padding:'14px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <div style={{ width:32, height:32, borderRadius:9, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             </div>
-            <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, letterSpacing:'-0.02em' }}>StarPulse</span>
+            <span className="nav-brand" style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, letterSpacing:'-0.02em' }}>StarPulse</span>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <a href="#pricing" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 12px', borderRadius:10 }}>Tarifs</a>
-            <Link to="/login" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 16px', borderRadius:10, transition:'color 0.15s' }}>Connexion</Link>
-            <Link to="/register" style={{ fontSize:14, fontWeight:600, color:'#fff', textDecoration:'none', padding:'9px 20px', borderRadius:10, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', boxShadow:'0 2px 8px rgba(37,99,235,0.25)', transition:'transform 0.1s', fontFamily:'"Outfit",system-ui' }}>Commencer</Link>
+          <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+            <a href="#pricing" className="nav-link-hide" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 12px', borderRadius:10 }}>Tarifs</a>
+            <Link to="/login" className="nav-link-hide" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 12px', borderRadius:10, transition:'color 0.15s' }}>Connexion</Link>
+            <Link to="/register" style={{ fontSize:13, fontWeight:600, color:'#fff', textDecoration:'none', padding:'9px 14px', borderRadius:10, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', boxShadow:'0 2px 8px rgba(37,99,235,0.25)', transition:'transform 0.1s', fontFamily:'"Outfit",system-ui', whiteSpace:'nowrap' }}>Commencer</Link>
           </div>
         </div>
       </nav>
@@ -244,6 +244,8 @@ export default function LandingPage() {
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         *{margin:0;padding:0;box-sizing:border-box}
         html{scroll-behavior:smooth}
+        @media(max-width:640px){.nav-link-hide{display:none !important;}.nav-inner{padding:14px 12px !important;}}
+        @media(max-width:380px){.nav-brand{font-size:15px !important;}}
       `}</style>
     </div>
   )
