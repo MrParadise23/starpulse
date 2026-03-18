@@ -17,7 +17,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
             <a href="#pricing" className="nav-link-hide" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 12px', borderRadius:10 }}>Tarifs</a>
-            <Link to="/login" className="nav-link-hide" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 12px', borderRadius:10, transition:'color 0.15s' }}>Connexion</Link>
+            <Link to="/login" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 12px', borderRadius:10, transition:'color 0.15s' }}>Connexion</Link>
             <Link to="/register" style={{ fontSize:13, fontWeight:600, color:'#fff', textDecoration:'none', padding:'9px 14px', borderRadius:10, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', boxShadow:'0 2px 8px rgba(37,99,235,0.25)', transition:'transform 0.1s', fontFamily:'"Outfit",system-ui', whiteSpace:'nowrap' }}>Commencer</Link>
           </div>
         </div>
