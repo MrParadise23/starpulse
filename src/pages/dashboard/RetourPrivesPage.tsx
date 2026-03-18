@@ -98,7 +98,7 @@ export default function RetourPrivesPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-gray-400 mb-3">Retour anonyme (pas de contact laisse)</p>
+                <p className="text-xs text-gray-400 mb-3">Retour anonyme (pas de contact laissé)</p>
               )}
 
               <div className="flex items-center gap-1">

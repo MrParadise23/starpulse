@@ -94,8 +94,8 @@ export default function PlatesPage() {
           <div style={{ display:'flex', alignItems:'center', gap:12, flex:1, minWidth:0 }}>
             <div style={{ width:40, height:40, borderRadius:10, background: plate.plate_type==='nfc'?'rgba(37,99,235,0.06)':'rgba(124,58,237,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               {plate.plate_type === 'nfc'
-                ? <svg width="18" height="18" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/><path d="M12.91 4.1a16.1 16.1 0 010 15.8"/></svg>
-                : <svg width="18" height="18" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><path d="M20 14v7h-3"/></svg>
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/><path d="M12.91 4.1a16.1 16.1 0 010 15.8"/></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><path d="M20 14v7h-3"/></svg>
               }
             </div>
             <div style={{ minWidth:0, flex:1 }}>
@@ -187,7 +187,7 @@ export default function PlatesPage() {
         <div style={{ display:'flex', flexDirection:'column', gap:32 }}>
           <section>
             <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:10, display:'flex', alignItems:'center', gap:8 }}>
-              <svg width="16" height="16" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/></svg>
               Tags NFC
             </h2>
             <div style={{ background:'#eff6ff', borderRadius:10, padding:12, marginBottom:12 }}>
@@ -205,7 +205,7 @@ export default function PlatesPage() {
           <section>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
               <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', display:'flex', alignItems:'center', gap:8, margin:0 }}>
-                <svg width="16" height="16" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 QR Codes
               </h2>
               <button onClick={() => setShowCreateQr(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1px solid #e8e8e4', background:'#fff', fontSize:12, fontWeight:500, color:'#2563eb', cursor:'pointer' }}>

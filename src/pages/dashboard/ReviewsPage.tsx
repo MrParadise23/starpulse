@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import type { Establishment, GoogleReview } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Star, Sparkles, Copy, Check, RefreshCw, Send, Inbox, Link2, AlertTriangle, Clock, CheckCircle2, X, Edit3, EyeOff, MapPin, Download } from 'lucide-react'
+import { Star, Sparkles, Copy, Check, RefreshCw, Send, Inbox, Link2, AlertTriangle, Clock, CheckCircle2, X, Edit3, EyeOff, MapPin, Download, RotateCcw } from 'lucide-react'
 
 interface DashboardContext { establishment: Establishment | null; session: Session }
 
@@ -242,6 +242,11 @@ export default function ReviewsPage() {
     setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply_status: 'ignored' } : r))
   }
 
+  async function resetReview(reviewId: string) {
+    await supabase.from('google_reviews').update({ reply_status: 'pending', ai_suggested_reply: null, final_reply: null, replied_at: null }).eq('id', reviewId)
+    setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply_status: 'pending', ai_suggested_reply: null, final_reply: null, replied_at: null } : r))
+  }
+
   const googleStatus = getGoogleStatus()
 
   const statusConfig = {
@@ -443,7 +448,7 @@ export default function ReviewsPage() {
             const badge = getStatusBadge(review.reply_status)
             const isEditing = editingId === review.id
             const replyText = review.final_reply || review.ai_suggested_reply || ''
-            const canAct = review.reply_status !== 'published'
+            const canAct = true
 
             return (
               <div key={review.id} className="bg-white rounded-2xl border border-gray-200 p-5">
@@ -548,7 +553,7 @@ export default function ReviewsPage() {
                         <button onClick={() => generateAiReply(review)} disabled={generatingId === review.id}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 disabled:opacity-50">
                           <RefreshCw className={`w-3.5 h-3.5 ${generatingId === review.id ? 'animate-spin' : ''}`} />
-                          Regénèrer
+                          Regénérer
                         </button>
                         <button onClick={() => publishReply(review)}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">
@@ -561,6 +566,12 @@ export default function ReviewsPage() {
                       <button onClick={() => ignoreReview(review.id)}
                         className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg">
                         <EyeOff className="w-3.5 h-3.5" />Ignorer
+                      </button>
+                    )}
+                    {(review.reply_status === 'ignored' || review.reply_status === 'published') && (
+                      <button onClick={() => resetReview(review.id)}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg">
+                        <RotateCcw className="w-3.5 h-3.5" />Remettre en attente
                       </button>
                     )}
                   </div>
