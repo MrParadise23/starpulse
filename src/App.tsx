@@ -16,6 +16,7 @@ import SettingsPage from './pages/dashboard/SettingsPage'
 import AffiliatePage from './pages/dashboard/AffiliatePage'
 import SubscriptionPage from './pages/dashboard/SubscriptionPage'
 import PricingPage from './pages/PricingPage'
+import NfcShopPage from './pages/dashboard/NfcShopPage'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="reviews" element={<ReviewsPage />} />
         <Route path="affiliate" element={<AffiliatePage />} />
         <Route path="subscription" element={<SubscriptionPage />} />
+        <Route path="nfc-shop" element={<NfcShopPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       {/* Fallback */}
