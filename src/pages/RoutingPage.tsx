@@ -12,7 +12,7 @@ export default function RoutingPage() {
   const [establishment, setEstablishment] = useState<Establishment | null>(null)
   const [selectedRating, setSelectedRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
-  const [animatingRating, setAnimatingRating] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
   const [feedbackText, setFeedbackText] = useState('')
   const [contactFirstName, setContactFirstName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
@@ -34,19 +34,18 @@ export default function RoutingPage() {
     setStep('rating')
   }
 
-  async function handleRating(rating: number) {
-    if (!plate || !establishment || animatingRating) return
-    setSelectedRating(rating)
-    setAnimatingRating(true)
-    const isPositive = rating >= establishment.satisfaction_threshold
+  async function confirmRating() {
+    if (!plate || !establishment || !selectedRating || confirmed) return
+    setConfirmed(true)
+    const isPositive = selectedRating >= establishment.satisfaction_threshold
     await supabase.from('scans').insert({
       plate_id: plate.id, establishment_id: establishment.id,
-      rating_given: rating, result: isPositive ? 'redirect' : 'feedback', plate_type: plate.plate_type
+      rating_given: selectedRating, result: isPositive ? 'redirect' : 'feedback', plate_type: plate.plate_type
     })
     if (isPositive) {
-      setTimeout(() => { if (establishment.redirect_url) window.location.href = establishment.redirect_url }, 300)
+      setTimeout(() => { if (establishment.redirect_url) window.location.href = establishment.redirect_url }, 400)
     } else {
-      setTimeout(() => { setStep('feedback'); setAnimatingRating(false) }, 400)
+      setTimeout(() => { setStep('feedback'); setConfirmed(false) }, 500)
     }
   }
 
@@ -136,15 +135,30 @@ export default function RoutingPage() {
               {[1,2,3,4,5].map((star) => {
                 const active = (hoveredRating||selectedRating) >= star
                 return (
-                  <button key={star} onClick={() => handleRating(star)} onMouseEnter={() => setHoveredRating(star)} onMouseLeave={() => setHoveredRating(0)} onTouchStart={() => setHoveredRating(star)} disabled={animatingRating}
-                    style={{ background:'none', border:'none', padding:6, cursor:animatingRating?'default':'pointer', transform:active?'scale(1.15)':'scale(1)', transition:'transform 0.15s ease,opacity 0.15s ease', opacity:animatingRating&&selectedRating!==star?0.4:1 }}>
+                  <button key={star} onClick={() => setSelectedRating(star)} onMouseEnter={() => setHoveredRating(star)} onMouseLeave={() => setHoveredRating(0)} onTouchStart={() => setHoveredRating(star)} disabled={confirmed}
+                    style={{ background:'none', border:'none', padding:6, cursor:confirmed?'default':'pointer', transform:active?'scale(1.15)':'scale(1)', transition:'transform 0.15s ease,opacity 0.15s ease', opacity:confirmed&&selectedRating!==star?0.4:1 }}>
                     <svg width="40" height="40" viewBox="0 0 24 24" fill={active?'#FBBF24':'none'} stroke={active?'#F59E0B':'#D1D5DB'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                   </button>
                 )
               })}
             </div>
-            {selectedRating > 0 && selectedRating >= (establishment?.satisfaction_threshold||4) && (
-              <p style={{ textAlign:'center' as const, fontSize:13, color:'#999', marginTop:16, animation:'fadeUp 0.3s ease-out' }}>Redirection en cours...</p>
+            {/* Bouton valider qui apparait apres selection */}
+            {selectedRating > 0 && !confirmed && (
+              <button onClick={confirmRating} style={{
+                display:'block', width:'100%', marginTop:20, padding:'13px 0', borderRadius:14, border:'none',
+                background:color, color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui',
+                cursor:'pointer', boxShadow:`0 4px 16px rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`,
+                transition:'transform 0.1s', letterSpacing:'-0.01em', animation:'fadeUp 0.3s ease-out'
+              }}
+                onMouseDown={(e) => (e.target as HTMLElement).style.transform='scale(0.98)'}
+                onMouseUp={(e) => (e.target as HTMLElement).style.transform='scale(1)'}>
+                Valider ma note
+              </button>
+            )}
+            {confirmed && (
+              <p style={{ textAlign:'center' as const, fontSize:13, color:'#999', marginTop:16, animation:'fadeUp 0.3s ease-out' }}>
+                {selectedRating >= (establishment?.satisfaction_threshold||4) ? 'Redirection en cours...' : 'Chargement...'}
+              </p>
             )}
           </div>
         )}
@@ -179,10 +193,7 @@ export default function RoutingPage() {
               {validationError && <div style={{ background:'#fef2f2', color:'#b91c1c', fontSize:13, padding:'10px 14px', borderRadius:10 }}>{validationError}</div>}
               <button onClick={handleFeedbackSubmit} disabled={submitting||!contactFirstName.trim()||(!contactEmail.trim()&&!contactPhone.trim())}
                 style={{ width:'100%', padding:'14px 0', borderRadius:14, border:'none', background:submitting||!contactFirstName.trim()||(!contactEmail.trim()&&!contactPhone.trim())?'#d1d5db':color, color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:submitting?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'background 0.2s,transform 0.1s', boxShadow:submitting||!contactFirstName.trim()?'none':`0 4px 16px rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`, letterSpacing:'-0.01em' }}>
-                {submitting ? <div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/> : <>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" transform="scale(0.67)"/><path d="M22 2l-7 20-4-9-9-4z" transform="scale(0.67)"/></svg>
-                  Envoyer mon retour
-                </>}
+                {submitting?<div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>:'Envoyer mon retour'}
               </button>
             </div>
           </div>
