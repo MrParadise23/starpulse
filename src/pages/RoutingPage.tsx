@@ -34,19 +34,28 @@ export default function RoutingPage() {
     setStep('rating')
   }
 
-  async function confirmRating() {
+  async function handleStarClick(rating: number) {
+    if (!plate || !establishment || confirmed) return
+    setSelectedRating(rating)
+    const isPositive = rating >= establishment.satisfaction_threshold
+    if (isPositive) {
+      setConfirmed(true)
+      await supabase.from('scans').insert({
+        plate_id: plate.id, establishment_id: establishment.id,
+        rating_given: rating, result: 'redirect', plate_type: plate.plate_type
+      })
+      setTimeout(() => { if (establishment.redirect_url) window.location.href = establishment.redirect_url }, 400)
+    }
+  }
+
+  async function confirmNegative() {
     if (!plate || !establishment || !selectedRating || confirmed) return
     setConfirmed(true)
-    const isPositive = selectedRating >= establishment.satisfaction_threshold
     await supabase.from('scans').insert({
       plate_id: plate.id, establishment_id: establishment.id,
-      rating_given: selectedRating, result: isPositive ? 'redirect' : 'feedback', plate_type: plate.plate_type
+      rating_given: selectedRating, result: 'feedback', plate_type: plate.plate_type
     })
-    if (isPositive) {
-      setTimeout(() => { if (establishment.redirect_url) window.location.href = establishment.redirect_url }, 400)
-    } else {
-      setTimeout(() => { setStep('feedback'); setConfirmed(false) }, 500)
-    }
+    setTimeout(() => { setStep('feedback'); setConfirmed(false) }, 400)
   }
 
   function validateFeedback(): boolean {
@@ -73,6 +82,8 @@ export default function RoutingPage() {
     return { r: parseInt(hex.slice(1,3),16), g: parseInt(hex.slice(3,5),16), b: parseInt(hex.slice(5,7),16) }
   }
   const rgb = hexToRgb(color)
+  const threshold = establishment?.satisfaction_threshold || 4
+  const isNegative = selectedRating > 0 && selectedRating < threshold
 
   if (step === 'loading') return (
     <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8' }}>
@@ -131,20 +142,29 @@ export default function RoutingPage() {
         {step === 'rating' && (
           <div style={{ background:'#fff', borderRadius:20, padding:'28px 24px', boxShadow:'0 1px 3px rgba(0,0,0,0.04),0 8px 32px rgba(0,0,0,0.06)', animation:'fadeUp 0.5s ease-out 0.1s both' }}>
             <p style={{ textAlign:'center' as const, fontWeight:500, fontSize:16, color:'#333', margin:'0 0 24px', lineHeight:1.5 }}>{establishment?.routing_question}</p>
-            <div style={{ display:'flex', justifyContent:'center', gap:8 }}>
+            <div style={{ display:'flex', justifyContent:'center', gap:6 }}>
               {[1,2,3,4,5].map((star) => {
-                const active = (hoveredRating||selectedRating) >= star
+                const display = hoveredRating || selectedRating
+                const active = display >= star
                 return (
-                  <button key={star} onClick={() => setSelectedRating(star)} onMouseEnter={() => setHoveredRating(star)} onMouseLeave={() => setHoveredRating(0)} onTouchStart={() => setHoveredRating(star)} disabled={confirmed}
-                    style={{ background:'none', border:'none', padding:6, cursor:confirmed?'default':'pointer', transform:active?'scale(1.15)':'scale(1)', transition:'transform 0.15s ease,opacity 0.15s ease', opacity:confirmed&&selectedRating!==star?0.4:1 }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill={active?'#FBBF24':'none'} stroke={active?'#F59E0B':'#D1D5DB'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <button key={star} onClick={() => handleStarClick(star)} onMouseEnter={() => !confirmed && setHoveredRating(star)} onMouseLeave={() => setHoveredRating(0)} disabled={confirmed}
+                    style={{ background:'none', border:'none', padding:4, cursor:confirmed?'default':'pointer', transform:active?'scale(1.1)':'scale(1)', transition:'transform 0.2s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s', filter:confirmed&&selectedRating!==star?'opacity(0.3)':'none' }}>
+                    <svg width="42" height="42" viewBox="0 0 24 24" style={{ display:'block' }}>
+                      <defs>
+                        <linearGradient id={`sg${star}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={active?'#FCD34D':'#E5E5E0'}/>
+                          <stop offset="100%" stopColor={active?'#F59E0B':'#D4D4CD'}/>
+                        </linearGradient>
+                      </defs>
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill={`url(#sg${star})`} stroke={active?'#E8A308':'#CCCCC6'} strokeWidth="0.5"/>
+                    </svg>
                   </button>
                 )
               })}
             </div>
-            {/* Bouton valider qui apparait apres selection */}
-            {selectedRating > 0 && !confirmed && (
-              <button onClick={confirmRating} style={{
+            {/* Bouton valider seulement pour note negative */}
+            {isNegative && !confirmed && (
+              <button onClick={confirmNegative} style={{
                 display:'block', width:'100%', marginTop:20, padding:'13px 0', borderRadius:14, border:'none',
                 background:color, color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui',
                 cursor:'pointer', boxShadow:`0 4px 16px rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`,
@@ -156,9 +176,7 @@ export default function RoutingPage() {
               </button>
             )}
             {confirmed && (
-              <p style={{ textAlign:'center' as const, fontSize:13, color:'#999', marginTop:16, animation:'fadeUp 0.3s ease-out' }}>
-                {selectedRating >= (establishment?.satisfaction_threshold||4) ? 'Redirection en cours...' : 'Chargement...'}
-              </p>
+              <p style={{ textAlign:'center' as const, fontSize:13, color:'#999', marginTop:16, animation:'fadeUp 0.3s ease-out' }}>Redirection en cours...</p>
             )}
           </div>
         )}
@@ -168,7 +186,11 @@ export default function RoutingPage() {
             <div style={{ display:'flex', alignItems:'center', gap:8, paddingBottom:16, marginBottom:20, borderBottom:'1px solid #f0f0ec' }}>
               <span style={{ fontSize:13, color:'#999' }}>Votre note</span>
               <div style={{ display:'flex', gap:2 }}>
-                {[1,2,3,4,5].map(s => <svg key={s} width="16" height="16" viewBox="0 0 24 24" fill={s<=selectedRating?'#FBBF24':'none'} stroke={s<=selectedRating?'#F59E0B':'#D1D5DB'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
+                {[1,2,3,4,5].map(s => (
+                  <svg key={s} width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill={s<=selectedRating?'#F59E0B':'#E5E5E0'} stroke="none"/>
+                  </svg>
+                ))}
               </div>
             </div>
             <p style={{ fontSize:14, color:'#777', marginBottom:20, lineHeight:1.6 }}>Ce retour restera prive. Il sera transmis directement a l'etablissement.</p>
