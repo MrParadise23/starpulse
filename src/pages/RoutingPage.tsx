@@ -188,7 +188,7 @@ export default function RoutingPage() {
           </div>
         )}
 
-        <p style={{ textAlign:'center' as const, fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>Propulse par PapyStar</p>
+        <p style={{ textAlign:'center' as const, fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>Propulse par StarPulse</p>
       </div>
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{margin:0;padding:0;box-sizing:border-box}input::placeholder,textarea::placeholder{color:#bbb}input:focus,textarea:focus{border-color:${color} !important}`}</style>
     </div>

@@ -76,10 +76,7 @@ export default function RegisterPage() {
           </div>
           {error && <div style={{ background:'#fef2f2', color:'#b91c1c', fontSize:13, padding:'10px 14px', borderRadius:10, marginBottom:16 }}>{error}</div>}
           <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px 0', borderRadius:14, border:'none', background:loading?'#93a3b8':'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:loading?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:loading?'none':'0 4px 16px rgba(37,99,235,0.3)', transition:'background 0.2s,transform 0.1s', letterSpacing:'-0.01em' }} onMouseDown={(e) => {if(!loading)(e.target as HTMLElement).style.transform='scale(0.98)'}} onMouseUp={(e) => (e.target as HTMLElement).style.transform='scale(1)'}>
-            {loading?<div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>:<>
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2" transform="scale(0.67)"/><circle cx="6" cy="5" r="3" transform="scale(0.67)"/><line x1="15.5" y1="9.3" x2="15.5" y2="15.3" transform="scale(0.67)"/><line x1="12.5" y1="12.3" x2="18.5" y2="12.3" transform="scale(0.67)"/></svg>
-              Creer mon compte
-            </>}
+            {loading?<div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>:'Creer mon compte'}
           </button>
         </form>
         <div style={{ display:'flex', justifyContent:'center', gap:24, marginTop:24, animation:'fadeUp 0.5s ease-out 0.2s both' }}>
@@ -91,7 +88,7 @@ export default function RegisterPage() {
           ))}
         </div>
         <p style={{ textAlign:'center', fontSize:14, color:'#888', marginTop:20, animation:'fadeUp 0.5s ease-out 0.25s both' }}>Deja un compte ? <Link to="/login" style={{ color:'#2563eb', fontWeight:600, textDecoration:'none' }}>Se connecter</Link></p>
-        <p style={{ textAlign:'center', fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>PapyStar — Gerez vos avis, boostez votre reputation.</p>
+        <p style={{ textAlign:'center', fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>StarPulse — Gerez vos avis, boostez votre reputation.</p>
       </div>
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{margin:0;padding:0;box-sizing:border-box}input::placeholder{color:#bbb}`}</style>
     </div>
