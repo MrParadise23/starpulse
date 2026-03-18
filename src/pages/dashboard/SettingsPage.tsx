@@ -33,7 +33,7 @@ export default function SettingsPage() {
   const [city, setCity] = useState('')
   const [category, setCategory] = useState('restaurant')
   const [redirectUrl, setRedirectUrl] = useState('')
-  const [routingQuestion, setRoutingQuestion] = useState("Comment s'est passee votre experience ?")
+  const [routingQuestion, setRoutingQuestion] = useState("Comment s'est passée votre expérience ?")
   const [satisfactionThreshold, setSatisfactionThreshold] = useState(4)
   const [primaryColor, setPrimaryColor] = useState('#2563eb')
   const [logoUrl, setLogoUrl] = useState('')
@@ -132,21 +132,21 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em', margin:'0 0 4px' }}>{isNew ? 'Configurer mon etablissement' : 'Reglages'}</h1>
-        <p className="text-gray-500 text-sm">{isNew ? 'Renseignez les informations de votre etablissement.' : 'Parametres de votre etablissement, smart routing et IA.'}</p>
+        <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em', margin:'0 0 4px' }}>{isNew ? 'Configurer mon établissement' : 'Réglages'}</h1>
+        <p className="text-gray-500 text-sm">{isNew ? 'Renseignez les informations de votre établissement.' : 'Parametres de votre établissement, smart routing et IA.'}</p>
       </div>
 
       <div className="space-y-6 max-w-lg">
 
         {/* Logo */}
         <section style={sectionStyle}>
-          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:16 }}>Logo de l'etablissement</h2>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:16 }}>Logo de l'établissement</h2>
           <div style={{ display:'flex', alignItems:'center', gap:16 }}>
             {logoUrl ? (
               <img src={logoUrl} alt="Logo" style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:'1px solid #f0f0ec' }}/>
             ) : (
               <div style={{ width:72, height:72, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', border:'1px dashed #ddd' }}>
-                <svg width="24" height="24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <svg width="24" height="24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circlé cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
               </div>
             )}
             <div style={{ flex:1 }}>
@@ -169,12 +169,12 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Informations generales */}
+        {/* Informations générales */}
         <section style={sectionStyle}>
-          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:16 }}>Informations generales</h2>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:16 }}>Informations générales</h2>
           <div className="space-y-4">
             <div>
-              <label style={labelStyle}>Nom de l'etablissement *</label>
+              <label style={labelStyle}>Nom de l'établissement *</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Restaurant Le Gourmet" className={inputCls}/>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -212,7 +212,7 @@ export default function SettingsPage() {
             <div>
               <label style={labelStyle}>Lien public de redirection (Google, TripAdvisor, etc.)</label>
               <input type="url" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)} placeholder="https://g.page/r/votre-restaurant/review" className={inputCls}/>
-              <p style={{ fontSize:12, color:'#aaa', marginTop:4 }}>Les clients satisfaits seront rediriges instantanement vers ce lien.</p>
+              <p style={{ fontSize:12, color:'#aaa', marginTop:4 }}>Les clients satisfaits seront redirigés instantanement vers ce lien.</p>
             </div>
             <div>
               <label style={labelStyle}>Question affichee au client</label>
@@ -232,31 +232,31 @@ export default function SettingsPage() {
                   <div style={{ display:'flex', gap:2 }}>
                     {[1,2,3,4,5].map(s => <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s<satisfactionThreshold?'#f87171':'none'} stroke={s<satisfactionThreshold?'#f87171':'#d1d5db'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
                   </div>
-                  <span style={{ fontSize:12, color:'#666' }}>{negativeRange} etoile(s) → <span style={{ fontWeight:600, color:'#d97706' }}>Retour prive</span></span>
+                  <span style={{ fontSize:12, color:'#666' }}>{negativeRange} étoile(s) → <span style={{ fontWeight:600, color:'#d97706' }}>Retour privé</span></span>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <div style={{ display:'flex', gap:2 }}>
                     {[1,2,3,4,5].map(s => <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={s>=satisfactionThreshold?'#facc15':'none'} stroke={s>=satisfactionThreshold?'#facc15':'#d1d5db'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
                   </div>
-                  <span style={{ fontSize:12, color:'#666' }}>{positiveRange} etoiles → <span style={{ fontWeight:600, color:'#059669' }}>Redirection Google</span></span>
+                  <span style={{ fontSize:12, color:'#666' }}>{positiveRange} étoiles → <span style={{ fontWeight:600, color:'#059669' }}>Redirection Google</span></span>
                 </div>
               </div>
             </div>
             <div style={{ background:'#eff6ff', border:'1px solid #dbeafe', borderRadius:12, padding:16 }}>
-              <p style={{ fontSize:12, fontWeight:600, color:'#1e40af', marginBottom:6 }}>Comment ca marche ?</p>
+              <p style={{ fontSize:12, fontWeight:600, color:'#1e40af', marginBottom:6 }}>Comment ça marche ?</p>
               <ol style={{ fontSize:12, color:'#3b82f6', lineHeight:1.8, paddingLeft:16, margin:0 }}>
-                <li>Creez un QR code dans Tags NFC & QR</li>
-                <li>Imprimez-le et placez-le dans votre etablissement</li>
-                <li>Le client scanne → voit les etoiles → est redirige selon sa note</li>
+                <li>Créez un QR code dans Tags NFC & QR</li>
+                <li>Imprimez-le et placez-le dans votre établissement</li>
+                <li>Le client scanne → voit les étoiles → est redirigé selon sa note</li>
               </ol>
             </div>
           </div>
         </section>
 
-        {/* Apercu du smart routing */}
+        {/* Aperçu du smart routing */}
         <section style={sectionStyle}>
-          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Apercu du smart routing</h2>
-          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Voila ce que vos clients verront en scannant votre QR code.</p>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Aperçu du smart routing</h2>
+          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Voilà ce que vos clients verront en scannant votre QR code.</p>
           <div style={{ background:`radial-gradient(ellipse at 50% 20%,${primaryColor}08 0%,#fafaf8 60%)`, borderRadius:16, padding:24, border:'1px solid #f0f0ec' }}>
             <div style={{ textAlign:'center', marginBottom:16 }}>
               {logoUrl ? (
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                   <span style={{ fontSize:18, fontWeight:700, color:'#999' }}>{name ? name.charAt(0) : '?'}</span>
                 </div>
               )}
-              <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#1a1a18' }}>{name || 'Votre etablissement'}</p>
+              <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#1a1a18' }}>{name || 'Votre établissement'}</p>
             </div>
             <div style={{ background:'#fff', borderRadius:14, padding:20, boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>
               <p style={{ textAlign:'center', fontSize:14, fontWeight:500, color:'#333', marginBottom:16 }}>{routingQuestion}</p>
@@ -288,80 +288,80 @@ export default function SettingsPage() {
         {/* Google Business Profile */}
         <section style={sectionStyle}>
           <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Google Business Profile</h2>
-          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Connexion liee a cet etablissement : <span style={{ fontWeight:500 }}>{name || 'Non defini'}</span></p>
+          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Connexion liée a cet établissement : <span style={{ fontWeight:500 }}>{name || 'Non défini'}</span></p>
           {!isNew && (
             <div style={{ background:'#f5f5f0', borderRadius:12, padding:16 }}>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
                 <span style={{ fontSize:13, color:'#666' }}>Statut</span>
                 {establishment?.google_connection_status === 'connected' ? (
-                  <span style={{ fontSize:13, fontWeight:600, color:'#059669' }}>Connecte</span>
+                  <span style={{ fontSize:13, fontWeight:600, color:'#059669' }}>Connecté</span>
                 ) : (
-                  <span style={{ fontSize:13, color:'#999' }}>Non connecte</span>
+                  <span style={{ fontSize:13, color:'#999' }}>Non connecté</span>
                 )}
               </div>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                <span style={{ fontSize:13, color:'#666' }}>Fiche liee</span>
+                <span style={{ fontSize:13, color:'#666' }}>Fiche liée</span>
                 <span style={{ fontSize:13, color:'#999' }}>{establishment?.google_business_name || 'Aucune'}</span>
               </div>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
-                <span style={{ fontSize:13, color:'#666' }}>Derniere synchro</span>
+                <span style={{ fontSize:13, color:'#666' }}>Dernière synchro</span>
                 <span style={{ fontSize:13, color:'#999' }}>{establishment?.google_last_sync ? new Date(establishment.google_last_sync).toLocaleString('fr-FR') : 'Jamais'}</span>
               </div>
               <button style={{ width:'100%', padding:10, borderRadius:10, border:'none', background:'#2563eb', color:'#fff', fontSize:13, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:'pointer' }}>
-                {establishment?.google_connection_status === 'connected' ? 'Reconnecter' : 'Connecter Google Business Profile'}
+                {establishment?.google_connection_status === 'connected' ? 'Reconnecter' : 'Connectér Google Business Profile'}
               </button>
-              <p style={{ fontSize:11, color:'#aaa', textAlign:'center', marginTop:8 }}>OAuth Google en cours d'implementation.</p>
+              <p style={{ fontSize:11, color:'#aaa', textAlign:'center', marginTop:8 }}>OAuth Google en cours d'implémentation.</p>
             </div>
           )}
-          {isNew && <p style={{ fontSize:13, color:'#aaa' }}>Creez d'abord votre etablissement.</p>}
+          {isNew && <p style={{ fontSize:13, color:'#aaa' }}>Créez d'abord votre établissement.</p>}
         </section>
 
         {/* Voix de marque IA */}
         <section style={sectionStyle}>
           <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Voix de marque IA</h2>
-          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Definissez la personnalite de votre etablissement pour que les reponses IA sonnent comme vous.</p>
+          <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Définissez la personnalité de votre établissement pour que les réponses IA sonnent comme vous.</p>
           <div className="space-y-4">
             <div>
-              <label style={labelStyle}>Ton general</label>
+              <label style={labelStyle}>Ton général</label>
               <select value={aiTone} onChange={(e) => setAiTone(e.target.value)} className={inputCls}>
                 <option value="chaleureux et professionnel">Chaleureux et professionnel</option>
-                <option value="decontracte et amical">Decontracte et amical</option>
+                <option value="décontracté et amical">Decontracte et amical</option>
                 <option value="formel et courtois">Formel et courtois</option>
                 <option value="enthousiaste et dynamique">Enthousiaste et dynamique</option>
-                <option value="sobre et elegant">Sobre et elegant</option>
+                <option value="sobre et élégant">Sobre et élégant</option>
                 <option value="familial et bienveillant">Familial et bienveillant</option>
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Mots et expressions a privilegier</label>
+              <label style={labelStyle}>Mots et expressions a privilégier</label>
               <textarea value={aiPreferredExpressions} onChange={(e) => setAiPreferredExpressions(e.target.value)} placeholder="ex: Merci de tout coeur, au plaisir de vous revoir..." rows={2} className={inputCls + " resize-none"}/>
             </div>
             <div>
-              <label style={labelStyle}>Formulations a eviter</label>
-              <textarea value={aiAvoidExpressions} onChange={(e) => setAiAvoidExpressions(e.target.value)} placeholder="ex: Cher client, nous sommes desoles..." rows={2} className={inputCls + " resize-none"}/>
+              <label style={labelStyle}>Formulations a éviter</label>
+              <textarea value={aiAvoidExpressions} onChange={(e) => setAiAvoidExpressions(e.target.value)} placeholder="ex: Cher client, nous sommes désolés..." rows={2} className={inputCls + " resize-none"}/>
             </div>
             <div>
-              <label style={labelStyle}>Longueur des reponses</label>
+              <label style={labelStyle}>Longueur des réponses</label>
               <select value={aiResponseLength} onChange={(e) => setAiResponseLength(e.target.value)} className={inputCls}>
                 <option value="short">Courte (2-3 phrases)</option>
                 <option value="medium">Moyenne (4-6 phrases)</option>
-                <option value="long">Detaillee (7+ phrases)</option>
+                <option value="long">Détaillée (7+ phrases)</option>
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Comment repondre aux avis positifs ?</label>
+              <label style={labelStyle}>Comment répondre aux avis positifs ?</label>
               <textarea value={aiPositiveStyle} onChange={(e) => setAiPositiveStyle(e.target.value)} placeholder="ex: Remercier chaleureusement, mentionner un detail..." rows={2} className={inputCls + " resize-none"}/>
             </div>
             <div>
-              <label style={labelStyle}>Comment repondre aux avis negatifs ?</label>
-              <textarea value={aiNegativeStyle} onChange={(e) => setAiNegativeStyle(e.target.value)} placeholder="ex: Presenter des excuses sinceres, proposer de regler en prive..." rows={2} className={inputCls + " resize-none"}/>
+              <label style={labelStyle}>Comment répondre aux avis négatifs ?</label>
+              <textarea value={aiNegativeStyle} onChange={(e) => setAiNegativeStyle(e.target.value)} placeholder="ex: Présentér des excuses sincères, proposer de regler en privé..." rows={2} className={inputCls + " resize-none"}/>
             </div>
             <div>
-              <label style={labelStyle}>Regles a toujours respecter</label>
+              <label style={labelStyle}>Règles à toujours respecter</label>
               <textarea value={aiRules} onChange={(e) => setAiRules(e.target.value)} placeholder="ex: Toujours tutoyer. Ne jamais proposer de reduction." rows={2} className={inputCls + " resize-none"}/>
             </div>
             <div>
-              <label style={labelStyle}>Instructions supplementaires</label>
+              <label style={labelStyle}>Instructions supplémentaires</label>
               <textarea value={aiInstructions} onChange={(e) => setAiInstructions(e.target.value)} placeholder="Toute autre instruction pour l'IA..." rows={3} className={inputCls + " resize-none"}/>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function SettingsPage() {
             cursor: saving ? 'wait' : 'pointer', boxShadow: saving ? 'none' : '0 4px 16px rgba(37,99,235,0.3)',
             transition:'all 0.2s', letterSpacing:'-0.01em'
           }}>
-          {saving ? 'Enregistrement...' : saved ? 'Enregistre !' : isNew ? "Creer l'etablissement" : 'Enregistrer les modifications'}
+          {saving ? 'Enregistrément...' : saved ? 'Enregistré !' : isNew ? "Créer l'établissement" : 'Enregistrér les modifications'}
         </button>
       </div>
     </div>

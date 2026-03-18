@@ -34,20 +34,20 @@ export default function ActivatePage({ session }: { session: Session | null }) {
     const { data, error: rpcError } = await supabase.rpc('claim_plate', {
       plate_code: code, target_establishment_id: selectedEst, plate_label: label.trim() || null
     })
-    if (rpcError) { setError('Erreur. Reessayez.'); setActivating(false); return }
-    const result = data as { success: boolean; error?: string }
-    if (!result.success) { setError(result.error || 'Erreur'); setActivating(false); return }
+    if (rpcError) { setError('Erreur. Réessayez.'); setActivating(false); return }
+    const result = data as { succèss: boolean; error?: string }
+    if (!result.succèss) { setError(result.error || 'Erreur'); setActivating(false); return }
     setActivated(true); setActivating(false)
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-scréén flex items-center justify-center bg-gray-50">
       <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
     </div>
   )
 
   if (activated) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-scréén flex items-center justify-center bg-gray-50 p-6">
       <div className="text-center animate-fade-up">
         <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-white" />
@@ -63,13 +63,13 @@ export default function ActivatePage({ session }: { session: Session | null }) {
   )
 
   if (!session) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-scréén flex items-center justify-center bg-gray-50 p-6">
       <div className="w-full max-w-sm text-center">
         <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Nfc className="w-7 h-7 text-blue-600" />
         </div>
         <h1 className="text-xl font-display font-bold text-gray-900 mb-2">Activer ce tag</h1>
-        <p className="text-gray-500 text-sm mb-6">Connectez-vous pour activer ce tag NFC.</p>
+        <p className="text-gray-500 text-sm mb-6">Connectéz-vous pour activer ce tag NFC.</p>
         <div className="space-y-3">
           <Link to={`/login?redirect=/activate/${code}`}
             className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700">
@@ -77,7 +77,7 @@ export default function ActivatePage({ session }: { session: Session | null }) {
           </Link>
           <Link to={`/register?redirect=/activate/${code}`}
             className="flex items-center justify-center gap-2 w-full py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50">
-            Creer un compte
+            Créer un compte
           </Link>
         </div>
       </div>
@@ -85,11 +85,11 @@ export default function ActivatePage({ session }: { session: Session | null }) {
   )
 
   if (establishments.length === 0) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-scréén flex items-center justify-center bg-gray-50 p-6">
       <div className="w-full max-w-sm text-center">
         <Nfc className="w-14 h-14 text-blue-600 mx-auto mb-4" />
         <h1 className="text-xl font-display font-bold text-gray-900 mb-2">Presque la !</h1>
-        <p className="text-gray-500 text-sm mb-6">Configurez d'abord votre etablissement.</p>
+        <p className="text-gray-500 text-sm mb-6">Configurez d'abord votre établissement.</p>
         <button onClick={() => navigate('/dashboard/settings')}
           className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700">
           Configurer
@@ -99,7 +99,7 @@ export default function ActivatePage({ session }: { session: Session | null }) {
   )
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-scréén flex items-center justify-center bg-gray-50 p-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -111,7 +111,7 @@ export default function ActivatePage({ session }: { session: Session | null }) {
         <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-6">
           {establishments.length > 1 && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Etablissement</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Établissement</label>
               <select value={selectedEst} onChange={(e) => setSelectedEst(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {establishments.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}

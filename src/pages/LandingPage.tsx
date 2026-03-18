@@ -33,7 +33,7 @@ export default function LandingPage() {
             Transformez chaque client en <span style={{ color:'#2563eb' }}>ambassadeur</span>
           </h1>
           <p style={{ fontSize:17, color:'#777', lineHeight:1.7, maxWidth:540, margin:'0 auto 36px' }}>
-            Collectez des avis 5 etoiles, interceptez les clients insatisfaits avant qu'ils ne publient, et repondez a tous vos avis avec l'IA.
+            Collectez des avis 5 étoiles, interceptez les clients insatisfaits avant qu'ils ne publient, et répondez à tous vos avis avec l'IA.
           </p>
           <div style={{ display:'flex', justifyContent:'center', gap:12, flexWrap:'wrap' }}>
             <Link to="/register" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'15px 32px', borderRadius:14, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:16, fontWeight:600, fontFamily:'"Outfit",system-ui', textDecoration:'none', boxShadow:'0 4px 20px rgba(37,99,235,0.3)', transition:'transform 0.1s', letterSpacing:'-0.01em' }}>
@@ -41,7 +41,7 @@ export default function LandingPage() {
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" transform="scale(0.67)"/></svg>
             </Link>
             <a href="#fonctionnement" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'15px 28px', borderRadius:14, border:'1.5px solid #e8e8e4', background:'#fff', color:'#555', fontSize:15, fontWeight:500, textDecoration:'none', transition:'all 0.15s' }}>
-              Decouvrir le fonctionnement
+              Découvrir le fonctionnement
             </a>
           </div>
           <p style={{ fontSize:13, color:'#bbb', marginTop:16 }}>Aucune carte bancaire requise</p>
@@ -60,14 +60,14 @@ export default function LandingPage() {
       {/* COMMENT CA MARCHE */}
       <section id="fonctionnement" style={{ maxWidth:1080, margin:'0 auto', padding:'60px 24px 80px' }}>
         <div style={{ textAlign:'center', marginBottom:48 }}>
-          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Comment ca marche ?</h2>
-          <p style={{ fontSize:15, color:'#888', margin:0 }}>3 etapes simples pour booster votre reputation en ligne</p>
+          <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Comment ça marche ?</h2>
+          <p style={{ fontSize:15, color:'#888', margin:0 }}>3 étapes simples pour booster votre réputation en ligne</p>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(260px, 1fr))', gap:20 }}>
           {[
-            { step:'1', title:'Le client scanne', desc:'Un QR code sur table ou un tag NFC. En une seconde, il accede a votre page d\'avis.', color:'#2563eb' },
-            { step:'2', title:'Le smart routing decide', desc:'Satisfait ? Redirige vers Google pour un avis 5 etoiles. Insatisfait ? Formulaire prive, jamais publie.', color:'#059669' },
-            { step:'3', title:'L\'IA vous repond', desc:'StarPulse genere des reponses personnalisees a chaque avis Google, dans votre ton de voix.', color:'#7c3aed' },
+            { step:'1', title:'Le client scanne', desc:'Un QR code sur table ou un tag NFC. En une seconde, il accède à votre page d\'avis.', color:'#2563eb' },
+            { step:'2', title:'Le smart routing décide', desc:'Satisfait ? Redirigé vers Google pour un avis 5 étoiles. Insatisfait ? Formulaire privé, jamais publié.', color:'#059669' },
+            { step:'3', title:'L\'IA vous répond', desc:'StarPulse génère des réponses personnalisées à chaque avis Google, dans votre ton de voix.', color:'#7c3aed' },
           ].map(item => (
             <div key={item.step} style={{ background:'#fff', borderRadius:20, padding:'28px 24px', border:'1px solid #f0f0ec', transition:'border-color 0.2s, box-shadow 0.2s' }}
               onMouseEnter={(e) => { (e.currentTarget).style.borderColor='#ddd'; (e.currentTarget).style.boxShadow='0 4px 16px rgba(0,0,0,0.04)' }}
@@ -87,15 +87,15 @@ export default function LandingPage() {
         <div style={{ maxWidth:1080, margin:'0 auto', padding:'80px 24px' }}>
           <div style={{ textAlign:'center', marginBottom:48 }}>
             <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Tout ce qu'il faut pour briller</h2>
-            <p style={{ fontSize:15, color:'#888', margin:0 }}>Un outil complet pour gerer votre e-reputation</p>
+            <p style={{ fontSize:15, color:'#888', margin:0 }}>Un outil complet pour gérer votre e-réputation</p>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:16 }}>
             {[
-              { title:'Smart routing intelligent', desc:'Redirigez les clients satisfaits vers Google et interceptez les mecontents en prive.', icon:'route' },
-              { title:'QR codes & tags NFC', desc:'Generez des QR codes et encodez vos tags NFC en quelques clics. Zero friction.', icon:'qr' },
-              { title:'Reponses IA personnalisees', desc:'L\'IA repond a vos avis dans votre style. Modifiez avant de publier.', icon:'ai' },
-              { title:'Dashboard en temps reel', desc:'Suivez vos scans, taux de satisfaction, et avis en attente d\'un coup d\'oeil.', icon:'dash' },
-              { title:'Retours prives', desc:'Les clients insatisfaits vous ecrivent en prive. Recontactez-les, reglez le probleme.', icon:'msg' },
+              { title:'Smart routing intelligent', desc:'Redirigez les clients satisfaits vers Google et interceptez les mécontents en privé.', icon:'route' },
+              { title:'QR codes & tags NFC', desc:'Générez des QR codes et encodez vos tags NFC en quelques clics. Zéro friction.', icon:'qr' },
+              { title:'Réponses IA personnalisées', desc:'L\'IA répond à vos avis dans votre style. Modifiez avant de publier.', icon:'ai' },
+              { title:'Dashboard en temps réel', desc:'Suivez vos scans, taux de satisfaction, et avis en attente d\'un coup d\'œil.', icon:'dash' },
+              { title:'Retours privés', desc:'Les clients insatisfaits vous écrivent en privé. Recontactez-les, réglez le problème.', icon:'msg' },
               { title:'Programme d\'affiliation', desc:'Recommandez StarPulse et touchez 20% de commission pendant 24 mois.', icon:'aff' },
             ].map(f => (
               <div key={f.title} style={{ padding:'24px 20px', borderRadius:16, border:'1px solid #f0f0ec', background:'#fafaf8' }}>
@@ -114,7 +114,7 @@ export default function LandingPage() {
       <section id="pricing" style={{ maxWidth:1080, margin:'0 auto', padding:'80px 24px' }}>
         <div style={{ textAlign:'center', marginBottom:32 }}>
           <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Un prix simple, sans surprise</h2>
-          <p style={{ fontSize:15, color:'#888', margin:'0 0 28px' }}>Tout inclus. Pas de frais caches. Essai gratuit 14 jours. Annulez quand vous voulez.</p>
+          <p style={{ fontSize:15, color:'#888', margin:'0 0 28px' }}>Tout inclus. Pas de frais cachés. Essai gratuit 14 jours. Annulez quand vous voulez.</p>
 
           {/* Toggle */}
           <div style={{ display:'inline-flex', alignItems:'center', gap:0, background:'#f0f0ec', borderRadius:14, padding:4 }}>
@@ -141,14 +141,14 @@ export default function LandingPage() {
                 <span style={{ fontSize:18, fontWeight:600, color:'#888' }}>EUR{yearly ? '/an' : '/mois'}</span>
               </div>
               {yearly && <p style={{ fontSize:13, color:'#16a34a', fontWeight:500, marginBottom:4 }}>soit ~20,75 EUR/mois au lieu de 29 EUR</p>}
-              <p style={{ fontSize:13, color:'#aaa', marginBottom:28 }}>par etablissement</p>
+              <p style={{ fontSize:13, color:'#aaa', marginBottom:28 }}>par établissement</p>
               <div style={{ textAlign:'left', marginBottom:28 }}>
                 {[
-                  'Smart routing illimite (NFC + QR)',
-                  'QR codes illimites',
-                  'Reponses IA (OpenAI GPT-4)',
-                  'Dashboard temps reel',
-                  'Retours prives + recontact client',
+                  'Smart routing illimité (NFC + QR)',
+                  'QR codes illimités',
+                  'Réponses IA (OpenAI GPT-4)',
+                  'Dashboard temps réel',
+                  'Retours privés + recontact client',
                   'Programme affiliation 20%',
                   'Essai gratuit 14 jours',
                   ...(yearly ? ['1 tag NFC offert avec votre abonnement'] : []),
@@ -163,7 +163,7 @@ export default function LandingPage() {
               <Link to="/register" style={{ display:'block', padding:'15px 0', borderRadius:14, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:16, fontWeight:600, fontFamily:'"Outfit",system-ui', textDecoration:'none', textAlign:'center', boxShadow:'0 4px 16px rgba(37,99,235,0.3)', letterSpacing:'-0.01em' }}>
                 Commencer l'essai gratuit
               </Link>
-              <p style={{ fontSize:12, color:'#bbb', marginTop:12 }}>Aucune carte bancaire requise a l'inscription.</p>
+              <p style={{ fontSize:12, color:'#bbb', marginTop:12 }}>Aucune carte bancaire requise à l'inscription.</p>
             </div>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function LandingPage() {
         {/* NFC Tags */}
         <div style={{ textAlign:'center', marginTop:56, marginBottom:24 }}>
           <h3 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:22, letterSpacing:'-0.02em', margin:'0 0 8px' }}>Tags NFC</h3>
-          <p style={{ fontSize:14, color:'#888', margin:0 }}>Pre-encodes, prets a coller. Livraison en 3-5 jours.</p>
+          <p style={{ fontSize:14, color:'#888', margin:0 }}>Pré-encodés, prêts à coller. Livraison en 3-5 jours.</p>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(155px, 1fr))', gap:12, maxWidth:700, margin:'0 auto' }}>
           {[
@@ -199,9 +199,9 @@ export default function LandingPage() {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:20 }}>
             {[
-              { name:'Thomas R.', role:'Restaurant Le Comptoir', text:'En 2 semaines, on est passe de 3.8 a 4.4 sur Google. Le smart routing change tout.', stars:5 },
-              { name:'Julie M.', role:'Salon Beaute Pure', text:'Les clients mecontents nous ecrivent en prive au lieu de publier. Ca nous sauve la mise.', stars:5 },
-              { name:'Marc D.', role:'Hotel du Lac', text:'Les reponses IA sont bluffantes. On gagne 2h par semaine sur la gestion des avis.', stars:5 },
+              { name:'Thomas R.', role:'Restaurant Le Comptoir', text:'En 2 semaines, on est passé de 3.8 à 4.4 sur Google. Le smart routing change tout.', stars:5 },
+              { name:'Julie M.', role:'Salon Beauté Pure', text:'Les clients mécontents nous écrivent en privé au lieu de publier. Ça nous sauve la mise.', stars:5 },
+              { name:'Marc D.', role:'Hôtel du Lac', text:'Les réponses IA sont bluffantes. On gagne 2h par semaine sur la gestion des avis.', stars:5 },
             ].map(t => (
               <div key={t.name} style={{ background:'#fafaf8', borderRadius:20, padding:'24px', border:'1px solid #f0f0ec' }}>
                 <div style={{ display:'flex', gap:2, marginBottom:12 }}>
@@ -220,8 +220,8 @@ export default function LandingPage() {
 
       {/* CTA FINAL */}
       <section style={{ maxWidth:1080, margin:'0 auto', padding:'80px 24px', textAlign:'center' }}>
-        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Pret a booster vos avis ?</h2>
-        <p style={{ fontSize:15, color:'#888', margin:'0 0 32px' }}>Rejoignez des centaines de commercants qui font confiance a StarPulse.</p>
+        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Prêt à booster vos avis ?</h2>
+        <p style={{ fontSize:15, color:'#888', margin:'0 0 32px' }}>Rejoignez des centaines de commerçants qui font confiance à StarPulse.</p>
         <Link to="/register" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'16px 36px', borderRadius:14, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:16, fontWeight:600, fontFamily:'"Outfit",system-ui', textDecoration:'none', boxShadow:'0 4px 20px rgba(37,99,235,0.3)', letterSpacing:'-0.01em' }}>
           Commencer gratuitement
         </Link>

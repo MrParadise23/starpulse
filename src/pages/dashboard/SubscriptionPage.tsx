@@ -81,25 +81,25 @@ export default function SubscriptionPage() {
     <div>
       <div className="mb-6">
         <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, letterSpacing:'-0.02em', color:'#1a1a18', margin:'0 0 4px' }}>Abonnement</h1>
-        <p style={{ fontSize:14, color:'#888', margin:0 }}>Gerez votre abonnement et votre facturation</p>
+        <p style={{ fontSize:14, color:'#888', margin:0 }}>Gérez votre abonnement et votre facturation</p>
       </div>
 
       {/* Success/cancel banners */}
-      {checkoutStatus === 'success' && (
+      {checkoutStatus === 'succèss' && (
         <div style={{ background:'#dcfce7', border:'1px solid #bbf7d0', borderRadius:14, padding:'14px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Abonnement active avec succes ! Bienvenue dans StarPulse Pro.</span>
+          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Abonnement active avec succès ! Bienvenue dans StarPulse Pro.</span>
         </div>
       )}
       {checkoutStatus === 'cancelled' && (
         <div style={{ background:'#fef3c7', border:'1px solid #fde68a', borderRadius:14, padding:'14px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:14, color:'#92400e', fontWeight:500 }}>Le paiement a ete annule. Vous pouvez reessayer quand vous voulez.</span>
+          <span style={{ fontSize:14, color:'#92400e', fontWeight:500 }}>Le paiement a été annule. Vous pouvez réessayer quand vous voulez.</span>
         </div>
       )}
-      {nfcStatus === 'success' && (
+      {nfcStatus === 'succèss' && (
         <div style={{ background:'#dcfce7', border:'1px solid #bbf7d0', borderRadius:14, padding:'14px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Commande de tags NFC confirmee ! Vous recevrez un email de confirmation.</span>
+          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Commande de tags NFC confirmée ! Vous recevrez un email de confirmation.</span>
         </div>
       )}
 
@@ -162,7 +162,7 @@ export default function SubscriptionPage() {
             {subscription.status === 'canceling' && (
               <div style={{ background:'#fef3c7', borderRadius:12, padding:'12px 16px', marginBottom:16 }}>
                 <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
-                  Votre abonnement reste actif jusqu'au {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—'}. Vous pouvez le reactiver a tout moment.
+                  Votre abonnement reste actif jusqu'au {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—'}. Vous pouvez le réactiver à tout moment.
                 </p>
               </div>
             )}
@@ -170,7 +170,7 @@ export default function SubscriptionPage() {
             {subscription.status === 'past_due' && (
               <div style={{ background:'#fee2e2', borderRadius:12, padding:'12px 16px', marginBottom:16 }}>
                 <p style={{ fontSize:13, color:'#991b1b', margin:0 }}>
-                  Le dernier paiement a echoue. Veuillez mettre a jour votre moyen de paiement pour eviter l'interruption du service.
+                  Le dernier paiement a échoué. Veuillez mettre a jour votre moyen de paiement pour éviter l'interruption du service.
                 </p>
               </div>
             )}
@@ -184,7 +184,7 @@ export default function SubscriptionPage() {
               onMouseEnter={(e) => { (e.currentTarget).style.borderColor='#ccc'; (e.currentTarget).style.boxShadow='0 2px 8px rgba(0,0,0,0.04)' }}
               onMouseLeave={(e) => { (e.currentTarget).style.borderColor='#e8e8e4'; (e.currentTarget).style.boxShadow='none' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              {portalLoading ? 'Ouverture...' : 'Gerer la facturation (Stripe)'}
+              {portalLoading ? 'Ouverture...' : 'Gérer la facturation (Stripe)'}
             </button>
             <p style={{ fontSize:11, color:'#aaa', marginTop:8 }}>
               Changement de plan, mise a jour du moyen de paiement, annulation, factures...
@@ -199,7 +199,7 @@ export default function SubscriptionPage() {
               </div>
               <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:'0 0 8px' }}>Activez StarPulse Pro</h2>
               <p style={{ fontSize:14, color:'#888', margin:'0 0 4px' }}>
-                {establishment ? 'Choisissez votre formule pour debloquer toutes les fonctionnalites.' : 'Creez d\'abord votre etablissement dans les Reglages.'}
+                {establishment ? 'Choisissez votre formule pour débloquer toutes les fonctionnalités.' : 'Créez d\'abord votre établissement dans les Réglages.'}
               </p>
             </div>
             {establishment && (

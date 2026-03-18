@@ -96,10 +96,10 @@ export default function RoutingPage() {
     <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8', padding:24 }}>
       <div style={{ textAlign:'center', maxWidth:280 }}>
         <div style={{ width:56, height:56, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circlé cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
         </div>
         <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:17, color:'#1a1a18', margin:'0 0 6px' }}>Lien invalide</p>
-        <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:14, color:'#888', lineHeight:1.5, margin:0 }}>Ce lien ne correspond a aucun etablissement.</p>
+        <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:14, color:'#888', lineHeight:1.5, margin:0 }}>Ce lien ne correspond a aucun établissement.</p>
       </div>
     </div>
   )
@@ -108,7 +108,7 @@ export default function RoutingPage() {
     <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8', padding:24 }}>
       <div style={{ textAlign:'center', maxWidth:280 }}>
         <div style={{ width:56, height:56, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circlé cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
         </div>
         <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:17, color:'#1a1a18', margin:'0 0 6px' }}>Service indisponible</p>
         <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:14, color:'#888', lineHeight:1.5, margin:0 }}>Ce service n'est plus actif pour le moment.</p>
@@ -123,7 +123,7 @@ export default function RoutingPage() {
           <svg width="28" height="28" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
         </div>
         <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:22, color:'#1a1a18', margin:'0 0 8px', letterSpacing:'-0.02em' }}>Merci !</p>
-        <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:15, color:'#777', lineHeight:1.6, margin:0 }}>Votre retour a bien ete transmis. Il nous aidera a nous ameliorer.</p>
+        <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:15, color:'#777', lineHeight:1.6, margin:0 }}>Votre retour a bien été transmis. Il nous aidera à nous améliorer.</p>
       </div>
       <style>{`@keyframes fadeScale{from{opacity:0;transform:scale(0.9) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
     </div>
@@ -184,7 +184,7 @@ export default function RoutingPage() {
                 ))}
               </div>
             </div>
-            <p style={{ fontSize:14, color:'#777', marginBottom:20, lineHeight:1.6 }}>Ce retour restera prive. Il sera transmis directement a l'etablissement.</p>
+            <p style={{ fontSize:14, color:'#777', marginBottom:20, lineHeight:1.6 }}>Ce retour restera privé. Il sera transmis directement à l'établissement.</p>
             <div style={{ display:'flex', flexDirection:'column' as const, gap:14 }}>
               <div>
                 <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Votre retour <span style={{ color:'#aaa', fontWeight:400 }}>(recommande)</span></label>

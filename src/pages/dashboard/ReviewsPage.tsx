@@ -183,8 +183,8 @@ export default function ReviewsPage() {
       const isPositive = review.rating && review.rating >= 4
       const name = review.author_name || ''
       replyText = isPositive
-        ? `Merci beaucoup ${name} pour votre retour positif ! Nous sommes ravis que votre experience chez ${est.name} vous ait plu. Au plaisir de vous revoir !`
-        : `Merci ${name} pour votre retour. Nous prenons note de vos remarques et ferons tout pour ameliorer votre prochaine experience chez ${est.name}. N'hesitez pas a nous contacter directement.`
+        ? `Merci beaucoup ${name} pour votre retour positif ! Nous sommes ravis que votre expérience chez ${est.name} vous ait plu. Au plaisir de vous revoir !`
+        : `Merci ${name} pour votre retour. Nous prenons note de vos remarques et ferons tout pour améliorer votre prochaine expérience chez ${est.name}. N'hésitez pas à nous contacter directement.`
     }
 
     await supabase.from('google_reviews').update({
@@ -245,10 +245,10 @@ export default function ReviewsPage() {
   const googleStatus = getGoogleStatus()
 
   const statusConfig = {
-    not_connected: { icon: Link2, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-200', label: 'Non connecte', desc: 'Importez vos avis Google en collant le lien de votre fiche.' },
-    connected: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'Connecte', desc: `Fiche liee : ${establishment?.google_business_name || establishment?.name || 'N/A'}` },
+    not_connected: { icon: Link2, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-200', label: 'Non connecté', desc: 'Importez vos avis Google en collant le lien de votre fiche.' },
+    connected: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'Connecté', desc: `Fiche liée : ${establishment?.google_business_name || establishment?.name || 'N/A'}` },
     pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', label: 'Synchronisation en cours', desc: 'La connexion est en cours de configuration.' },
-    error: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Erreur de connexion', desc: 'La connexion a echoue. Veuillez reconnecter votre compte.' },
+    error: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Erreur de connexion', desc: 'La connexion a échoué. Veuillez reconnecter votre compte.' },
   }
 
   const status = statusConfig[googleStatus]
@@ -256,7 +256,7 @@ export default function ReviewsPage() {
   function getStatusBadge(s: string) {
     switch (s) {
       case 'pending': return { label: 'Non traite', cls: 'bg-amber-100 text-amber-700' }
-      case 'ai_generated': return { label: 'Reponse IA generee', cls: 'bg-blue-100 text-blue-700' }
+      case 'ai_generated': return { label: 'Reponse IA génèree', cls: 'bg-blue-100 text-blue-700' }
       case 'published': return { label: 'Publie', cls: 'bg-emerald-100 text-emerald-700' }
       case 'ignored': return { label: 'Ignore', cls: 'bg-gray-100 text-gray-500' }
       default: return { label: s, cls: 'bg-gray-100 text-gray-600' }
@@ -267,7 +267,7 @@ export default function ReviewsPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-display font-bold text-gray-900">Avis Google</h1>
-        <p className="text-gray-500 text-sm mt-1">Gerez vos avis et repondez avec l'aide de l'IA.</p>
+        <p className="text-gray-500 text-sm mt-1">Gérez vos avis et répondez avec l'aide de l'IA.</p>
       </div>
 
       {/* Section Google Business Profile */}
@@ -288,7 +288,7 @@ export default function ReviewsPage() {
               </div>
               <p className="text-sm text-gray-600">{status.desc}</p>
               {googleStatus === 'connected' && establishment?.google_last_sync && (
-                <p className="text-xs text-gray-400 mt-1">Derniere synchronisation : {new Date(establishment.google_last_sync).toLocaleString('fr-FR')}</p>
+                <p className="text-xs text-gray-400 mt-1">Dernière synchronisation : {new Date(establishment.google_last_sync).toLocaleString('fr-FR')}</p>
               )}
             </div>
           </div>
@@ -409,7 +409,7 @@ export default function ReviewsPage() {
         {([
           { key: 'all' as const, label: 'Tous' },
           { key: 'pending' as const, label: 'Non traites' },
-          { key: 'ai_generated' as const, label: 'IA generee' },
+          { key: 'ai_generated' as const, label: 'IA génèree' },
           { key: 'published' as const, label: 'Publies' },
           { key: 'ignored' as const, label: 'Ignores' },
         ]).map(({ key, label }) => (
@@ -485,7 +485,7 @@ export default function ReviewsPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Edit3 className="w-3.5 h-3.5 text-blue-600" />
-                        <span className="text-xs font-medium text-blue-700">Modifier la reponse</span>
+                        <span className="text-xs font-medium text-blue-700">Modifier la réponse</span>
                       </div>
                       <button onClick={() => { setEditingId(null); setEditText('') }}
                         className="p-1 rounded hover:bg-blue-100">
@@ -513,7 +513,7 @@ export default function ReviewsPage() {
                   <div className="bg-emerald-50/50 rounded-xl p-4 mb-3">
                     <div className="flex items-center gap-1.5 mb-2">
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-xs font-medium text-emerald-700">Reponse publiee</span>
+                      <span className="text-xs font-medium text-emerald-700">Reponse publiée</span>
                       {review.replied_at && (
                         <span className="text-xs text-emerald-500">le {new Date(review.replied_at).toLocaleDateString('fr-FR')}</span>
                       )}
@@ -530,7 +530,7 @@ export default function ReviewsPage() {
                         {generatingId === review.id
                           ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                           : <Sparkles className="w-3.5 h-3.5" />}
-                        Generer une reponse IA
+                        Générer une réponse IA
                       </button>
                     )}
 
@@ -548,7 +548,7 @@ export default function ReviewsPage() {
                         <button onClick={() => generateAiReply(review)} disabled={generatingId === review.id}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 disabled:opacity-50">
                           <RefreshCw className={`w-3.5 h-3.5 ${generatingId === review.id ? 'animate-spin' : ''}`} />
-                          Regenerer
+                          Regénèrer
                         </button>
                         <button onClick={() => publishReply(review)}
                           className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">

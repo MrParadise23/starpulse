@@ -7,8 +7,8 @@ import type { Session } from '@supabase/supabase-js'
 interface DashboardContext { establishment: Establishment | null; session: Session; refreshEstablishments: () => Promise<void> }
 
 const NFC_PACKS = [
-  { type: 'single', label: '1 tag', qty: 1, price: 24.90, unitPrice: '', desc: 'Ideal pour tester' },
-  { type: 'pack3', label: '3 tags', qty: 3, price: 59, unitPrice: '19.67', desc: 'Petit etablissement' },
+  { type: 'single', label: '1 tag', qty: 1, price: 24.90, unitPrice: '', desc: 'Idéal pour tester' },
+  { type: 'pack3', label: '3 tags', qty: 3, price: 59, unitPrice: '19.67', desc: 'Petit établissement' },
   { type: 'pack5', label: '5 tags', qty: 5, price: 89, unitPrice: '17.80', desc: 'Restaurant moyen' },
   { type: 'pack10', label: '10 tags', qty: 10, price: 149, unitPrice: '14.90', desc: 'Multi-zones', popular: true },
   { type: 'pack25', label: '25 tags', qty: 25, price: 299, unitPrice: '11.96', desc: 'Grande surface' },
@@ -34,7 +34,7 @@ export default function NfcShopPage() {
       if (error) throw error
       if (data?.url) window.location.href = data.url
     } catch (err: any) {
-      alert("Erreur : " + (err.message || "Impossible de creer la commande"))
+      alert("Erreur : " + (err.message || "Impossible de créér la commande"))
     }
     setLoading(null)
   }
@@ -43,7 +43,7 @@ export default function NfcShopPage() {
     <div>
       <div className="mb-6">
         <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, letterSpacing:'-0.02em', color:'#1a1a18', margin:'0 0 4px' }}>Boutique NFC</h1>
-        <p style={{ fontSize:14, color:'#888', margin:0 }}>Commandez vos tags NFC pre-encodes, prets a coller.</p>
+        <p style={{ fontSize:14, color:'#888', margin:0 }}>Commandez vos tags NFC pré-encodés, prêts à coller.</p>
       </div>
 
       {/* Info banner */}
@@ -53,11 +53,11 @@ export default function NfcShopPage() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/><path d="M12.91 4.1a16.1 16.1 0 010 15.8"/><path d="M16.37 2a20.16 20.16 0 010 20"/></svg>
           </div>
           <div>
-            <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:'0 0 4px' }}>Comment ca marche ?</p>
+            <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:'0 0 4px' }}>Comment ça marche ?</p>
             <p style={{ fontSize:13, color:'#666', margin:0, lineHeight:1.6 }}>
-              Chaque tag NFC est pre-encode avec un lien unique vers votre page d'avis StarPulse. 
-              Collez-les sur vos tables, comptoir ou menu. Le client pose son telephone dessus → il arrive directement sur votre smart routing.
-              Livraison en 3-5 jours ouvres.
+              Chaque tag NFC est pré-encodé avec un lien unique vers votre page d'avis StarPulse. 
+              Collez-les sur vos tables, comptoir ou menu. Le client pose son téléphone dessus → il arrive directement sur votre smart routing.
+              Livraison en 3-5 jours ouvrés.
             </p>
           </div>
         </div>
@@ -116,12 +116,12 @@ export default function NfcShopPage() {
 
       {/* FAQ */}
       <div style={{ background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px' }}>
-        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>Questions frequentes</h2>
+        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>Questions fréquentes</h2>
         {[
-          { q: 'Les tags sont-ils compatibles avec tous les telephones ?', a: 'Oui, tous les smartphones recents (iPhone XS+ et Android avec NFC) peuvent lire nos tags sans application.' },
-          { q: 'Comment activer un tag NFC ?', a: 'Les tags arrivent pre-encodes. Collez-les et ils sont immediatement operationnels — aucune configuration necessaire.' },
-          { q: 'Puis-je commander pour plusieurs etablissements ?', a: 'Oui, vous pouvez passer plusieurs commandes. Chaque tag sera lie a votre compte et configurable depuis le dashboard.' },
-          { q: 'Quel est le delai de livraison ?', a: '3 a 5 jours ouvres en France metropolitaine. Livraison egalement disponible en Belgique, Suisse et Luxembourg.' },
+          { q: 'Les tags sont-ils compatibles avec tous les téléphones ?', a: 'Oui, tous les smartphones récents (iPhone XS+ et Android avec NFC) peuvent lire nos tags sans application.' },
+          { q: 'Comment activer un tag NFC ?', a: 'Les tags arrivent pré-encodés. Collez-les et ils sont immédiatement opérationnels — aucune configuration nécessaire.' },
+          { q: 'Puis-je commander pour plusieurs établissements ?', a: 'Oui, vous pouvez passer plusieurs commandes. Chaque tag sera lié à votre compte et configurable depuis le dashboard.' },
+          { q: 'Quel est le délai de livraison ?', a: '3 à 5 jours ouvrés en France métropolitaine. Livraison également disponible en Belgique, Suisse et Luxembourg.' },
         ].map((item, i) => (
           <div key={i} style={{ padding:'12px 0', borderBottom: i < 3 ? '1px solid #f5f5f0' : 'none' }}>
             <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:'0 0 4px' }}>{item.q}</p>

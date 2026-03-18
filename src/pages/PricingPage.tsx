@@ -96,7 +96,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
               Un prix simple,<br/>sans surprise
             </h2>
             <p style={{ fontSize:15, color:'#888', margin:'0 0 28px', maxWidth:480, marginLeft:'auto', marginRight:'auto' }}>
-              Tout inclus. Pas de frais caches. Essai gratuit 14 jours. Annulez quand vous voulez.
+              Tout inclus. Pas de frais cachés. Essai gratuit 14 jours. Annulez quand vous voulez.
             </p>
           </>
         )}
@@ -155,15 +155,15 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
                 soit ~20,75 EUR/mois au lieu de 29 EUR
               </p>
             )}
-            <p style={{ fontSize:13, color:'#aaa', marginBottom:24 }}>par etablissement</p>
+            <p style={{ fontSize:13, color:'#aaa', marginBottom:24 }}>par établissement</p>
 
             <div style={{ textAlign:'left', marginBottom:24 }}>
               {[
-                'Smart routing illimite (NFC + QR)',
-                'QR codes illimites',
-                'Reponses IA (OpenAI GPT-4)',
-                'Dashboard temps reel',
-                'Retours prives + recontact client',
+                'Smart routing illimité (NFC + QR)',
+                'QR codes illimités',
+                'Réponses IA (OpenAI GPT-4)',
+                'Dashboard temps réel',
+                'Retours privés + recontact client',
                 'Programme affiliation 20%',
                 'Essai gratuit 14 jours',
                 ...(yearly ? ['1 tag NFC offert avec votre abonnement'] : []),
@@ -188,7 +188,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
               {loading ? 'Redirection...' : session ? 'S\'abonner maintenant' : 'Commencer l\'essai gratuit'}
             </button>
             <p style={{ fontSize:12, color:'#bbb', marginTop:12 }}>
-              {session ? 'Paiement securise par Stripe. Annulez a tout moment.' : 'Essai gratuit 14 jours. Aucune carte requise a l\'inscription.'}
+              {session ? 'Paiement sécurisé par Stripe. Annulez à tout moment.' : 'Essai gratuit 14 jours. Aucune carte requise à l\'inscription.'}
             </p>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
           Tags NFC
         </h3>
         <p style={{ fontSize:14, color:'#888', margin:'0 0 28px', maxWidth:420, marginLeft:'auto', marginRight:'auto' }}>
-          Tags pre-encodes, prets a coller. Livraison en 3-5 jours ouvrés.
+          Tags pré-encodés, prêts à coller. Livraison en 3-5 jours ouvrés.
         </p>
       </div>
 
