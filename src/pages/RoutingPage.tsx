@@ -96,7 +96,7 @@ export default function RoutingPage() {
     <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8', padding:24 }}>
       <div style={{ textAlign:'center', maxWidth:280 }}>
         <div style={{ width:56, height:56, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circlé cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
         </div>
         <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:17, color:'#1a1a18', margin:'0 0 6px' }}>Lien invalide</p>
         <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:14, color:'#888', lineHeight:1.5, margin:0 }}>Ce lien ne correspond a aucun établissement.</p>
@@ -108,7 +108,7 @@ export default function RoutingPage() {
     <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8', padding:24 }}>
       <div style={{ textAlign:'center', maxWidth:280 }}>
         <div style={{ width:56, height:56, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circlé cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
         </div>
         <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:17, color:'#1a1a18', margin:'0 0 6px' }}>Service indisponible</p>
         <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:14, color:'#888', lineHeight:1.5, margin:0 }}>Ce service n'est plus actif pour le moment.</p>

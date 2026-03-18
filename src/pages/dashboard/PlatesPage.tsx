@@ -80,7 +80,7 @@ export default function PlatesPage() {
   if (!establishment) return (
     <div>
       <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em' }}>Tags NFC & QR Codes</h1>
-      <p style={{ color:'#888', fontSize:14, marginTop:4 }}>Configurez d'abord votre etablissement dans les Reglages.</p>
+      <p style={{ color:'#888', fontSize:14, marginTop:4 }}>Configurez d'abord votre établissement dans les Réglages.</p>
     </div>
   )
 
@@ -174,7 +174,7 @@ export default function PlatesPage() {
           <svg width="18" height="18" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" transform="scale(0.75)"/></svg>
           <div>
             <p style={{ fontSize:13, fontWeight:600, color:'#92400e', margin:'0 0 2px' }}>Lien de redirection non configure</p>
-            <p style={{ fontSize:12, color:'#b45309', margin:0 }}>Allez dans Reglages pour configurer votre lien Google.</p>
+            <p style={{ fontSize:12, color:'#b45309', margin:0 }}>Allez dans Réglages pour configurer votre lien Google.</p>
           </div>
         </div>
       )}
@@ -209,7 +209,7 @@ export default function PlatesPage() {
                 QR Codes
               </h2>
               <button onClick={() => setShowCreateQr(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1px solid #e8e8e4', background:'#fff', fontSize:12, fontWeight:500, color:'#2563eb', cursor:'pointer' }}>
-                + Creer un QR code
+                + Créer un QR code
               </button>
             </div>
 
@@ -220,7 +220,7 @@ export default function PlatesPage() {
                   style={{ width:'100%', border:'1.5px solid #e8e8e4', borderRadius:10, padding:'10px 12px', fontSize:13, fontFamily:'inherit', outline:'none', marginBottom:10 }}/>
                 <div style={{ display:'flex', gap:8 }}>
                   <button onClick={createQrCode} disabled={creating} style={{ padding:'8px 18px', borderRadius:10, border:'none', background:'#2563eb', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'"Outfit",system-ui' }}>
-                    {creating ? 'Creation...' : 'Creer'}
+                    {creating ? 'Creation...' : 'Créer'}
                   </button>
                   <button onClick={() => setShowCreateQr(false)} style={{ padding:'8px 18px', borderRadius:10, border:'1px solid #e8e8e4', background:'#fff', fontSize:13, color:'#666', cursor:'pointer' }}>Annuler</button>
                 </div>
@@ -230,9 +230,9 @@ export default function PlatesPage() {
             {qrPlates.length === 0 && !showCreateQr ? (
               <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:40, textAlign:'center' }}>
                 <p style={{ fontSize:14, fontWeight:500, color:'#555', marginBottom:4 }}>Aucun QR code</p>
-                <p style={{ fontSize:13, color:'#999', marginBottom:16 }}>Creez votre premier QR code pour commencer.</p>
+                <p style={{ fontSize:13, color:'#999', marginBottom:16 }}>Créez votre premier QR code pour commencer.</p>
                 <button onClick={() => setShowCreateQr(true)} style={{ padding:'10px 22px', borderRadius:12, border:'none', background:'#2563eb', color:'#fff', fontSize:14, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:'pointer', boxShadow:'0 2px 8px rgba(37,99,235,0.25)' }}>
-                  + Creer mon premier QR code
+                  + Créer mon premier QR code
                 </button>
               </div>
             ) : (
@@ -246,7 +246,7 @@ export default function PlatesPage() {
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }} onClick={() => setPreviewPlate(null)}>
           <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:380, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px', borderBottom:'1px solid #f0f0ec', background:'#fafaf8' }}>
-              <span style={{ fontSize:13, fontWeight:500, color:'#666' }}>Apercu client</span>
+              <span style={{ fontSize:13, fontWeight:500, color:'#666' }}>Aperçu client</span>
               <button onClick={() => setPreviewPlate(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'#999', padding:4 }}>
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="4" x2="4" y2="12"/><line x1="4" y1="4" x2="12" y2="12"/></svg>
               </button>

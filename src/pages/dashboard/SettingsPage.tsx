@@ -146,7 +146,7 @@ export default function SettingsPage() {
               <img src={logoUrl} alt="Logo" style={{ width:72, height:72, borderRadius:16, objectFit:'cover', border:'1px solid #f0f0ec' }}/>
             ) : (
               <div style={{ width:72, height:72, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', border:'1px dashed #ddd' }}>
-                <svg width="24" height="24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circlé cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <svg width="24" height="24" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
               </div>
             )}
             <div style={{ flex:1 }}>
