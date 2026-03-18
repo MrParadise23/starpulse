@@ -9,6 +9,92 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// Helper: calculate and create affiliate commission
+async function processAffiliateCommission(userId: string, amountPaid: number, periodStart: number, periodEnd: number) {
+  if (amountPaid <= 0) {
+    console.log("Skipping commission: amount is 0 (trial)")
+    return
+  }
+
+  // Find if this user was referred by someone
+  const { data: referral } = await supabase
+    .from("referrals")
+    .select("id, affiliate_id, commission_end_date, status")
+    .eq("referred_user_id", userId)
+    .eq("status", "active")
+    .single()
+
+  if (!referral) {
+    console.log(`No active referral found for user ${userId}`)
+    return
+  }
+
+  // Check if commission period is still valid
+  if (referral.commission_end_date && new Date(referral.commission_end_date) < new Date()) {
+    console.log(`Commission period expired for referral ${referral.id}`)
+    return
+  }
+
+  // Get affiliate's commission rate
+  const { data: affiliate } = await supabase
+    .from("affiliates")
+    .select("id, commission_rate")
+    .eq("id", referral.affiliate_id)
+    .single()
+
+  if (!affiliate) return
+
+  const commissionAmount = Math.round(amountPaid * affiliate.commission_rate * 100) / 100
+
+  // Check if commission already exists for this period (avoid duplicates)
+  const pStart = new Date(periodStart * 1000).toISOString().split("T")[0]
+  const pEnd = new Date(periodEnd * 1000).toISOString().split("T")[0]
+
+  const { data: existing } = await supabase
+    .from("commissions")
+    .select("id")
+    .eq("referral_id", referral.id)
+    .eq("period_start", pStart)
+    .eq("period_end", pEnd)
+    .single()
+
+  if (existing) {
+    console.log(`Commission already exists for referral ${referral.id}, period ${pStart} - ${pEnd}`)
+    return
+  }
+
+  // Create commission
+  const { error: commError } = await supabase
+    .from("commissions")
+    .insert({
+      affiliate_id: affiliate.id,
+      referral_id: referral.id,
+      amount: commissionAmount,
+      period_start: pStart,
+      period_end: pEnd,
+      status: "pending",
+    })
+
+  if (commError) {
+    console.error("Error creating commission:", commError)
+    return
+  }
+
+  // Update affiliate total_earned
+  await supabase
+    .from("affiliates")
+    .update({ total_earned: affiliate.commission_rate }) // Will be replaced by RPC
+    .eq("id", affiliate.id)
+
+  // Use raw SQL to increment
+  await supabase.rpc("increment_affiliate_earnings", {
+    aff_id: affiliate.id,
+    earn_amount: commissionAmount,
+  })
+
+  console.log(`Commission created: ${commissionAmount} EUR for affiliate ${affiliate.id} (referral ${referral.id})`)
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature" } })
@@ -38,7 +124,6 @@ serve(async (req) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
 
-        // Subscription checkout
         if (session.mode === "subscription") {
           const userId = session.metadata?.user_id
           const establishmentId = session.metadata?.establishment_id
@@ -49,16 +134,13 @@ serve(async (req) => {
             break
           }
 
-          // Update profile with stripe_customer_id
           await supabase
             .from("profiles")
             .update({ stripe_customer_id: session.customer as string })
             .eq("id", userId)
 
-          // Retrieve the subscription from Stripe
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
 
-          // Upsert subscription in DB
           const { error } = await supabase
             .from("subscriptions")
             .upsert({
@@ -82,14 +164,17 @@ serve(async (req) => {
 
           if (error) console.error("Error upserting subscription:", error)
           else console.log(`Subscription created for user ${userId}, plan: ${planInterval}`)
+
+          // Link referral to establishment
+          await supabase
+            .from("referrals")
+            .update({ referred_establishment_id: establishmentId })
+            .eq("referred_user_id", userId)
+            .is("referred_establishment_id", null)
         }
 
-        // One-time payment (NFC tags)
         if (session.mode === "payment") {
-          const userId = session.metadata?.user_id
-          const packType = session.metadata?.pack_type
           const orderId = session.metadata?.order_id
-
           if (orderId) {
             await supabase
               .from("nfc_orders")
@@ -99,14 +184,13 @@ serve(async (req) => {
                 updated_at: new Date().toISOString(),
               })
               .eq("id", orderId)
-
             console.log(`NFC order ${orderId} marked as paid`)
           }
         }
         break
       }
 
-      // ===== INVOICE PAID (recurring) =====
+      // ===== INVOICE PAID =====
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice
         if (invoice.subscription) {
@@ -121,6 +205,18 @@ serve(async (req) => {
 
           if (error) console.error("Error updating subscription on invoice.paid:", error)
           else console.log(`Subscription ${invoice.subscription} renewed`)
+
+          // === AFFILIATE COMMISSION ===
+          const { data: sub } = await supabase
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_subscription_id", invoice.subscription as string)
+            .single()
+
+          if (sub) {
+            const amountPaid = (invoice.amount_paid || 0) / 100
+            await processAffiliateCommission(sub.user_id, amountPaid, invoice.period_start, invoice.period_end)
+          }
         }
         break
       }
@@ -133,7 +229,6 @@ serve(async (req) => {
             .from("subscriptions")
             .update({ status: "past_due" })
             .eq("stripe_subscription_id", invoice.subscription as string)
-
           console.log(`Subscription ${invoice.subscription} marked as past_due`)
         }
         break
@@ -143,7 +238,6 @@ serve(async (req) => {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription
         const cancelAtPeriodEnd = subscription.cancel_at_period_end
-
         await supabase
           .from("subscriptions")
           .update({
@@ -153,8 +247,7 @@ serve(async (req) => {
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           })
           .eq("stripe_subscription_id", subscription.id)
-
-        console.log(`Subscription ${subscription.id} updated, status: ${subscription.status}, cancel_at_period_end: ${cancelAtPeriodEnd}`)
+        console.log(`Subscription ${subscription.id} updated`)
         break
       }
 
@@ -163,12 +256,8 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription
         await supabase
           .from("subscriptions")
-          .update({
-            status: "cancelled",
-            cancelled_at: new Date().toISOString(),
-          })
+          .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
           .eq("stripe_subscription_id", subscription.id)
-
         console.log(`Subscription ${subscription.id} cancelled`)
         break
       }
