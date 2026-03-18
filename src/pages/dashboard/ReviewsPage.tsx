@@ -70,16 +70,6 @@ export default function ReviewsPage() {
     // Si rien ne marche, on accepte quand même l'URL et on laisse passer
     // La fonction va utiliser un place_id générique pour le mode démo
     return 'demo_place_id'
-  }    if (url.startsWith('ChIJ') || url.startsWith('GhIJ')) {
-      return url.trim()
-    }
-    const placeIdMatch = url.match(/place_id=([^&]+)/)
-    if (placeIdMatch) return placeIdMatch[1]
-    const longMatch = url.match(/!1s([^!]+)/)
-    if (longMatch) return longMatch[1]
-    const dataMatch = url.match(/data=[^!]*!1s([^!&]+)/)
-    if (dataMatch) return dataMatch[1]
-    return null
   }
 
 // Importer les avis depuis Google Maps
@@ -149,69 +139,6 @@ export default function ReviewsPage() {
         await loadReviews()
         
         // Fermer la modal après 2s
-        setTimeout(() => {
-          setShowImportModal(false)
-          setGoogleMapsUrl('')
-          setImportSuccess('')
-        }, 2000)
-      } else {
-        setImportError("Aucun avis trouvé pour cet établissement.")
-      }
-
-    } catch (err: any) {
-      console.error('Erreur import:', err)
-      setImportError(err.message || "Erreur lors de l'import. Vérifiez l'URL et réessayez.")
-    }
-
-    setImporting(false)
-  }    setImporting(true)
-    setImportError('')
-    setImportSuccess('')
-
-    const placeId = extractPlaceId(googleMapsUrl)
-    
-    if (!placeId) {
-      setImportError("Impossible d'extraire le Place ID. Copiez l'URL complète de votre fiche Google Maps ou entrez directement le Place ID.")
-      setImporting(false)
-      return
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('import-google-reviews', {
-        body: {
-          place_id: placeId,
-          establishment_id: establishment!.id
-        }
-      })
-
-      if (error) throw error
-
-      if (data.reviews && data.reviews.length > 0) {
-        for (const review of data.reviews) {
-          await supabase
-            .from('google_reviews')
-            .upsert({
-              ...review,
-              establishment_id: establishment!.id
-            }, {
-              onConflict: 'google_review_id',
-              ignoreDuplicates: true
-            })
-        }
-
-        await supabase
-          .from('establishments')
-          .update({
-            google_place_id: placeId,
-            google_connection_status: 'connected',
-            google_last_sync: new Date().toISOString()
-          })
-          .eq('id', establishment!.id)
-
-        setImportSuccess(`${data.reviews.length} avis importés avec succès !${data.mode === 'demo' ? ' (Mode démo)' : ''}`)
-        
-        await loadReviews()
-        
         setTimeout(() => {
           setShowImportModal(false)
           setGoogleMapsUrl('')
