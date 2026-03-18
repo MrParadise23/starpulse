@@ -14,8 +14,6 @@ import RetourPrivesPage from './pages/dashboard/RetourPrivesPage'
 import ReviewsPage from './pages/dashboard/ReviewsPage'
 import SettingsPage from './pages/dashboard/SettingsPage'
 import AffiliatePage from './pages/dashboard/AffiliatePage'
-import SubscriptionPage from './pages/dashboard/SubscriptionPage'
-import PricingPage from './pages/PricingPage'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -50,8 +48,6 @@ export default function App() {
       {/* Auth */}
       <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={session ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
-      {/* Pricing public */}
-      <Route path="/pricing" element={<PricingPage session={session} />} />
       {/* Dashboard */}
       <Route path="/dashboard" element={
         <ProtectedRoute session={session}><DashboardLayout session={session!} /></ProtectedRoute>
@@ -61,7 +57,6 @@ export default function App() {
         <Route path="retours" element={<RetourPrivesPage />} />
         <Route path="reviews" element={<ReviewsPage />} />
         <Route path="affiliate" element={<AffiliatePage />} />
-        <Route path="subscription" element={<SubscriptionPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       {/* Fallback */}

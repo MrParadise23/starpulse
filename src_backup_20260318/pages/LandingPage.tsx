@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
 
 export default function LandingPage() {
-  const [yearly, setYearly] = useState(false)
   return (
     <div style={{ fontFamily:'"DM Sans",system-ui,sans-serif', color:'#1a1a18', background:'#fafaf8' }}>
 
@@ -16,7 +14,6 @@ export default function LandingPage() {
             <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, letterSpacing:'-0.02em' }}>StarPulse</span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <a href="#pricing" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 12px', borderRadius:10 }}>Tarifs</a>
             <Link to="/login" style={{ fontSize:14, fontWeight:500, color:'#666', textDecoration:'none', padding:'8px 16px', borderRadius:10, transition:'color 0.15s' }}>Connexion</Link>
             <Link to="/register" style={{ fontSize:14, fontWeight:600, color:'#fff', textDecoration:'none', padding:'9px 20px', borderRadius:10, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', boxShadow:'0 2px 8px rgba(37,99,235,0.25)', transition:'transform 0.1s', fontFamily:'"Outfit",system-ui' }}>Commencer</Link>
           </div>
@@ -111,83 +108,41 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" style={{ maxWidth:1080, margin:'0 auto', padding:'80px 24px' }}>
-        <div style={{ textAlign:'center', marginBottom:32 }}>
+      <section style={{ maxWidth:1080, margin:'0 auto', padding:'80px 24px' }}>
+        <div style={{ textAlign:'center', marginBottom:48 }}>
           <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Un prix simple, sans surprise</h2>
-          <p style={{ fontSize:15, color:'#888', margin:'0 0 28px' }}>Tout inclus. Pas de frais caches. Essai gratuit 14 jours. Annulez quand vous voulez.</p>
-
-          {/* Toggle */}
-          <div style={{ display:'inline-flex', alignItems:'center', gap:0, background:'#f0f0ec', borderRadius:14, padding:4 }}>
-            <button onClick={() => setYearly(false)}
-              style={{ padding:'10px 24px', borderRadius:11, border:'none', fontSize:14, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:'pointer', transition:'all 0.2s', background: !yearly?'#fff':'transparent', color: !yearly?'#1a1a18':'#888', boxShadow: !yearly?'0 2px 8px rgba(0,0,0,0.06)':'none' }}>
-              Mensuel
-            </button>
-            <button onClick={() => setYearly(true)}
-              style={{ padding:'10px 24px', borderRadius:11, border:'none', fontSize:14, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:'pointer', transition:'all 0.2s', background: yearly?'#fff':'transparent', color: yearly?'#1a1a18':'#888', boxShadow: yearly?'0 2px 8px rgba(0,0,0,0.06)':'none' }}>
-              Annuel
-              <span style={{ display:'inline-block', marginLeft:6, padding:'2px 8px', borderRadius:6, background:'#dcfce7', color:'#16a34a', fontSize:11, fontWeight:700 }}>-28%</span>
-            </button>
-          </div>
+          <p style={{ fontSize:15, color:'#888', margin:0 }}>Tout inclus. Pas de frais caches. Annulez quand vous voulez.</p>
         </div>
-
-        <div style={{ maxWidth:420, margin:'0 auto' }}>
-          <div style={{ background:'#fff', borderRadius:24, border:'2px solid #2563eb', padding:'36px 32px', textAlign:'center', boxShadow:'0 8px 32px rgba(37,99,235,0.1)', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', top:-60, right:-60, width:200, height:200, borderRadius:'50%', background:'rgba(37,99,235,0.03)', pointerEvents:'none' }}/>
-            <div style={{ position:'relative' }}>
-              <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:16, background:'rgba(37,99,235,0.06)', fontSize:12, fontWeight:600, color:'#2563eb', marginBottom:16, fontFamily:'"Outfit",system-ui' }}>{yearly ? 'MEILLEURE OFFRE' : 'RECOMMANDE'}</div>
-              <h3 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, margin:'0 0 16px' }}>StarPulse Pro</h3>
-              <div style={{ display:'flex', alignItems:'baseline', justifyContent:'center', gap:4, marginBottom:4 }}>
-                <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:52, letterSpacing:'-0.04em', lineHeight:1 }}>{yearly ? '249' : '29'}</span>
-                <span style={{ fontSize:18, fontWeight:600, color:'#888' }}>EUR{yearly ? '/an' : '/mois'}</span>
-              </div>
-              {yearly && <p style={{ fontSize:13, color:'#16a34a', fontWeight:500, marginBottom:4 }}>soit ~20,75 EUR/mois au lieu de 29 EUR</p>}
-              <p style={{ fontSize:13, color:'#aaa', marginBottom:28 }}>par etablissement</p>
-              <div style={{ textAlign:'left', marginBottom:28 }}>
-                {[
-                  'Smart routing illimite (NFC + QR)',
-                  'QR codes illimites',
-                  'Reponses IA (OpenAI GPT-4)',
-                  'Dashboard temps reel',
-                  'Retours prives + recontact client',
-                  'Programme affiliation 20%',
-                  'Essai gratuit 14 jours',
-                  ...(yearly ? ['1 tag NFC offert avec votre abonnement'] : []),
-                  'Support prioritaire',
-                ].map((f, i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid #f5f5f0' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={f.includes('offert') ? '#2563eb' : '#059669'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                    <span style={{ fontSize:14, color:'#555', fontWeight: f.includes('offert') ? 600 : 400 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <Link to="/register" style={{ display:'block', padding:'15px 0', borderRadius:14, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:16, fontWeight:600, fontFamily:'"Outfit",system-ui', textDecoration:'none', textAlign:'center', boxShadow:'0 4px 16px rgba(37,99,235,0.3)', letterSpacing:'-0.01em' }}>
-                Commencer l'essai gratuit
-              </Link>
-              <p style={{ fontSize:12, color:'#bbb', marginTop:12 }}>Aucune carte bancaire requise a l'inscription.</p>
+        <div style={{ maxWidth:400, margin:'0 auto' }}>
+          <div style={{ background:'#fff', borderRadius:24, border:'2px solid #2563eb', padding:'36px 32px', textAlign:'center', boxShadow:'0 8px 32px rgba(37,99,235,0.1)' }}>
+            <div style={{ display:'inline-block', padding:'4px 14px', borderRadius:16, background:'rgba(37,99,235,0.06)', fontSize:12, fontWeight:600, color:'#2563eb', marginBottom:16, fontFamily:'"Outfit",system-ui' }}>RECOMMANDE</div>
+            <h3 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, margin:'0 0 16px' }}>StarPulse Pro</h3>
+            <div style={{ display:'flex', alignItems:'baseline', justifyContent:'center', gap:4, marginBottom:8 }}>
+              <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:48, letterSpacing:'-0.03em' }}>29</span>
+              <span style={{ fontSize:18, fontWeight:600, color:'#888' }}>EUR/mois</span>
             </div>
-          </div>
-        </div>
-
-        {/* NFC Tags */}
-        <div style={{ textAlign:'center', marginTop:56, marginBottom:24 }}>
-          <h3 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:22, letterSpacing:'-0.02em', margin:'0 0 8px' }}>Tags NFC</h3>
-          <p style={{ fontSize:14, color:'#888', margin:0 }}>Pre-encodes, prets a coller. Livraison en 3-5 jours.</p>
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(155px, 1fr))', gap:12, maxWidth:700, margin:'0 auto' }}>
-          {[
-            { label:'1 tag', price:'24.90', unit:'' },
-            { label:'3 tags', price:'59', unit:'19.67' },
-            { label:'5 tags', price:'89', unit:'17.80' },
-            { label:'10 tags', price:'149', unit:'14.90', pop:true },
-            { label:'25 tags', price:'299', unit:'11.96' },
-          ].map((p, i) => (
-            <div key={i} style={{ background:'#fff', borderRadius:16, padding:'18px 14px', textAlign:'center', border: p.pop ? '2px solid #2563eb' : '1px solid #f0f0ec', position:'relative' }}>
-              {p.pop && <div style={{ position:'absolute', top:-9, left:'50%', transform:'translateX(-50%)', padding:'2px 10px', borderRadius:6, background:'#2563eb', color:'#fff', fontSize:10, fontWeight:700, fontFamily:'"Outfit",system-ui' }}>POPULAIRE</div>}
-              <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:13, color:'#1a1a18', marginBottom:4 }}>{p.label}</div>
-              <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:26, color:'#1a1a18', letterSpacing:'-0.03em' }}>{p.price}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}>EUR</span></div>
-              {p.unit && <p style={{ fontSize:11, color:'#16a34a', fontWeight:500, margin:'2px 0 0' }}>{p.unit} EUR/tag</p>}
+            <p style={{ fontSize:13, color:'#aaa', marginBottom:28 }}>par etablissement</p>
+            <div style={{ textAlign:'left', marginBottom:28 }}>
+              {[
+                'Smart routing illimite',
+                'QR codes & NFC illimites',
+                'Reponses IA generees par OpenAI',
+                'Dashboard temps reel',
+                'Retours prives + recontact',
+                'Programme affiliation 20%',
+                'Support prioritaire',
+              ].map(f => (
+                <div key={f} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:'1px solid #f5f5f0' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  <span style={{ fontSize:14, color:'#555' }}>{f}</span>
+                </div>
+              ))}
             </div>
-          ))}
+            <Link to="/register" style={{ display:'block', padding:'15px 0', borderRadius:14, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:16, fontWeight:600, fontFamily:'"Outfit",system-ui', textDecoration:'none', textAlign:'center', boxShadow:'0 4px 16px rgba(37,99,235,0.3)', letterSpacing:'-0.01em' }}>
+              Commencer maintenant
+            </Link>
+            <p style={{ fontSize:12, color:'#bbb', marginTop:12 }}>Essai gratuit inclus. Sans engagement.</p>
+          </div>
         </div>
       </section>
 
