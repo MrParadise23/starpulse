@@ -176,14 +176,17 @@ export default function SettingsPage() {
 
         {/* Smart Routing (CDC 7.3) */}
         <section className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h2 className="font-display font-semibold text-gray-900 mb-4">Smart Routing</h2>
+          <h2 className="font-display font-semibold text-gray-900 mb-2">Smart Routing</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Configurez le comportement quand un client scanne votre QR code ou tag NFC.
+          </p>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Lien public de redirection (Google, TripAdvisor, etc.)</label>
               <input type="url" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)}
                 placeholder="https://g.page/r/votre-restaurant/review"
                 className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <p className="text-xs text-gray-400 mt-1">Les clients satisfaits seront rediriges instantanement vers ce lien. Google conseille.</p>
+              <p className="text-xs text-gray-400 mt-1">Les clients satisfaits seront rediriges instantanement vers ce lien.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Question affichee au client</label>
@@ -219,6 +222,20 @@ export default function SettingsPage() {
                   <span className="text-xs text-gray-700">{positiveRange} etoiles : <span className="font-medium text-emerald-700">Redirection vers le lien public</span></span>
                 </div>
               </div>
+            </div>
+
+            {/* Apercu + lien QR codes */}
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+              <p className="text-xs font-medium text-blue-900 mb-2">Comment ca marche ?</p>
+              <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside mb-3">
+                <li>Creez un QR code dans <strong>Tags NFC & QR</strong></li>
+                <li>Imprimez-le et placez-le dans votre etablissement</li>
+                <li>Le client scanne &rarr; voit les etoiles &rarr; est redirige selon sa note</li>
+              </ol>
+              <a href="/dashboard/plates"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-900">
+                Voir mes QR codes &rarr;
+              </a>
             </div>
           </div>
         </section>
