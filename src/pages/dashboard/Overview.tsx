@@ -139,10 +139,10 @@ export default function Overview() {
           onMouseLeave={(e) => { (e.target as HTMLElement).style.borderColor = '#e8e8e4'; (e.target as HTMLElement).style.color = '#555' }}>
           Importer des avis
         </Link>
-        <Link to="/dashboard/settings" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid #e8e8e4', background: '#fff', fontSize: 13, fontWeight: 500, color: '#555', textDecoration: 'none', transition: 'all 0.15s' }}
+        <Link to="/dashboard/nfc-shop" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid rgba(124,58,237,0.2)', background: 'rgba(124,58,237,0.04)', fontSize: 13, fontWeight: 500, color: '#7c3aed', textDecoration: 'none', transition: 'all 0.15s' }}
           onMouseEnter={(e) => { (e.target as HTMLElement).style.borderColor = '#2563eb'; (e.target as HTMLElement).style.color = '#2563eb' }}
           onMouseLeave={(e) => { (e.target as HTMLElement).style.borderColor = '#e8e8e4'; (e.target as HTMLElement).style.color = '#555' }}>
-          Reglages
+          Commander des tags NFC
         </Link>
       </div>
 
