@@ -129,20 +129,22 @@ export default function SubscriptionPage() {
             <div style={{ background:'#f5f5f0', borderRadius:14, padding:'16px 20px', marginBottom:16 }}>
               {subscription.status === 'trialing' && subscription.trial_ends_at && (
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                  <span style={{ fontSize:13, color:'#666' }}>Fin de l'essai gratuit</span>
+                  <span style={{ fontSize:13, color:'#666' }}>Essai gratuit jusqu'au</span>
                   <span style={{ fontSize:13, fontWeight:600, color:'#2563eb' }}>
                     {new Date(subscription.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
                   </span>
                 </div>
               )}
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                <span style={{ fontSize:13, color:'#666' }}>Période actuelle</span>
-                <span style={{ fontSize:13, color:'#555' }}>
-                  {subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleDateString('fr-FR') : '-'}
-                  {' → '}
-                  {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR') : '-'}
-                </span>
-              </div>
+              {subscription.status !== 'trialing' && (
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                  <span style={{ fontSize:13, color:'#666' }}>Période actuelle</span>
+                  <span style={{ fontSize:13, color:'#555' }}>
+                    {subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleDateString('fr-FR') : '-'}
+                    {' → '}
+                    {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR') : '-'}
+                  </span>
+                </div>
+              )}
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
                 <span style={{ fontSize:13, color:'#666' }}>Formule</span>
                 <span style={{ fontSize:13, fontWeight:500, color:'#555' }}>
@@ -151,7 +153,7 @@ export default function SubscriptionPage() {
               </div>
               {subscription.cancelled_at && (
                 <div style={{ display:'flex', justifyContent:'space-between' }}>
-                  <span style={{ fontSize:13, color:'#666' }}>Annulation demandee le</span>
+                  <span style={{ fontSize:13, color:'#666' }}>Annulation demandée le</span>
                   <span style={{ fontSize:13, color:'#d97706', fontWeight:500 }}>
                     {new Date(subscription.cancelled_at).toLocaleDateString('fr-FR')}
                   </span>

@@ -114,7 +114,7 @@ export default function LandingPage() {
       <section id="pricing" style={{ maxWidth:1080, margin:'0 auto', padding:'80px 24px' }}>
         <div style={{ textAlign:'center', marginBottom:32 }}>
           <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:32, letterSpacing:'-0.02em', margin:'0 0 12px' }}>Un prix simple, sans surprise</h2>
-          <p style={{ fontSize:15, color:'#888', margin:'0 0 28px' }}>Tout inclus. Pas de frais cachés. Essai gratuit 14 jours. Annulez quand vous voulez.</p>
+          <p style={{ fontSize:15, color:'#888', margin:'0 0 28px' }}>Tout inclus. Pas de frais cachés. Essai gratuit 7 jours. Annulez quand vous voulez.</p>
 
           {/* Toggle */}
           <div style={{ display:'inline-flex', alignItems:'center', gap:0, background:'#f0f0ec', borderRadius:14, padding:4 }}>
@@ -150,7 +150,7 @@ export default function LandingPage() {
                   'Dashboard temps réel',
                   'Retours privés + recontact client',
                   'Programme affiliation 20%',
-                  'Essai gratuit 14 jours',
+                  'Essai gratuit 7 jours',
                   ...(yearly ? ['1 tag NFC offert avec votre abonnement'] : []),
                   'Support prioritaire',
                 ].map((f, i) => (

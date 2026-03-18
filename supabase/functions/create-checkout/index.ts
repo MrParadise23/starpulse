@@ -73,7 +73,7 @@ serve(async (req) => {
             user_id: user.id,
             establishment_id,
           },
-          trial_period_days: 14,
+          trial_period_days: 7,
         },
         allow_promotion_codes: true,
         billing_address_collection: "auto",
