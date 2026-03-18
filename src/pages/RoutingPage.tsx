@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Establishment, Plate } from '../lib/supabase'
-import { Star, Send, CheckCircle, AlertCircle, User, Mail, Phone } from 'lucide-react'
 
 type Step = 'loading' | 'rating' | 'feedback' | 'thanks' | 'error' | 'inactive'
 
@@ -13,8 +12,7 @@ export default function RoutingPage() {
   const [establishment, setEstablishment] = useState<Establishment | null>(null)
   const [selectedRating, setSelectedRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
-
-  // Formulaire retour negatif unifie (CDC section 6.5)
+  const [animatingRating, setAnimatingRating] = useState(false)
   const [feedbackText, setFeedbackText] = useState('')
   const [contactFirstName, setContactFirstName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
@@ -37,227 +35,162 @@ export default function RoutingPage() {
   }
 
   async function handleRating(rating: number) {
-    if (!plate || !establishment) return
+    if (!plate || !establishment || animatingRating) return
     setSelectedRating(rating)
+    setAnimatingRating(true)
     const isPositive = rating >= establishment.satisfaction_threshold
-
-    // Enregistrer le scan
     await supabase.from('scans').insert({
-      plate_id: plate.id,
-      establishment_id: establishment.id,
-      rating_given: rating,
-      result: isPositive ? 'redirect' : 'feedback',
-      plate_type: plate.plate_type
+      plate_id: plate.id, establishment_id: establishment.id,
+      rating_given: rating, result: isPositive ? 'redirect' : 'feedback', plate_type: plate.plate_type
     })
-
     if (isPositive) {
-      // CDC 5.1 / 6.3 / 13.1 : REDIRECTION INSTANTANEE
-      // Aucun message, aucun ecran de transition, aucun bouton "continuer"
-      if (establishment.redirect_url) {
-        window.location.href = establishment.redirect_url
-      }
+      setTimeout(() => { if (establishment.redirect_url) window.location.href = establishment.redirect_url }, 300)
     } else {
-      setStep('feedback')
+      setTimeout(() => { setStep('feedback'); setAnimatingRating(false) }, 400)
     }
   }
 
   function validateFeedback(): boolean {
-    // CDC 6.5 : prenom obligatoire + email OU telephone obligatoire
-    if (!contactFirstName.trim()) {
-      setValidationError('Veuillez renseigner votre prenom.')
-      return false
-    }
-    if (!contactEmail.trim() && !contactPhone.trim()) {
-      setValidationError('Veuillez renseigner au moins un moyen de contact (email ou telephone).')
-      return false
-    }
-    if (contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim())) {
-      setValidationError('Veuillez entrer une adresse email valide.')
-      return false
-    }
-    setValidationError('')
-    return true
+    if (!contactFirstName.trim()) { setValidationError('Veuillez renseigner votre prenom.'); return false }
+    if (!contactEmail.trim() && !contactPhone.trim()) { setValidationError('Veuillez renseigner au moins un moyen de contact.'); return false }
+    if (contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim())) { setValidationError('Adresse email invalide.'); return false }
+    setValidationError(''); return true
   }
 
   async function handleFeedbackSubmit() {
-    if (!plate || !establishment) return
-    if (!validateFeedback()) return
-
+    if (!plate || !establishment || !validateFeedback()) return
     setSubmitting(true)
     await supabase.from('feedbacks').insert({
-      establishment_id: establishment.id,
-      plate_id: plate.id,
-      rating: selectedRating,
-      comment: feedbackText.trim() || null,
-      client_first_name: contactFirstName.trim(),
-      client_email: contactEmail.trim() || null,
-      client_phone: contactPhone.trim() || null,
+      establishment_id: establishment.id, plate_id: plate.id, rating: selectedRating,
+      comment: feedbackText.trim() || null, client_first_name: contactFirstName.trim(),
+      client_email: contactEmail.trim() || null, client_phone: contactPhone.trim() || null,
       source_plate_code: plate.code
     })
-    setSubmitting(false)
-    setStep('thanks')
+    setSubmitting(false); setStep('thanks')
   }
 
-  const primaryColor = establishment?.primary_color || '#2563eb'
-  const bgGradient = `linear-gradient(135deg, ${primaryColor}15 0%, ${primaryColor}05 100%)`
+  const color = establishment?.primary_color || '#2563eb'
+  function hexToRgb(hex: string) {
+    return { r: parseInt(hex.slice(1,3),16), g: parseInt(hex.slice(3,5),16), b: parseInt(hex.slice(5,7),16) }
+  }
+  const rgb = hexToRgb(color)
 
   if (step === 'loading') return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-8 h-8 border-3 rounded-full animate-spin" style={{ borderColor: primaryColor, borderTopColor: 'transparent' }} />
+    <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8' }}>
+      <div style={{ width:40, height:40, borderRadius:'50%', border:`3px solid ${color}20`, borderTopColor:color, animation:'spin 0.8s linear infinite' }}/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
+
   if (step === 'error') return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="text-center">
-        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600 font-medium">Ce lien n'est pas valide.</p>
-      </div>
-    </div>
-  )
-  if (step === 'inactive') return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="text-center">
-        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600 font-medium">Ce service n'est plus actif.</p>
-      </div>
-    </div>
-  )
-  // CDC 6.6 : ecran final simple apres retour negatif (friction OK ici)
-  if (step === 'thanks') return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: bgGradient }}>
-      <div className="text-center animate-fade-up">
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: primaryColor }}>
-          <CheckCircle className="w-8 h-8 text-white" />
+    <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8', padding:24 }}>
+      <div style={{ textAlign:'center', maxWidth:280 }}>
+        <div style={{ width:56, height:56, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
         </div>
-        <h2 className="text-xl font-display font-bold text-gray-900 mb-2">Merci pour votre retour.</h2>
-        <p className="text-gray-500 text-sm">Votre avis nous aidera a nous ameliorer.</p>
+        <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:17, color:'#1a1a18', margin:'0 0 6px' }}>Lien invalide</p>
+        <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:14, color:'#888', lineHeight:1.5, margin:0 }}>Ce lien ne correspond a aucun etablissement.</p>
       </div>
     </div>
   )
+
+  if (step === 'inactive') return (
+    <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:'#fafaf8', padding:24 }}>
+      <div style={{ textAlign:'center', maxWidth:280 }}>
+        <div style={{ width:56, height:56, borderRadius:16, background:'#f5f5f0', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+          <svg width="24" height="24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        </div>
+        <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:17, color:'#1a1a18', margin:'0 0 6px' }}>Service indisponible</p>
+        <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:14, color:'#888', lineHeight:1.5, margin:0 }}>Ce service n'est plus actif pour le moment.</p>
+      </div>
+    </div>
+  )
+
+  if (step === 'thanks') return (
+    <div style={{ minHeight:'100dvh', display:'flex', alignItems:'center', justifyContent:'center', background:`radial-gradient(ellipse at 50% 30%,rgba(${rgb.r},${rgb.g},${rgb.b},0.06) 0%,#fafaf8 70%)`, padding:24 }}>
+      <div style={{ textAlign:'center', maxWidth:300, animation:'fadeScale 0.5s ease-out' }}>
+        <div style={{ width:64, height:64, borderRadius:20, background:color, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px', boxShadow:`0 8px 32px rgba(${rgb.r},${rgb.g},${rgb.b},0.3)` }}>
+          <svg width="28" height="28" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:22, color:'#1a1a18', margin:'0 0 8px', letterSpacing:'-0.02em' }}>Merci !</p>
+        <p style={{ fontFamily:'"DM Sans",system-ui', fontSize:15, color:'#777', lineHeight:1.6, margin:0 }}>Votre retour a bien ete transmis. Il nous aidera a nous ameliorer.</p>
+      </div>
+      <style>{`@keyframes fadeScale{from{opacity:0;transform:scale(0.9) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+    </div>
+  )
+
+  const inputStyle = { width:'100%', border:'1.5px solid #e8e8e4', borderRadius:12, padding:'12px 14px', fontSize:14, fontFamily:'inherit', color:'#333', background:'#fafaf8', outline:'none', transition:'border-color 0.2s' } as const
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: bgGradient }}>
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8 animate-fade-up">
-          {establishment?.logo_url && (
-            <img src={establishment.logo_url} alt={establishment.name}
-              className="w-16 h-16 rounded-2xl object-cover mx-auto mb-3 shadow-md" />
-          )}
-          <h1 className="text-xl font-display font-bold text-gray-900">{establishment?.name}</h1>
+    <div style={{ minHeight:'100dvh', display:'flex', flexDirection:'column' as const, alignItems:'center', justifyContent:'center', background:`radial-gradient(ellipse at 50% 20%,rgba(${rgb.r},${rgb.g},${rgb.b},0.05) 0%,#fafaf8 60%)`, padding:'32px 20px', fontFamily:'"DM Sans",system-ui,sans-serif' }}>
+      <div style={{ width:'100%', maxWidth:380 }}>
+        <div style={{ textAlign:'center' as const, marginBottom:32, animation:'fadeUp 0.5s ease-out' }}>
+          {establishment?.logo_url && <img src={establishment.logo_url} alt={establishment.name} style={{ width:56, height:56, borderRadius:16, objectFit:'cover' as const, margin:'0 auto 12px', display:'block', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}/>}
+          <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', margin:'0 0 4px', letterSpacing:'-0.02em' }}>{establishment?.name}</h1>
         </div>
 
-        {/* NOTATION (CDC 6.2) */}
         {step === 'rating' && (
-          <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-6 animate-fade-up-delay">
-            <p className="text-center text-gray-700 font-medium mb-6">{establishment?.routing_question}</p>
-            <div className="star-rating flex justify-center gap-2 mb-4">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button key={star}
-                  onClick={() => handleRating(star)}
-                  onMouseEnter={() => setHoveredRating(star)}
-                  onMouseLeave={() => setHoveredRating(0)}
-                  className="p-1">
-                  <Star className="w-10 h-10 transition-colors" strokeWidth={1.5}
-                    fill={(hoveredRating || selectedRating) >= star ? '#facc15' : 'none'}
-                    color={(hoveredRating || selectedRating) >= star ? '#facc15' : '#d1d5db'} />
-                </button>
-              ))}
+          <div style={{ background:'#fff', borderRadius:20, padding:'28px 24px', boxShadow:'0 1px 3px rgba(0,0,0,0.04),0 8px 32px rgba(0,0,0,0.06)', animation:'fadeUp 0.5s ease-out 0.1s both' }}>
+            <p style={{ textAlign:'center' as const, fontWeight:500, fontSize:16, color:'#333', margin:'0 0 24px', lineHeight:1.5 }}>{establishment?.routing_question}</p>
+            <div style={{ display:'flex', justifyContent:'center', gap:8 }}>
+              {[1,2,3,4,5].map((star) => {
+                const active = (hoveredRating||selectedRating) >= star
+                return (
+                  <button key={star} onClick={() => handleRating(star)} onMouseEnter={() => setHoveredRating(star)} onMouseLeave={() => setHoveredRating(0)} onTouchStart={() => setHoveredRating(star)} disabled={animatingRating}
+                    style={{ background:'none', border:'none', padding:6, cursor:animatingRating?'default':'pointer', transform:active?'scale(1.15)':'scale(1)', transition:'transform 0.15s ease,opacity 0.15s ease', opacity:animatingRating&&selectedRating!==star?0.4:1 }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill={active?'#FBBF24':'none'} stroke={active?'#F59E0B':'#D1D5DB'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  </button>
+                )
+              })}
             </div>
+            {selectedRating > 0 && selectedRating >= (establishment?.satisfaction_threshold||4) && (
+              <p style={{ textAlign:'center' as const, fontSize:13, color:'#999', marginTop:16, animation:'fadeUp 0.3s ease-out' }}>Redirection en cours...</p>
+            )}
           </div>
         )}
 
-        {/* RETOUR PRIVE NEGATIF - FORMULAIRE UNIFIE (CDC 6.4 / 6.5) */}
         {step === 'feedback' && (
-          <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-6 animate-fade-up">
-            <p className="text-sm text-gray-500 mb-4">
-              Votre retour ne sera pas publie. Il est transmis directement a l'etablissement.
-            </p>
-
-            <div className="space-y-4">
-              {/* Note donnee */}
-              <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Votre note :</span>
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map(s => (
-                    <Star key={s} className="w-4 h-4"
-                      fill={s <= selectedRating ? '#facc15' : 'none'}
-                      color={s <= selectedRating ? '#facc15' : '#d1d5db'} />
-                  ))}
-                </div>
+          <div style={{ background:'#fff', borderRadius:20, padding:'28px 24px', boxShadow:'0 1px 3px rgba(0,0,0,0.04),0 8px 32px rgba(0,0,0,0.06)', animation:'fadeUp 0.4s ease-out' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, paddingBottom:16, marginBottom:20, borderBottom:'1px solid #f0f0ec' }}>
+              <span style={{ fontSize:13, color:'#999' }}>Votre note</span>
+              <div style={{ display:'flex', gap:2 }}>
+                {[1,2,3,4,5].map(s => <svg key={s} width="16" height="16" viewBox="0 0 24 24" fill={s<=selectedRating?'#FBBF24':'none'} stroke={s<=selectedRating?'#F59E0B':'#D1D5DB'} strokeWidth="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
               </div>
-
-              {/* Commentaire */}
+            </div>
+            <p style={{ fontSize:14, color:'#777', marginBottom:20, lineHeight:1.6 }}>Ce retour restera prive. Il sera transmis directement a l'etablissement.</p>
+            <div style={{ display:'flex', flexDirection:'column' as const, gap:14 }}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Votre retour <span className="text-gray-400 font-normal">(recommande)</span>
-                </label>
-                <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Qu'est-ce qui pourrait etre ameliore ?" rows={3} autoFocus
-                  className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Votre retour <span style={{ color:'#aaa', fontWeight:400 }}>(recommande)</span></label>
+                <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} placeholder="Qu'est-ce qui pourrait etre ameliore ?" rows={3} autoFocus style={{...inputStyle, resize:'none' as const}} onFocus={(e) => e.target.style.borderColor=color} onBlur={(e) => e.target.style.borderColor='#e8e8e4'}/>
               </div>
-
-              {/* Prenom OBLIGATOIRE */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Prenom <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input type="text" value={contactFirstName}
-                    onChange={(e) => { setContactFirstName(e.target.value); setValidationError('') }}
-                    placeholder="Votre prenom"
-                    className="w-full border border-gray-200 rounded-xl p-3 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+                <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Prenom <span style={{ color:'#e55' }}>*</span></label>
+                <input type="text" value={contactFirstName} onChange={(e) => {setContactFirstName(e.target.value);setValidationError('')}} placeholder="Votre prenom" style={inputStyle} onFocus={(e) => e.target.style.borderColor=color} onBlur={(e) => e.target.style.borderColor='#e8e8e4'}/>
               </div>
-
-              {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Email <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input type="email" value={contactEmail}
-                    onChange={(e) => { setContactEmail(e.target.value); setValidationError('') }}
-                    placeholder="votre@email.com"
-                    className="w-full border border-gray-200 rounded-xl p-3 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+                <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Email <span style={{ color:'#e55' }}>*</span></label>
+                <input type="email" value={contactEmail} onChange={(e) => {setContactEmail(e.target.value);setValidationError('')}} placeholder="votre@email.com" style={inputStyle} onFocus={(e) => e.target.style.borderColor=color} onBlur={(e) => e.target.style.borderColor='#e8e8e4'}/>
               </div>
-
-              {/* Telephone */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Telephone <span className="text-gray-400 font-normal">(ou email ci-dessus)</span>
-                </label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input type="tel" value={contactPhone}
-                    onChange={(e) => { setContactPhone(e.target.value); setValidationError('') }}
-                    placeholder="06 12 34 56 78"
-                    className="w-full border border-gray-200 rounded-xl p-3 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+                <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Telephone <span style={{ color:'#aaa', fontWeight:400 }}>(ou email ci-dessus)</span></label>
+                <input type="tel" value={contactPhone} onChange={(e) => {setContactPhone(e.target.value);setValidationError('')}} placeholder="06 12 34 56 78" style={inputStyle} onFocus={(e) => e.target.style.borderColor=color} onBlur={(e) => e.target.style.borderColor='#e8e8e4'}/>
               </div>
-
-              <p className="text-xs text-gray-400">
-                <span className="text-red-400">*</span> Prenom et au moins un moyen de contact obligatoires.
-              </p>
-
-              {validationError && (
-                <div className="bg-red-50 text-red-700 text-sm p-3 rounded-xl">{validationError}</div>
-              )}
-
-              <button onClick={handleFeedbackSubmit}
-                disabled={submitting || !contactFirstName.trim() || (!contactEmail.trim() && !contactPhone.trim())}
-                className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50 transition-opacity"
-                style={{ backgroundColor: primaryColor }}>
-                {submitting
-                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : <><Send className="w-4 h-4" />Envoyer mon retour</>}
+              <p style={{ fontSize:12, color:'#aaa', margin:0 }}>* Prenom et au moins un moyen de contact obligatoires.</p>
+              {validationError && <div style={{ background:'#fef2f2', color:'#b91c1c', fontSize:13, padding:'10px 14px', borderRadius:10 }}>{validationError}</div>}
+              <button onClick={handleFeedbackSubmit} disabled={submitting||!contactFirstName.trim()||(!contactEmail.trim()&&!contactPhone.trim())}
+                style={{ width:'100%', padding:'14px 0', borderRadius:14, border:'none', background:submitting||!contactFirstName.trim()||(!contactEmail.trim()&&!contactPhone.trim())?'#d1d5db':color, color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:submitting?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'background 0.2s,transform 0.1s', boxShadow:submitting||!contactFirstName.trim()?'none':`0 4px 16px rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`, letterSpacing:'-0.01em' }}>
+                {submitting ? <div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/> : <>
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" transform="scale(0.67)"/><path d="M22 2l-7 20-4-9-9-4z" transform="scale(0.67)"/></svg>
+                  Envoyer mon retour
+                </>}
               </button>
             </div>
           </div>
         )}
+
+        <p style={{ textAlign:'center' as const, fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>Propulse par PapyStar</p>
       </div>
+      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{margin:0;padding:0;box-sizing:border-box}input::placeholder,textarea::placeholder{color:#bbb}input:focus,textarea:focus{border-color:${color} !important}`}</style>
     </div>
   )
 }
