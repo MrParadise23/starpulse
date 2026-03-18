@@ -84,12 +84,12 @@ export default function PlatesPage() {
     </div>
   )
 
-  const iconBtn = { background:'none', border:'none', padding:6, borderRadius:8, cursor:'pointer', color:'#999', transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center' } as const
+  const iconBtn: React.CSSProperties = { background:'none', border:'none', padding:6, borderRadius:8, cursor:'pointer', color:'#999', transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center' }
 
   const PlateCard = ({ plate }: { plate: Plate & { scan_count?: number } }) => {
     const isEditing = editingId === plate.id
     return (
-      <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:16, transition:'border-color 0.2s' }}>
+      <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:16 }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:12, flex:1, minWidth:0 }}>
             <div style={{ width:40, height:40, borderRadius:10, background: plate.plate_type==='nfc'?'rgba(37,99,235,0.06)':'rgba(124,58,237,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -125,32 +125,25 @@ export default function PlatesPage() {
                 <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0 }}>{plate.scan_count}</p>
                 <p style={{ fontSize:11, color:'#bbb', margin:0 }}>scans</p>
               </div>
-              <button onClick={() => setPreviewPlate(plate)} style={iconBtn} title="Previsualiser"
-                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+              <button onClick={() => setPreviewPlate(plate)} style={iconBtn} title="Previsualiser">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" transform="scale(0.67)"/><circle cx="8" cy="8" r="2"/></svg>
               </button>
-              <button onClick={() => { setEditingId(plate.id); setEditLabel(plate.label || '') }} style={iconBtn} title="Renommer"
-                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+              <button onClick={() => { setEditingId(plate.id); setEditLabel(plate.label || '') }} style={iconBtn} title="Renommer">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" transform="scale(0.58)"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z" transform="scale(0.58)"/></svg>
               </button>
-              <button onClick={() => copyUrl(plate)} style={iconBtn} title="Copier le lien"
-                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+              <button onClick={() => copyUrl(plate)} style={iconBtn} title="Copier le lien">
                 {copiedId === plate.id
                   ? <svg width="16" height="16" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5" transform="scale(0.67)"/></svg>
                   : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" transform="scale(0.58)"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" transform="scale(0.58)"/></svg>
                 }
               </button>
-              <button onClick={() => downloadQr(plate)} style={iconBtn} title="Telecharger QR"
-                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+              <button onClick={() => downloadQr(plate)} style={iconBtn} title="Telecharger QR">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" transform="scale(0.67)"/></svg>
               </button>
-              <a href={getPlateUrl(plate)} target="_blank" rel="noopener noreferrer" style={{ ...iconBtn, textDecoration:'none' }} title="Ouvrir"
-                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+              <a href={getPlateUrl(plate)} target="_blank" rel="noopener noreferrer" style={{ ...iconBtn, textDecoration:'none' }} title="Ouvrir">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" transform="scale(0.67)"/></svg>
               </a>
-              <button onClick={() => deletePlate(plate.id)} style={{ ...iconBtn, color:'#ddd' }} title="Supprimer"
-                onMouseEnter={(e) => { (e.currentTarget).style.background='#fef2f2'; (e.currentTarget).style.color='#dc2626' }}
-                onMouseLeave={(e) => { (e.currentTarget).style.background='none'; (e.currentTarget).style.color='#ddd' }}>
+              <button onClick={() => deletePlate(plate.id)} style={{ ...iconBtn, color:'#ddd' }} title="Supprimer">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" transform="scale(0.67)"/></svg>
               </button>
             </div>
@@ -161,7 +154,7 @@ export default function PlatesPage() {
             <img src={getQrImageUrl(plate)} alt="QR Code" style={{ width:72, height:72, borderRadius:10, border:'1px solid #f0f0ec' }}/>
             <div style={{ flex:1 }}>
               <p style={{ fontSize:12, color:'#888', marginBottom:4 }}>Telechargez et imprimez ce QR code.</p>
-              <p style={{ fontSize:11, fontFamily:'monospace', color:'#bbb', wordBreak:'break-all' as const }}>{getPlateUrl(plate)}</p>
+              <p style={{ fontSize:11, fontFamily:'monospace', color:'#bbb', wordBreak:'break-all' }}>{getPlateUrl(plate)}</p>
             </div>
           </div>
         )}
@@ -181,7 +174,7 @@ export default function PlatesPage() {
           <svg width="18" height="18" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" transform="scale(0.75)"/></svg>
           <div>
             <p style={{ fontSize:13, fontWeight:600, color:'#92400e', margin:'0 0 2px' }}>Lien de redirection non configure</p>
-            <p style={{ fontSize:12, color:'#b45309', margin:0 }}>Allez dans Reglages → Smart Routing pour configurer votre lien Google.</p>
+            <p style={{ fontSize:12, color:'#b45309', margin:0 }}>Allez dans Reglages pour configurer votre lien Google.</p>
           </div>
         </div>
       )}
@@ -192,28 +185,26 @@ export default function PlatesPage() {
         </div>
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:32 }}>
-          {/* NFC */}
           <section>
             <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:10, display:'flex', alignItems:'center', gap:8 }}>
               <svg width="16" height="16" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/></svg>
               Tags NFC
             </h2>
             <div style={{ background:'#eff6ff', borderRadius:10, padding:12, marginBottom:12 }}>
-              <p style={{ fontSize:12, color:'#1e40af' }}>Vos tags NFC encodes arrivent bientot. Ils apparaitront ici apres le premier scan.</p>
+              <p style={{ fontSize:12, color:'#1e40af', margin:0 }}>Vos tags NFC encodes arrivent bientot. Ils apparaitront ici apres le premier scan.</p>
             </div>
             {nfcPlates.length === 0 ? (
               <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:32, textAlign:'center' }}>
-                <p style={{ fontSize:13, color:'#999' }}>Aucun tag NFC active.</p>
+                <p style={{ fontSize:13, color:'#999', margin:0 }}>Aucun tag NFC active.</p>
               </div>
             ) : (
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>{nfcPlates.map(p => <PlateCard key={p.id} plate={p}/>)}</div>
             )}
           </section>
 
-          {/* QR */}
           <section>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-              <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', display:'flex', alignItems:'center', gap:8 }}>
+              <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', display:'flex', alignItems:'center', gap:8, margin:0 }}>
                 <svg width="16" height="16" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 QR Codes
               </h2>
@@ -223,12 +214,12 @@ export default function PlatesPage() {
             </div>
 
             {showCreateQr && (
-              <div style={{ background:'#fff', borderRadius:14, border:'1.5px solid #2563eb20', padding:16, marginBottom:12 }}>
+              <div style={{ background:'#fff', borderRadius:14, border:'1.5px solid rgba(37,99,235,0.15)', padding:16, marginBottom:12 }}>
                 <p style={{ fontSize:14, fontWeight:500, color:'#1a1a18', marginBottom:10 }}>Nouveau QR code</p>
                 <input type="text" value={newQrLabel} onChange={(e) => setNewQrLabel(e.target.value)} placeholder="Emplacement (ex: Table 5, Comptoir, Caisse...)"
                   style={{ width:'100%', border:'1.5px solid #e8e8e4', borderRadius:10, padding:'10px 12px', fontSize:13, fontFamily:'inherit', outline:'none', marginBottom:10 }}/>
                 <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={createQrCode} disabled={creating} style={{ padding:'8px 18px', borderRadius:10, border:'none', background:'#2563eb', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                  <button onClick={createQrCode} disabled={creating} style={{ padding:'8px 18px', borderRadius:10, border:'none', background:'#2563eb', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'"Outfit",system-ui' }}>
                     {creating ? 'Creation...' : 'Creer'}
                   </button>
                   <button onClick={() => setShowCreateQr(false)} style={{ padding:'8px 18px', borderRadius:10, border:'1px solid #e8e8e4', background:'#fff', fontSize:13, color:'#666', cursor:'pointer' }}>Annuler</button>
@@ -251,19 +242,36 @@ export default function PlatesPage() {
         </div>
       )}
 
-      {/* Modal preview */}
       {previewPlate && establishment && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }} onClick={() => setPreviewPlate(null)}>
           <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:380, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px', borderBottom:'1px solid #f0f0ec', background:'#fafaf8' }}>
               <span style={{ fontSize:13, fontWeight:500, color:'#666' }}>Apercu client</span>
               <button onClick={() => setPreviewPlate(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'#999', padding:4 }}>
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" transform="scale(0.67)"/><line x1="6" y1="6" x2="18" y2="18" transform="scale(0.67)"/></svg>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="4" x2="4" y2="12"/><line x1="4" y1="4" x2="12" y2="12"/></svg>
               </button>
             </div>
             <div style={{ padding:24, background:`radial-gradient(ellipse at 50% 20%,${establishment.primary_color}08 0%,#fafaf8 60%)` }}>
               <div style={{ textAlign:'center', marginBottom:16 }}>
                 {establishment.logo_url && <img src={establishment.logo_url} alt="" style={{ width:48, height:48, borderRadius:12, objectFit:'cover', margin:'0 auto 8px', display:'block' }}/>}
-                <p
-cd ~/Desktop/PAPYSTAR/mvp-saas-improved
-git add . && git commit -m "feat: renommer + supprimer QR codes" && git push
+                <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#1a1a18', margin:0 }}>{establishment.name}</p>
+              </div>
+              <div style={{ background:'#fff', borderRadius:14, padding:20, boxShadow:'0 1px 3px rgba(0,0,0,0.04)' }}>
+                <p style={{ textAlign:'center', fontSize:14, fontWeight:500, color:'#333', marginBottom:14 }}>{establishment.routing_question}</p>
+                <div style={{ display:'flex', justifyContent:'center', gap:6 }}>
+                  {[1,2,3,4,5].map(s => <svg key={s} width="30" height="30" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" strokeWidth="1.5" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
+                </div>
+              </div>
+              <p style={{ textAlign:'center', fontSize:10, color:'#c0c0b8', marginTop:12 }}>Propulse par StarPulse</p>
+            </div>
+            <div style={{ padding:'12px 18px', borderTop:'1px solid #f0f0ec', background:'#fafaf8', display:'flex', justifyContent:'flex-end' }}>
+              <a href={getPlateUrl(previewPlate)} target="_blank" rel="noopener noreferrer" style={{ fontSize:12, fontWeight:500, color:'#2563eb', textDecoration:'none' }}>Tester en vrai →</a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
+}
