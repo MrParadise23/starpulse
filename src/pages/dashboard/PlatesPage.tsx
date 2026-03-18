@@ -3,7 +3,6 @@ import { useOutletContext } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import type { Establishment, Plate } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
-import { Nfc, QrCode, Copy, Check, ExternalLink, Tag, Download, Plus, Eye, X, Star, ArrowRight } from 'lucide-react'
 
 interface DashboardContext { establishment: Establishment | null; session: Session }
 
@@ -16,6 +15,8 @@ export default function PlatesPage() {
   const [newQrLabel, setNewQrLabel] = useState('')
   const [creating, setCreating] = useState(false)
   const [previewPlate, setPreviewPlate] = useState<(Plate & { scan_count?: number }) | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editLabel, setEditLabel] = useState('')
 
   useEffect(() => { if (establishment) loadPlates(); else setLoading(false) }, [establishment])
 
@@ -56,11 +57,20 @@ export default function PlatesPage() {
     if (!establishment) return
     setCreating(true)
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-    await supabase.from('plates').insert({
-      code, establishment_id: establishment.id, label: newQrLabel.trim() || null,
-      plate_type: 'qr', is_active: true, activated_at: new Date().toISOString()
-    })
+    await supabase.from('plates').insert({ code, establishment_id: establishment.id, label: newQrLabel.trim() || null, plate_type: 'qr', is_active: true, activated_at: new Date().toISOString() })
     setNewQrLabel(''); setShowCreateQr(false); setCreating(false)
+    loadPlates()
+  }
+
+  async function saveRename(plateId: string) {
+    await supabase.from('plates').update({ label: editLabel.trim() || null }).eq('id', plateId)
+    setEditingId(null); setEditLabel('')
+    loadPlates()
+  }
+
+  async function deletePlate(plateId: string) {
+    if (!confirm('Supprimer ce support ? Les scans associes seront perdus.')) return
+    await supabase.from('plates').delete().eq('id', plateId)
     loadPlates()
   }
 
@@ -69,210 +79,191 @@ export default function PlatesPage() {
 
   if (!establishment) return (
     <div>
-      <h1 className="text-2xl font-display font-bold text-gray-900 mb-2">Tags NFC & QR Codes</h1>
-      <p className="text-gray-500">Configurez d'abord votre etablissement dans les Reglages.</p>
+      <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em' }}>Tags NFC & QR Codes</h1>
+      <p style={{ color:'#888', fontSize:14, marginTop:4 }}>Configurez d'abord votre etablissement dans les Reglages.</p>
     </div>
   )
 
-  const PlateCard = ({ plate }: { plate: Plate & { scan_count?: number } }) => (
-    <div className="bg-white rounded-2xl border border-gray-200 p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${plate.plate_type === 'nfc' ? 'bg-blue-50' : 'bg-purple-50'}`}>
-            {plate.plate_type === 'nfc' ? <Nfc className="w-5 h-5 text-blue-600" /> : <QrCode className="w-5 h-5 text-purple-600" />}
+  const iconBtn = { background:'none', border:'none', padding:6, borderRadius:8, cursor:'pointer', color:'#999', transition:'all 0.15s', display:'flex', alignItems:'center', justifyContent:'center' } as const
+
+  const PlateCard = ({ plate }: { plate: Plate & { scan_count?: number } }) => {
+    const isEditing = editingId === plate.id
+    return (
+      <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:16, transition:'border-color 0.2s' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, flex:1, minWidth:0 }}>
+            <div style={{ width:40, height:40, borderRadius:10, background: plate.plate_type==='nfc'?'rgba(37,99,235,0.06)':'rgba(124,58,237,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              {plate.plate_type === 'nfc'
+                ? <svg width="18" height="18" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/><path d="M12.91 4.1a16.1 16.1 0 010 15.8"/></svg>
+                : <svg width="18" height="18" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><path d="M20 14v7h-3"/></svg>
+              }
+            </div>
+            <div style={{ minWidth:0, flex:1 }}>
+              {isEditing ? (
+                <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                  <input type="text" value={editLabel} onChange={(e) => setEditLabel(e.target.value)} placeholder="Nouveau nom..."
+                    autoFocus onKeyDown={(e) => { if (e.key==='Enter') saveRename(plate.id); if (e.key==='Escape') setEditingId(null) }}
+                    style={{ border:'1.5px solid #2563eb', borderRadius:8, padding:'6px 10px', fontSize:13, fontFamily:'inherit', outline:'none', flex:1, minWidth:0 }}/>
+                  <button onClick={() => saveRename(plate.id)} style={{ ...iconBtn, color:'#059669' }} title="Sauvegarder">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5" transform="scale(0.67)"/></svg>
+                  </button>
+                  <button onClick={() => setEditingId(null)} style={{ ...iconBtn, color:'#999' }} title="Annuler">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" transform="scale(0.67)"/></svg>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p style={{ fontWeight:500, fontSize:14, color:'#1a1a18', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{plate.label || `${plate.plate_type==='nfc'?'Tag':'QR'} ${plate.code}`}</p>
+                  <p style={{ fontSize:12, color:'#bbb', fontFamily:'monospace', margin:0 }}>{plate.code}</p>
+                </>
+              )}
+            </div>
           </div>
-          <div>
-            <p className="font-medium text-gray-900">{plate.label || `${plate.plate_type === 'nfc' ? 'Tag' : 'QR'} ${plate.code}`}</p>
-            <p className="text-xs text-gray-400 font-mono">{plate.code}</p>
-          </div>
+          {!isEditing && (
+            <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+              <div style={{ textAlign:'right', marginRight:8 }}>
+                <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0 }}>{plate.scan_count}</p>
+                <p style={{ fontSize:11, color:'#bbb', margin:0 }}>scans</p>
+              </div>
+              <button onClick={() => setPreviewPlate(plate)} style={iconBtn} title="Previsualiser"
+                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" transform="scale(0.67)"/><circle cx="8" cy="8" r="2"/></svg>
+              </button>
+              <button onClick={() => { setEditingId(plate.id); setEditLabel(plate.label || '') }} style={iconBtn} title="Renommer"
+                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" transform="scale(0.58)"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z" transform="scale(0.58)"/></svg>
+              </button>
+              <button onClick={() => copyUrl(plate)} style={iconBtn} title="Copier le lien"
+                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+                {copiedId === plate.id
+                  ? <svg width="16" height="16" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5" transform="scale(0.67)"/></svg>
+                  : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" transform="scale(0.58)"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" transform="scale(0.58)"/></svg>
+                }
+              </button>
+              <button onClick={() => downloadQr(plate)} style={iconBtn} title="Telecharger QR"
+                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" transform="scale(0.67)"/></svg>
+              </button>
+              <a href={getPlateUrl(plate)} target="_blank" rel="noopener noreferrer" style={{ ...iconBtn, textDecoration:'none' }} title="Ouvrir"
+                onMouseEnter={(e) => (e.currentTarget).style.background='#f5f5f0'} onMouseLeave={(e) => (e.currentTarget).style.background='none'}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" transform="scale(0.67)"/></svg>
+              </a>
+              <button onClick={() => deletePlate(plate.id)} style={{ ...iconBtn, color:'#ddd' }} title="Supprimer"
+                onMouseEnter={(e) => { (e.currentTarget).style.background='#fef2f2'; (e.currentTarget).style.color='#dc2626' }}
+                onMouseLeave={(e) => { (e.currentTarget).style.background='none'; (e.currentTarget).style.color='#ddd' }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" transform="scale(0.67)"/></svg>
+              </button>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm font-semibold text-gray-900">{plate.scan_count}</p>
-            <p className="text-xs text-gray-400">scans</p>
+        {plate.plate_type === 'qr' && !isEditing && (
+          <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #f5f5f0', display:'flex', alignItems:'center', gap:14 }}>
+            <img src={getQrImageUrl(plate)} alt="QR Code" style={{ width:72, height:72, borderRadius:10, border:'1px solid #f0f0ec' }}/>
+            <div style={{ flex:1 }}>
+              <p style={{ fontSize:12, color:'#888', marginBottom:4 }}>Telechargez et imprimez ce QR code.</p>
+              <p style={{ fontSize:11, fontFamily:'monospace', color:'#bbb', wordBreak:'break-all' as const }}>{getPlateUrl(plate)}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setPreviewPlate(plate)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500" title="Previsualiser le smart routing">
-              <Eye className="w-4 h-4" />
-            </button>
-            <button onClick={() => copyUrl(plate)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500" title="Copier le lien">
-              {copiedId === plate.id ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-            </button>
-            <button onClick={() => downloadQr(plate)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500" title="Telecharger le QR code">
-              <Download className="w-4 h-4" />
-            </button>
-            <a href={getPlateUrl(plate)} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-gray-100 text-gray-500" title="Ouvrir dans un nouvel onglet">
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        </div>
+        )}
       </div>
-      {/* Apercu QR visible */}
-      {plate.plate_type === 'qr' && (
-        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-4">
-          <img src={getQrImageUrl(plate)} alt="QR Code" className="w-20 h-20 rounded-lg border border-gray-100" />
-          <div className="flex-1">
-            <p className="text-xs text-gray-500 mb-2">Telechargez et imprimez ce QR code. Vos clients le scannent et le smart routing s'affiche.</p>
-            <p className="text-xs font-mono text-gray-400 break-all">{getPlateUrl(plate)}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+    )
+  }
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold text-gray-900">Tags NFC & QR Codes</h1>
-        <p className="text-gray-500 text-sm mt-1">{plates.length} support(s) actif(s)</p>
+      <div style={{ marginBottom:24 }}>
+        <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em', margin:'0 0 4px' }}>Tags NFC & QR Codes</h1>
+        <p style={{ color:'#999', fontSize:14, margin:0 }}>{plates.length} support(s) actif(s)</p>
       </div>
 
-      {/* Alerte si pas de lien de redirection configure */}
       {!establishment.redirect_url && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <ArrowRight className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-amber-900">Lien de redirection Google non configure</p>
-              <p className="text-xs text-amber-700 mt-1">
-                Allez dans <strong>Reglages &rarr; Smart Routing</strong> pour configurer votre lien Google. Sans ce lien, les clients satisfaits ne seront pas rediriges.
-              </p>
-            </div>
+        <div style={{ background:'#fffbeb', border:'1px solid #fde68a', borderRadius:12, padding:14, marginBottom:20, display:'flex', gap:10 }}>
+          <svg width="18" height="18" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" transform="scale(0.75)"/></svg>
+          <div>
+            <p style={{ fontSize:13, fontWeight:600, color:'#92400e', margin:'0 0 2px' }}>Lien de redirection non configure</p>
+            <p style={{ fontSize:12, color:'#b45309', margin:0 }}>Allez dans Reglages → Smart Routing pour configurer votre lien Google.</p>
           </div>
         </div>
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>
+        <div style={{ display:'flex', justifyContent:'center', padding:'48px 0' }}>
+          <div style={{ width:32, height:32, borderRadius:'50%', border:'3px solid #e8e8e4', borderTopColor:'#2563eb', animation:'spin 0.8s linear infinite' }}/>
+        </div>
       ) : (
-        <div className="space-y-8">
-          {/* Section Tags NFC */}
+        <div style={{ display:'flex', flexDirection:'column', gap:32 }}>
+          {/* NFC */}
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-display font-semibold text-gray-900 flex items-center gap-2">
-                <Nfc className="w-4 h-4 text-blue-600" /> Tags NFC
-              </h2>
-            </div>
-            <div className="bg-blue-50 rounded-xl p-3 mb-3">
-              <p className="text-xs text-blue-800">Vos tags NFC encodes arrivent bientot. Quand un client scannera un tag avec son telephone, il sera automatiquement lie a votre etablissement et le smart routing s'affichera.</p>
+            <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:10, display:'flex', alignItems:'center', gap:8 }}>
+              <svg width="16" height="16" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round"><path d="M6 8.32a7.43 7.43 0 010 7.36"/><path d="M9.46 6.21a11.76 11.76 0 010 11.58"/></svg>
+              Tags NFC
+            </h2>
+            <div style={{ background:'#eff6ff', borderRadius:10, padding:12, marginBottom:12 }}>
+              <p style={{ fontSize:12, color:'#1e40af' }}>Vos tags NFC encodes arrivent bientot. Ils apparaitront ici apres le premier scan.</p>
             </div>
             {nfcPlates.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center">
-                <Tag className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Aucun tag NFC active. Ils apparaitront ici apres le premier scan.</p>
+              <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:32, textAlign:'center' }}>
+                <p style={{ fontSize:13, color:'#999' }}>Aucun tag NFC active.</p>
               </div>
             ) : (
-              <div className="space-y-3">{nfcPlates.map(p => <PlateCard key={p.id} plate={p} />)}</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>{nfcPlates.map(p => <PlateCard key={p.id} plate={p}/>)}</div>
             )}
           </section>
 
-          {/* Section QR Codes */}
+          {/* QR */}
           <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-display font-semibold text-gray-900 flex items-center gap-2">
-                <QrCode className="w-4 h-4 text-purple-600" /> QR Codes
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+              <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', display:'flex', alignItems:'center', gap:8 }}>
+                <svg width="16" height="16" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                QR Codes
               </h2>
-              <button onClick={() => setShowCreateQr(true)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100">
-                <Plus className="w-3.5 h-3.5" /> Creer un QR code
+              <button onClick={() => setShowCreateQr(true)} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1px solid #e8e8e4', background:'#fff', fontSize:12, fontWeight:500, color:'#2563eb', cursor:'pointer' }}>
+                + Creer un QR code
               </button>
             </div>
 
-            {/* Formulaire de creation */}
             {showCreateQr && (
-              <div className="bg-white rounded-2xl border border-blue-200 p-4 mb-3">
-                <p className="text-sm font-medium text-gray-900 mb-3">Nouveau QR code</p>
-                <input type="text" value={newQrLabel} onChange={(e) => setNewQrLabel(e.target.value)}
-                  placeholder="Emplacement (ex: Table 5, Comptoir, Sortie...)"
-                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3" />
-                <div className="flex items-center gap-2">
-                  <button onClick={createQrCode} disabled={creating}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+              <div style={{ background:'#fff', borderRadius:14, border:'1.5px solid #2563eb20', padding:16, marginBottom:12 }}>
+                <p style={{ fontSize:14, fontWeight:500, color:'#1a1a18', marginBottom:10 }}>Nouveau QR code</p>
+                <input type="text" value={newQrLabel} onChange={(e) => setNewQrLabel(e.target.value)} placeholder="Emplacement (ex: Table 5, Comptoir, Caisse...)"
+                  style={{ width:'100%', border:'1.5px solid #e8e8e4', borderRadius:10, padding:'10px 12px', fontSize:13, fontFamily:'inherit', outline:'none', marginBottom:10 }}/>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={createQrCode} disabled={creating} style={{ padding:'8px 18px', borderRadius:10, border:'none', background:'#2563eb', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer' }}>
                     {creating ? 'Creation...' : 'Creer'}
                   </button>
-                  <button onClick={() => setShowCreateQr(false)} className="px-4 py-2 text-gray-600 text-sm font-medium hover:bg-gray-50 rounded-xl">
-                    Annuler
-                  </button>
+                  <button onClick={() => setShowCreateQr(false)} style={{ padding:'8px 18px', borderRadius:10, border:'1px solid #e8e8e4', background:'#fff', fontSize:13, color:'#666', cursor:'pointer' }}>Annuler</button>
                 </div>
               </div>
             )}
 
-            <p className="text-xs text-gray-500 mb-3">Creez des QR codes intelligents qui redirigent vers votre smart routing. Telechargez-les et imprimez-les ou vous voulez.</p>
-
             {qrPlates.length === 0 && !showCreateQr ? (
-              <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
-                <QrCode className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm font-medium text-gray-700 mb-1">Aucun QR code</p>
-                <p className="text-xs text-gray-400 mb-4">Creez votre premier QR code pour voir a quoi ressemble le smart routing et commencer a collecter des avis.</p>
-                <button onClick={() => setShowCreateQr(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700">
-                  <Plus className="w-4 h-4" /> Creer mon premier QR code
+              <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:40, textAlign:'center' }}>
+                <p style={{ fontSize:14, fontWeight:500, color:'#555', marginBottom:4 }}>Aucun QR code</p>
+                <p style={{ fontSize:13, color:'#999', marginBottom:16 }}>Creez votre premier QR code pour commencer.</p>
+                <button onClick={() => setShowCreateQr(true)} style={{ padding:'10px 22px', borderRadius:12, border:'none', background:'#2563eb', color:'#fff', fontSize:14, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:'pointer', boxShadow:'0 2px 8px rgba(37,99,235,0.25)' }}>
+                  + Creer mon premier QR code
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">{qrPlates.map(p => <PlateCard key={p.id} plate={p} />)}</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>{qrPlates.map(p => <PlateCard key={p.id} plate={p}/>)}</div>
             )}
           </section>
         </div>
       )}
 
-      {/* Modal de previsualisation du smart routing */}
+      {/* Modal preview */}
       {previewPlate && establishment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setPreviewPlate(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-gray-700">Apercu : ce que vos clients voient</span>
-              </div>
-              <button onClick={() => setPreviewPlate(null)} className="p-1 rounded-lg hover:bg-gray-200">
-                <X className="w-4 h-4 text-gray-500" />
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }} onClick={() => setPreviewPlate(null)}>
+          <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:380, overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px', borderBottom:'1px solid #f0f0ec', background:'#fafaf8' }}>
+              <span style={{ fontSize:13, fontWeight:500, color:'#666' }}>Apercu client</span>
+              <button onClick={() => setPreviewPlate(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'#999', padding:4 }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" transform="scale(0.67)"/><line x1="6" y1="6" x2="18" y2="18" transform="scale(0.67)"/></svg>
               </button>
             </div>
-            {/* Preview du smart routing - exactement ce que le client voit */}
-            <div className="p-6" style={{ background: `linear-gradient(135deg, ${establishment.primary_color}15 0%, ${establishment.primary_color}05 100%)` }}>
-              <div className="text-center mb-6">
-                {establishment.logo_url && (
-                  <img src={establishment.logo_url} alt={establishment.name}
-                    className="w-14 h-14 rounded-2xl object-cover mx-auto mb-2 shadow-md" />
-                )}
-                <h2 className="text-lg font-bold text-gray-900">{establishment.name}</h2>
-              </div>
-              <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-5">
-                <p className="text-center text-gray-700 font-medium mb-5">{establishment.routing_question}</p>
-                <div className="flex justify-center gap-2 mb-3">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <div key={star} className="p-1">
-                      <Star className="w-9 h-9" strokeWidth={1.5}
-                        fill="#facc15"
-                        color="#facc15" />
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-3 border-t border-gray-100 space-y-1.5">
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-gray-500">{establishment.satisfaction_threshold}-5 etoiles &rarr; Redirige vers Google</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="text-gray-500">1-{establishment.satisfaction_threshold - 1} etoile(s) &rarr; Formulaire prive</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Footer */}
-            <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-              <p className="text-xs text-gray-400">Apercu fidele de l'experience client.</p>
-              <a href={getPlateUrl(previewPlate)} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100">
-                <ExternalLink className="w-3 h-3" /> Tester en vrai
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+            <div style={{ padding:24, background:`radial-gradient(ellipse at 50% 20%,${establishment.primary_color}08 0%,#fafaf8 60%)` }}>
+              <div style={{ textAlign:'center', marginBottom:16 }}>
+                {establishment.logo_url && <img src={establishment.logo_url} alt="" style={{ width:48, height:48, borderRadius:12, objectFit:'cover', margin:'0 auto 8px', display:'block' }}/>}
+                <p
+cd ~/Desktop/PAPYSTAR/mvp-saas-improved
+git add . && git commit -m "feat: renommer + supprimer QR codes" && git push
