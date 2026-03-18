@@ -133,7 +133,7 @@ export default function SettingsPage() {
     <div>
       <div className="mb-6">
         <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em', margin:'0 0 4px' }}>{isNew ? 'Configurer mon établissement' : 'Réglages'}</h1>
-        <p className="text-gray-500 text-sm">{isNew ? 'Renseignez les informations de votre établissement.' : 'Parametres de votre établissement, smart routing et IA.'}</p>
+        <p className="text-gray-500 text-sm">{isNew ? 'Renseignez les informations de votre établissement.' : 'Paramètres de votre établissement, smart routing et IA.'}</p>
       </div>
 
       <div className="space-y-6 max-w-lg">
@@ -281,7 +281,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
-            <p style={{ textAlign:'center', fontSize:10, color:'#c0c0b8', marginTop:12 }}>Propulse par StarPulse</p>
+            <p style={{ textAlign:'center', fontSize:10, color:'#c0c0b8', marginTop:12 }}>Propulsé par StarPulse</p>
           </div>
         </section>
 

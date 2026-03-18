@@ -212,7 +212,7 @@ export default function RoutingPage() {
           </div>
         )}
 
-        <p style={{ textAlign:'center' as const, fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>Propulse par StarPulse</p>
+        <p style={{ textAlign:'center' as const, fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>Propulsé par StarPulse</p>
       </div>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}

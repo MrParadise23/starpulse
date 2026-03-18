@@ -52,7 +52,7 @@ export default function ActivatePage({ session }: { session: Session | null }) {
         <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-xl font-display font-bold text-gray-900 mb-2">Tag active !</h2>
+        <h2 className="text-xl font-display font-bold text-gray-900 mb-2">Tag activé !</h2>
         <p className="text-gray-600 mb-6">Vos clients peuvent maintenant scanner ce tag.</p>
         <button onClick={() => navigate('/dashboard/plates')}
           className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700">
@@ -69,7 +69,7 @@ export default function ActivatePage({ session }: { session: Session | null }) {
           <Nfc className="w-7 h-7 text-blue-600" />
         </div>
         <h1 className="text-xl font-display font-bold text-gray-900 mb-2">Activer ce tag</h1>
-        <p className="text-gray-500 text-sm mb-6">Connectéz-vous pour activer ce tag NFC.</p>
+        <p className="text-gray-500 text-sm mb-6">Connectez-vous pour activer ce tag NFC.</p>
         <div className="space-y-3">
           <Link to={`/login?redirect=/activate/${code}`}
             className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700">

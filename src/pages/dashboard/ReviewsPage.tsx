@@ -255,10 +255,10 @@ export default function ReviewsPage() {
 
   function getStatusBadge(s: string) {
     switch (s) {
-      case 'pending': return { label: 'Non traite', cls: 'bg-amber-100 text-amber-700' }
-      case 'ai_generated': return { label: 'Reponse IA génèree', cls: 'bg-blue-100 text-blue-700' }
-      case 'published': return { label: 'Publie', cls: 'bg-emerald-100 text-emerald-700' }
-      case 'ignored': return { label: 'Ignore', cls: 'bg-gray-100 text-gray-500' }
+      case 'pending': return { label: 'Non traité', cls: 'bg-amber-100 text-amber-700' }
+      case 'ai_generated': return { label: 'Réponse IA générée', cls: 'bg-blue-100 text-blue-700' }
+      case 'published': return { label: 'Publié', cls: 'bg-emerald-100 text-emerald-700' }
+      case 'ignored': return { label: 'Ignoré', cls: 'bg-gray-100 text-gray-500' }
       default: return { label: s, cls: 'bg-gray-100 text-gray-600' }
     }
   }
@@ -408,10 +408,10 @@ export default function ReviewsPage() {
       <div className="flex gap-2 mb-6 flex-wrap">
         {([
           { key: 'all' as const, label: 'Tous' },
-          { key: 'pending' as const, label: 'Non traites' },
-          { key: 'ai_generated' as const, label: 'IA génèree' },
-          { key: 'published' as const, label: 'Publies' },
-          { key: 'ignored' as const, label: 'Ignores' },
+          { key: 'pending' as const, label: 'Non traités' },
+          { key: 'ai_generated' as const, label: 'IA générée' },
+          { key: 'published' as const, label: 'Publiés' },
+          { key: 'ignored' as const, label: 'Ignorés' },
         ]).map(({ key, label }) => (
           <button key={key} onClick={() => setFilter(key)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
@@ -513,7 +513,7 @@ export default function ReviewsPage() {
                   <div className="bg-emerald-50/50 rounded-xl p-4 mb-3">
                     <div className="flex items-center gap-1.5 mb-2">
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-xs font-medium text-emerald-700">Reponse publiée</span>
+                      <span className="text-xs font-medium text-emerald-700">Réponse publiée</span>
                       {review.replied_at && (
                         <span className="text-xs text-emerald-500">le {new Date(review.replied_at).toLocaleDateString('fr-FR')}</span>
                       )}

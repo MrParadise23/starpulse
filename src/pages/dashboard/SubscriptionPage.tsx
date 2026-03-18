@@ -88,7 +88,7 @@ export default function SubscriptionPage() {
       {checkoutStatus === 'succèss' && (
         <div style={{ background:'#dcfce7', border:'1px solid #bbf7d0', borderRadius:14, padding:'14px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Abonnement active avec succès ! Bienvenue dans StarPulse Pro.</span>
+          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Abonnement activé avec succès ! Bienvenue dans StarPulse Pro.</span>
         </div>
       )}
       {checkoutStatus === 'cancelled' && (
@@ -136,7 +136,7 @@ export default function SubscriptionPage() {
                 </div>
               )}
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                <span style={{ fontSize:13, color:'#666' }}>Periode actuelle</span>
+                <span style={{ fontSize:13, color:'#666' }}>Période actuelle</span>
                 <span style={{ fontSize:13, color:'#555' }}>
                   {subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleDateString('fr-FR') : '-'}
                   {' → '}

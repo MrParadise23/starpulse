@@ -29,7 +29,7 @@ export default function LoginPage() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
           <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:26, color:'#1a1a18', margin:'0 0 6px', letterSpacing:'-0.03em' }}>StarPulse</h1>
-          <p style={{ fontSize:14, color:'#888', margin:0 }}>Connectéz-vous à votre espace</p>
+          <p style={{ fontSize:14, color:'#888', margin:0 }}>Connectez-vous à votre espace</p>
         </div>
         <form onSubmit={handleLogin} style={{ background:'#fff', borderRadius:20, padding:'28px 24px', boxShadow:'0 1px 3px rgba(0,0,0,0.04),0 8px 32px rgba(0,0,0,0.06)', animation:'fadeUp 0.5s ease-out 0.1s both' }}>
           <div style={{ marginBottom:16 }}>

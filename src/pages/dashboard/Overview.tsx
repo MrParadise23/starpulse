@@ -42,14 +42,14 @@ export default function Overview() {
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </div>
         <h1 style={{ fontFamily: '"Outfit",system-ui', fontWeight: 700, fontSize: 24, color: '#1a1a18', margin: '0 0 8px', letterSpacing: '-0.02em' }}>Bienvenue sur StarPulse</h1>
-        <p style={{ fontSize: 15, color: '#888', lineHeight: 1.6, margin: '0 0 28px' }}>Configurez votre premier etablissement pour commencer a collecter et gerer vos avis clients.</p>
+        <p style={{ fontSize: 15, color: '#888', lineHeight: 1.6, margin: '0 0 28px' }}>Configurez votre premier établissement pour commencer à collecter et gérer vos avis clients.</p>
         <Link to="/dashboard/settings" style={{
           display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 14, border: 'none',
           background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: '#fff', fontSize: 15, fontWeight: 600,
           fontFamily: '"Outfit",system-ui', textDecoration: 'none', boxShadow: '0 4px 16px rgba(37,99,235,0.3)',
           transition: 'transform 0.1s', letterSpacing: '-0.01em'
         }}>
-          Configurer mon etablissement
+          Configurer mon établissement
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </Link>
       </div>
@@ -66,9 +66,9 @@ export default function Overview() {
 
   const cards = [
     { label: 'Scans cette semaine', value: stats?.scansThisWeek || 0, sub: `${stats?.totalScans || 0} au total`, color: '#2563eb', bg: 'rgba(37,99,235,0.06)', icon: 'scan', link: '' },
-    { label: 'Taux positif', value: `${stats?.positiveRate || 0}%`, sub: 'Rediriges vers Google', color: '#059669', bg: 'rgba(5,150,105,0.06)', icon: 'trend', link: '' },
+    { label: 'Taux positif', value: `${stats?.positiveRate || 0}%`, sub: 'Redirigés vers Google', color: '#059669', bg: 'rgba(5,150,105,0.06)', icon: 'trend', link: '' },
     { label: 'Retours non lus', value: stats?.unreadFeedbacks || 0, sub: `sur ${stats?.totalFeedbacks || 0} total`, color: '#d97706', bg: 'rgba(217,119,6,0.06)', icon: 'msg', link: '/dashboard/retours' },
-    { label: 'Avis en attente', value: stats?.pendingReplies || 0, sub: 'de reponse', color: '#7c3aed', bg: 'rgba(124,58,237,0.06)', icon: 'star', link: '/dashboard/reviews' },
+    { label: 'Avis en attente', value: stats?.pendingReplies || 0, sub: 'de réponse', color: '#7c3aed', bg: 'rgba(124,58,237,0.06)', icon: 'star', link: '/dashboard/reviews' },
   ]
 
   function CardIcon({ type, color }: { type: string; color: string }) {
@@ -132,12 +132,12 @@ export default function Overview() {
         <Link to="/dashboard/plates" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid #e8e8e4', background: '#fff', fontSize: 13, fontWeight: 500, color: '#555', textDecoration: 'none', transition: 'all 0.15s' }}
           onMouseEnter={(e) => { (e.target as HTMLElement).style.borderColor = '#2563eb'; (e.target as HTMLElement).style.color = '#2563eb' }}
           onMouseLeave={(e) => { (e.target as HTMLElement).style.borderColor = '#e8e8e4'; (e.target as HTMLElement).style.color = '#555' }}>
-          Gerer mes QR codes
+          + Créer un QR code
         </Link>
         <Link to="/dashboard/reviews" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid #e8e8e4', background: '#fff', fontSize: 13, fontWeight: 500, color: '#555', textDecoration: 'none', transition: 'all 0.15s' }}
           onMouseEnter={(e) => { (e.target as HTMLElement).style.borderColor = '#2563eb'; (e.target as HTMLElement).style.color = '#2563eb' }}
           onMouseLeave={(e) => { (e.target as HTMLElement).style.borderColor = '#e8e8e4'; (e.target as HTMLElement).style.color = '#555' }}>
-          Voir les avis Google
+          Importer des avis
         </Link>
         <Link to="/dashboard/settings" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid #e8e8e4', background: '#fff', fontSize: 13, fontWeight: 500, color: '#555', textDecoration: 'none', transition: 'all 0.15s' }}
           onMouseEnter={(e) => { (e.target as HTMLElement).style.borderColor = '#2563eb'; (e.target as HTMLElement).style.color = '#2563eb' }}

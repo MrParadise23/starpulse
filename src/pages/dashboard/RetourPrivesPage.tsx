@@ -59,7 +59,7 @@ export default function RetourPrivesPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
           <Inbox className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-600 font-medium">Aucun retour</p>
-          <p className="text-gray-400 text-sm mt-1">Les retours de vos clients insatisfaits apparaitront ici.</p>
+          <p className="text-gray-400 text-sm mt-1">Les retours de vos clients insatisfaits apparaîtront ici.</p>
         </div>
       ) : (
         <div className="space-y-3">

@@ -69,7 +69,7 @@ export default function PlatesPage() {
   }
 
   async function deletePlate(plateId: string) {
-    if (!confirm('Supprimer ce support ? Les scans associes seront perdus.')) return
+    if (!confirm('Supprimer ce support ? Les scans associés seront perdus.')) return
     await supabase.from('plates').delete().eq('id', plateId)
     loadPlates()
   }
@@ -125,7 +125,7 @@ export default function PlatesPage() {
                 <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0 }}>{plate.scan_count}</p>
                 <p style={{ fontSize:11, color:'#bbb', margin:0 }}>scans</p>
               </div>
-              <button onClick={() => setPreviewPlate(plate)} style={iconBtn} title="Previsualiser">
+              <button onClick={() => setPreviewPlate(plate)} style={iconBtn} title="Prévisualiser">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" transform="scale(0.67)"/><circle cx="8" cy="8" r="2"/></svg>
               </button>
               <button onClick={() => { setEditingId(plate.id); setEditLabel(plate.label || '') }} style={iconBtn} title="Renommer">
@@ -137,7 +137,7 @@ export default function PlatesPage() {
                   : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" transform="scale(0.58)"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" transform="scale(0.58)"/></svg>
                 }
               </button>
-              <button onClick={() => downloadQr(plate)} style={iconBtn} title="Telecharger QR">
+              <button onClick={() => downloadQr(plate)} style={iconBtn} title="Télécharger QR">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" transform="scale(0.67)"/></svg>
               </button>
               <a href={getPlateUrl(plate)} target="_blank" rel="noopener noreferrer" style={{ ...iconBtn, textDecoration:'none' }} title="Ouvrir">
@@ -153,7 +153,7 @@ export default function PlatesPage() {
           <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #f5f5f0', display:'flex', alignItems:'center', gap:14 }}>
             <img src={getQrImageUrl(plate)} alt="QR Code" style={{ width:72, height:72, borderRadius:10, border:'1px solid #f0f0ec' }}/>
             <div style={{ flex:1 }}>
-              <p style={{ fontSize:12, color:'#888', marginBottom:4 }}>Telechargez et imprimez ce QR code.</p>
+              <p style={{ fontSize:12, color:'#888', marginBottom:4 }}>Téléchargez et imprimez ce QR code.</p>
               <p style={{ fontSize:11, fontFamily:'monospace', color:'#bbb', wordBreak:'break-all' }}>{getPlateUrl(plate)}</p>
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function PlatesPage() {
         <div style={{ background:'#fffbeb', border:'1px solid #fde68a', borderRadius:12, padding:14, marginBottom:20, display:'flex', gap:10 }}>
           <svg width="18" height="18" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" transform="scale(0.75)"/></svg>
           <div>
-            <p style={{ fontSize:13, fontWeight:600, color:'#92400e', margin:'0 0 2px' }}>Lien de redirection non configure</p>
+            <p style={{ fontSize:13, fontWeight:600, color:'#92400e', margin:'0 0 2px' }}>Lien de redirection non configuré</p>
             <p style={{ fontSize:12, color:'#b45309', margin:0 }}>Allez dans Réglages pour configurer votre lien Google.</p>
           </div>
         </div>
@@ -191,11 +191,11 @@ export default function PlatesPage() {
               Tags NFC
             </h2>
             <div style={{ background:'#eff6ff', borderRadius:10, padding:12, marginBottom:12 }}>
-              <p style={{ fontSize:12, color:'#1e40af', margin:0 }}>Vos tags NFC encodes arrivent bientot. Ils apparaitront ici apres le premier scan.</p>
+              <p style={{ fontSize:12, color:'#1e40af', margin:0 }}>Vos tags NFC encodés arrivent bientôt. Ils apparaîtront ici après le premier scan.</p>
             </div>
             {nfcPlates.length === 0 ? (
               <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:32, textAlign:'center' }}>
-                <p style={{ fontSize:13, color:'#999', margin:0 }}>Aucun tag NFC active.</p>
+                <p style={{ fontSize:13, color:'#999', margin:0 }}>Aucun tag NFC activé.</p>
               </div>
             ) : (
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>{nfcPlates.map(p => <PlateCard key={p.id} plate={p}/>)}</div>
@@ -220,7 +220,7 @@ export default function PlatesPage() {
                   style={{ width:'100%', border:'1.5px solid #e8e8e4', borderRadius:10, padding:'10px 12px', fontSize:13, fontFamily:'inherit', outline:'none', marginBottom:10 }}/>
                 <div style={{ display:'flex', gap:8 }}>
                   <button onClick={createQrCode} disabled={creating} style={{ padding:'8px 18px', borderRadius:10, border:'none', background:'#2563eb', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'"Outfit",system-ui' }}>
-                    {creating ? 'Creation...' : 'Créer'}
+                    {creating ? 'Création...' : 'Créer'}
                   </button>
                   <button onClick={() => setShowCreateQr(false)} style={{ padding:'8px 18px', borderRadius:10, border:'1px solid #e8e8e4', background:'#fff', fontSize:13, color:'#666', cursor:'pointer' }}>Annuler</button>
                 </div>
@@ -262,7 +262,7 @@ export default function PlatesPage() {
                   {[1,2,3,4,5].map(s => <svg key={s} width="30" height="30" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" strokeWidth="1.5" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
                 </div>
               </div>
-              <p style={{ textAlign:'center', fontSize:10, color:'#c0c0b8', marginTop:12 }}>Propulse par StarPulse</p>
+              <p style={{ textAlign:'center', fontSize:10, color:'#c0c0b8', marginTop:12 }}>Propulsé par StarPulse</p>
             </div>
             <div style={{ padding:'12px 18px', borderTop:'1px solid #f0f0ec', background:'#fafaf8', display:'flex', justifyContent:'flex-end' }}>
               <a href={getPlateUrl(previewPlate)} target="_blank" rel="noopener noreferrer" style={{ fontSize:12, fontWeight:500, color:'#2563eb', textDecoration:'none' }}>Tester en vrai →</a>
