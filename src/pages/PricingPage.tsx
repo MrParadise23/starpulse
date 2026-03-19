@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
-const PRICE_MONTHLY = 'price_1TCJcSLMRsVfhf6RykLYqoSx'
-const PRICE_YEARLY = 'price_1TCJdCLMRsVfhf6RCBzCAUP3'
+const PRICE_MONTHLY = 'price_1TCjEzLMRsVfhf6RMRE1sO8K'
+const PRICE_YEARLY = 'price_1TCjGwLMRsVfhf6R06JFRqRr'
 
 const NFC_PACKS = [
   { type: 'single', label: '1 tag', qty: 1, price: 24.90 },
