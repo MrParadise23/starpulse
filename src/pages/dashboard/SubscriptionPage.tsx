@@ -7,8 +7,9 @@ import PricingPage from '../PricingPage'
 
 interface DashboardContext { establishment: Establishment | null; session: Session; refreshEstablishments: () => Promise<void> }
 
-interface Subscription {
+interface SubWithEst {
   id: string
+  establishment_id: string
   plan: string
   plan_interval: string
   status: string
@@ -18,11 +19,14 @@ interface Subscription {
   cancelled_at: string | null
   price_monthly: number
   stripe_subscription_id: string | null
+  establishment_name: string
+  establishment_logo: string | null
+  establishment_color: string
 }
 
 export default function SubscriptionPage() {
   const { establishment, session } = useOutletContext<DashboardContext>()
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [allSubs, setAllSubs] = useState<SubWithEst[]>([])
   const [loading, setLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [searchParams] = useSearchParams()
@@ -30,19 +34,33 @@ export default function SubscriptionPage() {
   const checkoutStatus = searchParams.get('checkout')
   const nfcStatus = searchParams.get('nfc_order')
 
-  useEffect(() => { loadSubscription() }, [establishment])
+  useEffect(() => { loadAllSubscriptions() }, [])
 
-  async function loadSubscription() {
-    if (!establishment) { setLoading(false); return }
-    const { data } = await supabase
+  async function loadAllSubscriptions() {
+    const { data: establishments } = await supabase
+      .from('establishments')
+      .select('id, name, logo_url, primary_color')
+      .eq('user_id', session.user.id)
+
+    const { data: subs } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('establishment_id', establishment.id)
+      .eq('user_id', session.user.id)
       .in('status', ['active', 'trialing', 'canceling', 'past_due'])
       .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-    setSubscription(data)
+
+    if (subs && establishments) {
+      const merged: SubWithEst[] = subs.map(sub => {
+        const est = establishments.find(e => e.id === sub.establishment_id)
+        return {
+          ...sub,
+          establishment_name: est?.name || 'Établissement',
+          establishment_logo: est?.logo_url || null,
+          establishment_color: est?.primary_color || '#2563eb',
+        }
+      })
+      setAllSubs(merged)
+    }
     setLoading(false)
   }
 
@@ -65,10 +83,15 @@ export default function SubscriptionPage() {
     trialing: { label: 'Essai gratuit', color: '#2563eb', bg: '#dbeafe' },
     canceling: { label: 'Annulation en cours', color: '#d97706', bg: '#fef3c7' },
     past_due: { label: 'Paiement en retard', color: '#dc2626', bg: '#fee2e2' },
-    cancelled: { label: 'Annulé', color: '#888', bg: '#f5f5f0' },
   }
 
   const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px' } as const
+
+  const activeSubs = allSubs.filter(s => ['active', 'trialing', 'canceling'].includes(s.status))
+  const totalMonthly = activeSubs.reduce((sum, s) => {
+    if (s.plan_interval === 'yearly') return sum + 20.75
+    return sum + 29
+  }, 0)
 
   if (loading) return (
     <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
@@ -81,11 +104,10 @@ export default function SubscriptionPage() {
     <div>
       <div className="mb-6">
         <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, letterSpacing:'-0.02em', color:'#1a1a18', margin:'0 0 4px' }}>Abonnement</h1>
-        <p style={{ fontSize:14, color:'#888', margin:0 }}>Gérez votre abonnement et votre facturation</p>
+        <p style={{ fontSize:14, color:'#888', margin:0 }}>Gérez vos abonnements et votre facturation</p>
       </div>
 
-      {/* Success/cancel banners */}
-      {checkoutStatus === 'succèss' && (
+      {(checkoutStatus === 'success' || checkoutStatus === 'succèss') && (
         <div style={{ background:'#dcfce7', border:'1px solid #bbf7d0', borderRadius:14, padding:'14px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
           <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Abonnement activé avec succès ! Bienvenue dans StarPulse Pro.</span>
@@ -93,107 +115,94 @@ export default function SubscriptionPage() {
       )}
       {checkoutStatus === 'cancelled' && (
         <div style={{ background:'#fef3c7', border:'1px solid #fde68a', borderRadius:14, padding:'14px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:14, color:'#92400e', fontWeight:500 }}>Le paiement a été annule. Vous pouvez réessayer quand vous voulez.</span>
+          <span style={{ fontSize:14, color:'#92400e', fontWeight:500 }}>Le paiement a été annulé. Vous pouvez réessayer quand vous voulez.</span>
         </div>
       )}
-      {nfcStatus === 'succèss' && (
+      {(nfcStatus === 'success' || nfcStatus === 'succèss') && (
         <div style={{ background:'#dcfce7', border:'1px solid #bbf7d0', borderRadius:14, padding:'14px 20px', marginBottom:20, display:'flex', alignItems:'center', gap:10 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Commande de tags NFC confirmée ! Vous recevrez un email de confirmation.</span>
+          <span style={{ fontSize:14, color:'#166534', fontWeight:500 }}>Commande de tags NFC confirmée !</span>
         </div>
       )}
 
       <div className="space-y-5">
-        {/* Current subscription */}
-        {subscription ? (
-          <section style={sectionStyle}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:12 }}>
-              <div>
-                <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:18, color:'#1a1a18', margin:'0 0 4px' }}>StarPulse Pro</h2>
-                <span style={{
-                  display:'inline-block', padding:'3px 10px', borderRadius:8, fontSize:12, fontWeight:600,
-                  background: statusLabels[subscription.status]?.bg || '#f5f5f0',
-                  color: statusLabels[subscription.status]?.color || '#888',
-                }}>
-                  {statusLabels[subscription.status]?.label || subscription.status}
-                </span>
-              </div>
-              <div style={{ textAlign:'right' }}>
-                <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:32, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
-                  {subscription.plan_interval === 'yearly' ? '249' : '29'}
-                  <span style={{ fontSize:14, fontWeight:500, color:'#888' }}> EUR/{subscription.plan_interval === 'yearly' ? 'an' : 'mois'}</span>
+        {allSubs.length > 0 ? (
+          <>
+            {/* Récap global */}
+            <section style={sectionStyle}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:20 }}>
+                <div>
+                  <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:18, color:'#1a1a18', margin:'0 0 4px' }}>Récapitulatif</h2>
+                  <p style={{ fontSize:13, color:'#888', margin:0 }}>{activeSubs.length} établissement{activeSubs.length > 1 ? 's' : ''} actif{activeSubs.length > 1 ? 's' : ''}</p>
+                </div>
+                <div style={{ textAlign:'right' }}>
+                  <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
+                    ~{totalMonthly.toFixed(0)}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span>
+                  </div>
+                  <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>Tous établissements confondus</p>
                 </div>
               </div>
-            </div>
 
-            <div style={{ background:'#f5f5f0', borderRadius:14, padding:'16px 20px', marginBottom:16 }}>
-              {subscription.status === 'trialing' && subscription.trial_ends_at && (
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                  <span style={{ fontSize:13, color:'#666' }}>Essai gratuit jusqu'au</span>
-                  <span style={{ fontSize:13, fontWeight:600, color:'#2563eb' }}>
-                    {new Date(subscription.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
-                  </span>
-                </div>
-              )}
-              {subscription.status !== 'trialing' && (
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                  <span style={{ fontSize:13, color:'#666' }}>Période actuelle</span>
-                  <span style={{ fontSize:13, color:'#555' }}>
-                    {subscription.current_period_start ? new Date(subscription.current_period_start).toLocaleDateString('fr-FR') : '-'}
-                    {' → '}
-                    {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR') : '-'}
-                  </span>
-                </div>
-              )}
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                <span style={{ fontSize:13, color:'#666' }}>Formule</span>
-                <span style={{ fontSize:13, fontWeight:500, color:'#555' }}>
-                  {subscription.plan_interval === 'yearly' ? 'Annuel' : 'Mensuel'}
-                </span>
+              <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                {allSubs.map(sub => (
+                  <div key={sub.id} style={{ background:'#f5f5f0', borderRadius:14, padding:'16px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:12, minWidth:0 }}>
+                      {sub.establishment_logo ? (
+                        <img src={sub.establishment_logo} alt="" style={{ width:32, height:32, borderRadius:8, objectFit:'cover', flexShrink:0 }}/>
+                      ) : (
+                        <div style={{ width:32, height:32, borderRadius:8, background:`${sub.establishment_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                          <span style={{ fontSize:13, fontWeight:700, color:sub.establishment_color }}>{sub.establishment_name.charAt(0)}</span>
+                        </div>
+                      )}
+                      <div style={{ minWidth:0 }}>
+                        <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sub.establishment_name}</p>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:2 }}>
+                          <span style={{
+                            display:'inline-block', padding:'2px 8px', borderRadius:6, fontSize:11, fontWeight:600,
+                            background: statusLabels[sub.status]?.bg || '#f5f5f0',
+                            color: statusLabels[sub.status]?.color || '#888',
+                          }}>
+                            {statusLabels[sub.status]?.label || sub.status}
+                          </span>
+                          {sub.status === 'trialing' && sub.trial_ends_at && (
+                            <span style={{ fontSize:11, color:'#888' }}>
+                              jusqu'au {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short' })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign:'right', flexShrink:0 }}>
+                      <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#1a1a18' }}>
+                        {sub.plan_interval === 'yearly' ? '249' : '29'}
+                      </span>
+                      <span style={{ fontSize:12, color:'#888' }}> EUR/{sub.plan_interval === 'yearly' ? 'an' : 'mois'}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-              {subscription.cancelled_at && (
-                <div style={{ display:'flex', justifyContent:'space-between' }}>
-                  <span style={{ fontSize:13, color:'#666' }}>Annulation demandée le</span>
-                  <span style={{ fontSize:13, color:'#d97706', fontWeight:500 }}>
-                    {new Date(subscription.cancelled_at).toLocaleDateString('fr-FR')}
-                  </span>
-                </div>
-              )}
-            </div>
+            </section>
 
-            {subscription.status === 'canceling' && (
-              <div style={{ background:'#fef3c7', borderRadius:12, padding:'12px 16px', marginBottom:16 }}>
-                <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
-                  Votre abonnement reste actif jusqu'au {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '-'}. Vous pouvez le réactiver à tout moment.
-                </p>
-              </div>
-            )}
-
-            {subscription.status === 'past_due' && (
-              <div style={{ background:'#fee2e2', borderRadius:12, padding:'12px 16px', marginBottom:16 }}>
-                <p style={{ fontSize:13, color:'#991b1b', margin:0 }}>
-                  Le dernier paiement a échoué. Veuillez mettre a jour votre moyen de paiement pour éviter l'interruption du service.
-                </p>
-              </div>
-            )}
-
-            <button onClick={openBillingPortal} disabled={portalLoading}
-              style={{
-                display:'flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:12, border:'1.5px solid #e8e8e4',
-                background:'#fff', color:'#555', fontSize:14, fontWeight:500, cursor: portalLoading ? 'wait' : 'pointer',
-                fontFamily:'"Outfit",system-ui', transition:'all 0.15s',
-              }}
-              onMouseEnter={(e) => { (e.currentTarget).style.borderColor='#ccc'; (e.currentTarget).style.boxShadow='0 2px 8px rgba(0,0,0,0.04)' }}
-              onMouseLeave={(e) => { (e.currentTarget).style.borderColor='#e8e8e4'; (e.currentTarget).style.boxShadow='none' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              {portalLoading ? 'Ouverture...' : 'Gérer la facturation (Stripe)'}
-            </button>
-            <p style={{ fontSize:11, color:'#aaa', marginTop:8 }}>
-              Changement de plan, mise a jour du moyen de paiement, annulation, factures...
-            </p>
-          </section>
+            {/* Billing portal */}
+            <section style={sectionStyle}>
+              <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 12px' }}>Facturation</h2>
+              <button onClick={openBillingPortal} disabled={portalLoading}
+                style={{
+                  display:'flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:12, border:'1.5px solid #e8e8e4',
+                  background:'#fff', color:'#555', fontSize:14, fontWeight:500, cursor: portalLoading ? 'wait' : 'pointer',
+                  fontFamily:'"Outfit",system-ui', transition:'all 0.15s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget).style.borderColor='#ccc'; (e.currentTarget).style.boxShadow='0 2px 8px rgba(0,0,0,0.04)' }}
+                onMouseLeave={(e) => { (e.currentTarget).style.borderColor='#e8e8e4'; (e.currentTarget).style.boxShadow='none' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                {portalLoading ? 'Ouverture...' : 'Gérer la facturation (Stripe)'}
+              </button>
+              <p style={{ fontSize:11, color:'#aaa', marginTop:8 }}>
+                Changement de plan, moyen de paiement, annulation, factures...
+              </p>
+            </section>
+          </>
         ) : (
-          /* No subscription - show pricing */
           <section style={sectionStyle}>
             <div style={{ textAlign:'center', marginBottom:24 }}>
               <div style={{ width:56, height:56, borderRadius:16, background:'rgba(37,99,235,0.06)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
