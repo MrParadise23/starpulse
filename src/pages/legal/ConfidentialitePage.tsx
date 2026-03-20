@@ -14,9 +14,7 @@ export default function ConfidentialitePage() {
       <p style={{ marginBottom:24 }}>StarPulse s'engage à protéger la vie privée de ses utilisateurs conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés. La présente politique de confidentialité décrit comment nous collectons, utilisons et protégeons vos données personnelles.</p>
 
       <S t="1. Responsable du traitement">
-        <p style={{ background:'#fef3c7', border:'1px solid #fde68a', borderRadius:12, padding:'12px 16px', margin:'12px 0', fontSize:13, color:'#92400e' }}>
-          ⚠️ <strong>À compléter :</strong> Nom, prénom (ou dénomination sociale), adresse du siège social, email de contact du responsable du traitement.
-        </p>
+        <p><strong>Louis Rocca Serra EI</strong> (Entrepreneur individuel, micro-entreprise)<br/>SIRET : 92872729600016<br/>Bonifacio, France</p>
         <p>Email de contact pour les questions relatives aux données : <strong>contact@star-pulse.com</strong></p>
       </S>
 
