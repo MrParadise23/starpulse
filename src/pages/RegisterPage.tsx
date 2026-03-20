@@ -14,10 +14,12 @@ export default function RegisterPage() {
   const [referralCode, setReferralCode] = useState(refCode)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (password.length < 6) { setError('Mot de passe : 6 caractères minimum.'); return }
+    if (!acceptedTerms) { setError('Vous devez accepter les CGV et CGU pour continuer.'); return }
     setLoading(true); setError('')
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email.trim(), password, options: { data: { full_name: fullName.trim() } }
@@ -73,6 +75,13 @@ export default function RegisterPage() {
           <div style={{ marginBottom:20 }}>
             <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Code parrainage <span style={{ color:'#aaa', fontWeight:400 }}>(optionnel)</span></label>
             <input type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="ex: LOUIS42" style={{...inputStyle, letterSpacing:'0.05em'}} onFocus={handleFocus} onBlur={handleBlur}/>
+          </div>
+          <div style={{ marginBottom:18, display:'flex', alignItems:'flex-start', gap:10 }}>
+            <input type="checkbox" id="accept-terms" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
+              style={{ marginTop:3, width:16, height:16, accentColor:'#2563eb', cursor:'pointer', flexShrink:0 }}/>
+            <label htmlFor="accept-terms" style={{ fontSize:12, color:'#888', lineHeight:1.5, cursor:'pointer' }}>
+              J'accepte les <a href="/cgv" target="_blank" style={{ color:'#2563eb', textDecoration:'none', fontWeight:500 }}>Conditions Générales de Vente</a>, les <a href="/cgu" target="_blank" style={{ color:'#2563eb', textDecoration:'none', fontWeight:500 }}>Conditions Générales d'Utilisation</a> et la <a href="/confidentialite" target="_blank" style={{ color:'#2563eb', textDecoration:'none', fontWeight:500 }}>Politique de confidentialité</a>.
+            </label>
           </div>
           {error && <div style={{ background:'#fef2f2', color:'#b91c1c', fontSize:13, padding:'10px 14px', borderRadius:10, marginBottom:16 }}>{error}</div>}
           <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px 0', borderRadius:14, border:'none', background:loading?'#93a3b8':'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:loading?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:loading?'none':'0 4px 16px rgba(37,99,235,0.3)', transition:'background 0.2s,transform 0.1s', letterSpacing:'-0.01em' }} onMouseDown={(e) => {if(!loading)(e.target as HTMLElement).style.transform='scale(0.98)'}} onMouseUp={(e) => (e.target as HTMLElement).style.transform='scale(1)'}>
