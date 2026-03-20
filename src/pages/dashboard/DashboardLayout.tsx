@@ -76,6 +76,84 @@ export default function DashboardLayout({ session }: { session: Session }) {
             </div>
             {activeEst && (
               <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'#f5f5f0', borderRadius:10 }}>
+                {activeEst.logo_url ? (
+                  <img src={activeEst.logo_url} alt={activeEst.name} style={{ width:28, height:28, borderRadius:8, objectFit:'cover', flexShrink:0 }} />
+                ) : (
+                  <div style={{ width:28, height:28, borderRadius:8, background:`${activeEst.primary_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <span style={{ fontSize:12, fontWeight:700, color:activeEst.primary_color }}>{activeEst.name.charAt(0)}</span>
+                  </div>
+                )}
+                <span style={{ fontSize:13, fontWeight:500, color:'#1a1a18', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{activeEst.name}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Nav items */}
+          <nav style={{ flex:1, padding:'12px 8px', display:'flex', flexDirection:'column', gap:2, overflowY:'auto' }}>
+            {navItems.map((item) => (
+              <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setSidebarOpen(false)}
+                style={({ isActive }) => ({
+                  display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10,
+                  fontSize:13, fontWeight:isActive?600:400, textDecoration:'none', transition:'all 0.15s',
+                  color: isActive ? '#2563eb' : '#666',
+                  background: isActive ? 'rgba(37,99,235,0.06)' : 'transparent',
+                })}>
+                <NavIcon type={item.icon} size={17}/>
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* User footer */}
+          <div style={{ padding:'12px 8px', borderTop:'1px solid #f0f0ec' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', marginBottom:4 }}>
+              <div style={{ width:32, height:32, borderRadius:10, background:'#f0f0ec', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <span style={{ fontSize:12, fontWeight:600, color:'#888' }}>{(userName || 'U').charAt(0).toUpperCase()}</span>
+              </div>
+              <span style={{ fontSize:13, fontWeight:500, color:'#1a1a18', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{userName}</span>
+            </div>
+            <button onClick={async () => { await supabase.auth.signOut(); navigate('/login') }}
+              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, width:'100%', border:'none', background:'transparent', cursor:'pointer', fontSize:13, color:'#999', transition:'all 0.15s', fontFamily:'inherit' }}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = '#f5f5f0'; (e.target as HTMLElement).style.color = '#666' }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.background = 'transparent'; (e.target as HTMLElement).style.color = '#999' }}>
+              <NavIcon type="logout" size={17}/>
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main style={{ marginLeft:0, paddingTop:56, minHeight:'100vh' }} className="main-content">
+        <div style={{ padding:'24px 16px', maxWidth:960, margin:'0 auto' }}>
+          <Outlet context={{ establishment: activeEst, session, refreshEstablishments: loadEstablishments }} />
+        </div>
+      </main>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .sidebar { transform: translateX(0) !important; }
+          .main-content { margin-left: 256px !important; padding-top: 0 !important; }
+          .lg\\:hidden { display: none !important; }
+        }
+      `}</style>
+    </div>
+  )
+}
+        <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+          {/* Logo */}
+          <div style={{ padding:'20px 16px 16px', borderBottom:'1px solid #f0f0ec' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:36, height:36, borderRadius:10, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(37,99,235,0.2)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+                <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:17, color:'#1a1a18', letterSpacing:'-0.02em' }}>StarPulse</span>
+              </div>
+              <button onClick={() => setSidebarOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'#aaa', padding:4 }} className="lg:hidden"><NavIcon type="x" size={16}/></button>
+            </div>
+            {activeEst && (
+              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'#f5f5f0', borderRadius:10 }}>
                 <div style={{ width:28, height:28, borderRadius:8, background:`${activeEst.primary_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                   <span style={{ fontSize:12, fontWeight:700, color:activeEst.primary_color }}>{activeEst.name.charAt(0)}</span>
                 </div>
