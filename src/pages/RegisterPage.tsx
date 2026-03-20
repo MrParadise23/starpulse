@@ -38,7 +38,7 @@ export default function RegisterPage() {
     navigate(redirectTo)
   }
 
-  const inputStyle = { width:'100%', border:'1.5px solid #e8e8e4', borderRadius:12, padding:'13px 14px', fontSize:14, fontFamily:'"DM Sans",system-ui', color:'#1a1a18', background:'#fafaf8', outline:'none', transition:'border-color 0.2s,box-shadow 0.2s' }
+  const inputStyle = { width:'100%', border:'1.5px solid #e8e8e4', borderRadius:12, padding:'13px 14px', fontSize:16, fontFamily:'"DM Sans",system-ui', color:'#1a1a18', background:'#fafaf8', outline:'none', transition:'border-color 0.2s,box-shadow 0.2s' }
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => { e.target.style.borderColor='#2563eb'; e.target.style.boxShadow='0 0 0 3px rgba(37,99,235,0.08)' }
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => { e.target.style.borderColor='#e8e8e4'; e.target.style.boxShadow='none' }
 
