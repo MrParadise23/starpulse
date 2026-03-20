@@ -38,12 +38,35 @@ export default function DashboardLayout({ session }: { session: Session }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [establishments, setEstablishments] = useState<Establishment[]>([])
   const [activeEst, setActiveEst] = useState<Establishment | null>(null)
+  const [estDropdownOpen, setEstDropdownOpen] = useState(false)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!estDropdownOpen) return
+    function handleClick() { setEstDropdownOpen(false) }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [estDropdownOpen])
 
   useEffect(() => { loadEstablishments() }, [])
 
   async function loadEstablishments() {
     const { data } = await supabase.from('establishments').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false })
-    if (data && data.length > 0) { setEstablishments(data); setActiveEst(data[0]) }
+    if (data && data.length > 0) {
+      setEstablishments(data)
+      setActiveEst(prev => {
+        if (prev) {
+          const stillExists = data.find(e => e.id === prev.id)
+          if (stillExists) return stillExists
+        }
+        return data[0]
+      })
+    }
+  }
+
+  function switchEstablishment(est: Establishment) {
+    setActiveEst(est)
+    setEstDropdownOpen(false)
   }
 
   const userName = session.user.user_metadata?.full_name || session.user.email
@@ -68,16 +91,51 @@ export default function DashboardLayout({ session }: { session: Session }) {
               </div>
               <button onClick={() => setSidebarOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'#aaa', padding:4 }} className="lg:hidden"><NavIcon type="x" size={16}/></button>
             </div>
+            {/* Establishment switcher */}
             {activeEst && (
-              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'#f5f5f0', borderRadius:10 }}>
-                {activeEst.logo_url ? (
-                  <img src={activeEst.logo_url} alt={activeEst.name} style={{ width:28, height:28, borderRadius:8, objectFit:'cover', flexShrink:0 }} />
-                ) : (
-                  <div style={{ width:28, height:28, borderRadius:8, background:`${activeEst.primary_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <span style={{ fontSize:12, fontWeight:700, color:activeEst.primary_color }}>{activeEst.name.charAt(0)}</span>
+              <div style={{ position:'relative' }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEstDropdownOpen(!estDropdownOpen) }}
+                  style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'#f5f5f0', borderRadius:10, width:'100%', border:'none', cursor:'pointer', textAlign:'left', transition:'all 0.15s' }}
+                  onMouseEnter={(e) => { (e.currentTarget).style.background = '#ededea' }}
+                  onMouseLeave={(e) => { (e.currentTarget).style.background = '#f5f5f0' }}
+                >
+                  {activeEst.logo_url ? (
+                    <img src={activeEst.logo_url} alt={activeEst.name} style={{ width:28, height:28, borderRadius:8, objectFit:'cover', flexShrink:0 }} />
+                  ) : (
+                    <div style={{ width:28, height:28, borderRadius:8, background:`${activeEst.primary_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:activeEst.primary_color }}>{activeEst.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <span style={{ fontSize:13, fontWeight:500, color:'#1a1a18', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{activeEst.name}</span>
+                  {establishments.length > 1 && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, transform: estDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  )}
+                </button>
+                {estDropdownOpen && establishments.length > 1 && (
+                  <div style={{ position:'absolute', top:'100%', left:0, right:0, marginTop:4, background:'#fff', borderRadius:12, border:'1px solid #e8e8e4', boxShadow:'0 8px 24px rgba(0,0,0,0.08)', zIndex:100, overflow:'hidden' }}>
+                    {establishments.filter(e => e.id !== activeEst.id).map(est => (
+                      <button
+                        key={est.id}
+                        onClick={() => switchEstablishment(est)}
+                        style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px', width:'100%', border:'none', background:'transparent', cursor:'pointer', textAlign:'left', transition:'background 0.1s' }}
+                        onMouseEnter={(e) => { (e.currentTarget).style.background = '#f5f5f0' }}
+                        onMouseLeave={(e) => { (e.currentTarget).style.background = 'transparent' }}
+                      >
+                        {est.logo_url ? (
+                          <img src={est.logo_url} alt={est.name} style={{ width:24, height:24, borderRadius:6, objectFit:'cover', flexShrink:0 }} />
+                        ) : (
+                          <div style={{ width:24, height:24, borderRadius:6, background:`${est.primary_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                            <span style={{ fontSize:10, fontWeight:700, color:est.primary_color }}>{est.name.charAt(0)}</span>
+                          </div>
+                        )}
+                        <span style={{ fontSize:12, fontWeight:400, color:'#555', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{est.name}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
-                <span style={{ fontSize:13, fontWeight:500, color:'#1a1a18', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{activeEst.name}</span>
               </div>
             )}
           </div>
@@ -114,7 +172,7 @@ export default function DashboardLayout({ session }: { session: Session }) {
       </aside>
       <main style={{ marginLeft:0, paddingTop:56, minHeight:'100vh' }} className="main-content">
         <div style={{ padding:'24px 16px', maxWidth:960, margin:'0 auto' }}>
-          <Outlet context={{ establishment: activeEst, session, refreshEstablishments: loadEstablishments }} />
+          <Outlet context={{ establishment: activeEst, session, refreshEstablishments: loadEstablishments, establishments, switchEstablishment }} />
         </div>
       </main>
       <style>{`

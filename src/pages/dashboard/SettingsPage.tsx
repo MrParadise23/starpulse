@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import type { Establishment } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
-interface DashboardContext { establishment: Establishment | null; session: Session; refreshEstablishments: () => Promise<void> }
+interface DashboardContext { establishment: Establishment | null; session: Session; refreshEstablishments: () => Promise<void>; establishments: Establishment[]; switchEstablishment: (est: Establishment) => void }
 
 const CATEGORIES = [
   { value: 'restaurant', label: 'Restaurant' },
@@ -21,10 +21,12 @@ const CATEGORIES = [
 ]
 
 export default function SettingsPage() {
-  const { establishment, session, refreshEstablishments } = useOutletContext<DashboardContext>()
+  const { establishment, session, refreshEstablishments, establishments, switchEstablishment } = useOutletContext<DashboardContext>()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const isNew = !establishment
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
+  const [canAddError, setCanAddError] = useState('')
+  const isNew = !establishment || isCreatingNew
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -47,6 +49,15 @@ export default function SettingsPage() {
   const [aiRules, setAiRules] = useState('')
 
   useEffect(() => {
+    if (isCreatingNew) {
+      setName(''); setAddress(''); setCity(''); setCategory('restaurant')
+      setRedirectUrl(''); setRoutingQuestion("Comment s'est passée votre expérience ?")
+      setSatisfactionThreshold(4); setPrimaryColor('#2563eb'); setLogoUrl('')
+      setAiTone('chaleureux et professionnel'); setAiInstructions('')
+      setAiPreferredExpressions(''); setAiAvoidExpressions('')
+      setAiResponseLength('medium'); setAiPositiveStyle(''); setAiNegativeStyle(''); setAiRules('')
+      return
+    }
     if (establishment) {
       setName(establishment.name)
       setAddress(establishment.address || '')
@@ -66,7 +77,7 @@ export default function SettingsPage() {
       setAiNegativeStyle((establishment as any).ai_negative_style || '')
       setAiRules((establishment as any).ai_rules || '')
     }
-  }, [establishment])
+  }, [establishment, isCreatingNew])
 
   async function uploadLogo(file: File) {
     setUploading(true)
@@ -91,6 +102,33 @@ export default function SettingsPage() {
     }
   }
 
+  async function checkCanAddEstablishment(): Promise<boolean> {
+    setCanAddError('')
+    // Count active subscriptions for this user
+    const { data: subs } = await supabase
+      .from('subscriptions')
+      .select('id, establishment_id')
+      .eq('user_id', session.user.id)
+      .in('status', ['active', 'trialing', 'canceling'])
+    const activeSubCount = subs?.length || 0
+    const estCount = establishments.length
+    if (estCount >= activeSubCount) {
+      setCanAddError(`Vous avez ${estCount} établissement(s) pour ${activeSubCount} abonnement(s) actif(s). Souscrivez un nouvel abonnement pour ajouter un établissement.`)
+      return false
+    }
+    return true
+  }
+
+  async function handleAddEstablishment() {
+    const ok = await checkCanAddEstablishment()
+    if (ok) setIsCreatingNew(true)
+  }
+
+  function cancelNewEstablishment() {
+    setIsCreatingNew(false)
+    setCanAddError('')
+  }
+
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
@@ -109,14 +147,20 @@ export default function SettingsPage() {
     }
     if (isNew) {
       const { data: newEst } = await supabase.from('establishments').insert(data).select().single()
-      if (newEst && redirectUrl.trim()) {
-        const qrCode = Math.random().toString(36).substring(2, 8).toUpperCase()
-        await supabase.from('plates').insert({ code: qrCode, establishment_id: newEst.id, label: 'QR principal', plate_type: 'qr', is_active: true, activated_at: new Date().toISOString() })
+      if (newEst) {
+        if (redirectUrl.trim()) {
+          const qrCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+          await supabase.from('plates').insert({ code: qrCode, establishment_id: newEst.id, label: 'QR principal', plate_type: 'qr', is_active: true, activated_at: new Date().toISOString() })
+        }
+        setIsCreatingNew(false)
+        await refreshEstablishments()
+        // Switch to the newly created establishment
+        switchEstablishment(newEst as Establishment)
       }
     } else {
       await supabase.from('establishments').update(data).eq('id', establishment!.id)
+      await refreshEstablishments()
     }
-    await refreshEstablishments()
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
 
@@ -132,8 +176,44 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em', margin:'0 0 4px' }}>{isNew ? 'Configurer mon établissement' : 'Réglages'}</h1>
-        <p className="text-gray-500 text-sm">{isNew ? 'Renseignez les informations de votre établissement.' : 'Paramètres de votre établissement, smart routing et IA.'}</p>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+          <div>
+            <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em', margin:'0 0 4px' }}>
+              {isCreatingNew ? 'Nouvel établissement' : isNew ? 'Configurer mon établissement' : 'Réglages'}
+            </h1>
+            <p className="text-gray-500 text-sm">
+              {isCreatingNew ? 'Renseignez les informations du nouvel établissement.' : isNew ? 'Renseignez les informations de votre établissement.' : 'Paramètres de votre établissement, smart routing et IA.'}
+            </p>
+          </div>
+          {!isNew && (
+            <button onClick={handleAddEstablishment}
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'10px 18px', borderRadius:12, border:'1.5px solid #e8e8e4', background:'#fff', fontSize:13, fontWeight:500, color:'#555', cursor:'pointer', transition:'all 0.15s', fontFamily:'"Outfit",system-ui', whiteSpace:'nowrap' }}
+              onMouseEnter={(e) => { (e.currentTarget).style.borderColor='#2563eb'; (e.currentTarget).style.color='#2563eb' }}
+              onMouseLeave={(e) => { (e.currentTarget).style.borderColor='#e8e8e4'; (e.currentTarget).style.color='#555' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Ajouter un établissement
+            </button>
+          )}
+        </div>
+        {canAddError && (
+          <div style={{ marginTop:12, background:'#fef3c7', border:'1px solid #fde68a', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'flex-start', gap:10 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <p style={{ fontSize:13, color:'#92400e', margin:0 }}>{canAddError}</p>
+              <button onClick={() => { setCanAddError(''); window.location.href = '/dashboard/subscription' }}
+                style={{ marginTop:8, padding:'6px 14px', borderRadius:8, border:'none', background:'#2563eb', color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'"Outfit",system-ui' }}>
+                Souscrire un abonnement
+              </button>
+            </div>
+          </div>
+        )}
+        {isCreatingNew && (
+          <button onClick={cancelNewEstablishment}
+            style={{ marginTop:12, display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:10, border:'1.5px solid #e8e8e4', background:'#fff', fontSize:13, fontWeight:500, color:'#888', cursor:'pointer', fontFamily:'"Outfit",system-ui' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Retour aux réglages
+          </button>
+        )}
       </div>
 
       <div className="space-y-6 max-w-lg">
@@ -376,7 +456,7 @@ export default function SettingsPage() {
             cursor: saving ? 'wait' : 'pointer', boxShadow: saving ? 'none' : '0 4px 16px rgba(37,99,235,0.3)',
             transition:'all 0.2s', letterSpacing:'-0.01em'
           }}>
-          {saving ? 'Enregistrément...' : saved ? 'Enregistré !' : isNew ? "Créer l'établissement" : 'Enregistrér les modifications'}
+          {saving ? 'Enregistrément...' : saved ? 'Enregistré !' : isCreatingNew ? "Créer l'établissement" : isNew ? "Créer l'établissement" : 'Enregistrer les modifications'}
         </button>
       </div>
     </div>
