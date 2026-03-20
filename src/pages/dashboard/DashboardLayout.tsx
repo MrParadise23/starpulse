@@ -43,7 +43,7 @@ export default function DashboardLayout({ session }: { session: Session }) {
   const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null)
 
   // Pages accessible without subscription
-  const freePages = ['/dashboard/settings', '/dashboard/subscription', '/dashboard/nfc-shop']
+  const freePages = ['/dashboard/subscription']
   const currentPath = location.pathname.replace(/\/$/, '') || '/dashboard'
   const isFreePage = freePages.includes(currentPath)
   
