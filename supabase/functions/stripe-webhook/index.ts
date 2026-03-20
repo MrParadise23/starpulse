@@ -165,6 +165,13 @@ serve(async (req) => {
           if (error) console.error("Error upserting subscription:", error)
           else console.log(`Subscription created for user ${userId}, plan: ${planInterval}`)
 
+          // Activate the establishment (in case it was created as a draft for multisite)
+          await supabase
+            .from("establishments")
+            .update({ is_active: true })
+            .eq("id", establishmentId)
+          console.log(`Establishment ${establishmentId} activated`)
+
           // Link referral to establishment
           await supabase
             .from("referrals")

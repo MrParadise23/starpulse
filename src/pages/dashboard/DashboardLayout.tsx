@@ -51,7 +51,7 @@ export default function DashboardLayout({ session }: { session: Session }) {
   useEffect(() => { loadEstablishments() }, [])
 
   async function loadEstablishments() {
-    const { data } = await supabase.from('establishments').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false })
+    const { data } = await supabase.from('establishments').select('*').eq('user_id', session.user.id).eq('is_active', true).order('created_at', { ascending: false })
     if (data && data.length > 0) {
       setEstablishments(data)
       setActiveEst(prev => {
