@@ -19,6 +19,11 @@ import AffiliatePage from './pages/dashboard/AffiliatePage'
 import SubscriptionPage from './pages/dashboard/SubscriptionPage'
 import PricingPage from './pages/PricingPage'
 import NfcShopPage from './pages/dashboard/NfcShopPage'
+import MentionsLegalesPage from './pages/legal/MentionsLegalesPage'
+import CgvPage from './pages/legal/CgvPage'
+import CguPage from './pages/legal/CguPage'
+import ConfidentialitePage from './pages/legal/ConfidentialitePage'
+import CookiesPage from './pages/legal/CookiesPage'
 
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
@@ -57,6 +62,12 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       {/* Pricing public */}
       <Route path="/pricing" element={<PricingPage session={session} />} />
+      {/* Pages légales */}
+      <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
+      <Route path="/cgv" element={<CgvPage />} />
+      <Route path="/cgu" element={<CguPage />} />
+      <Route path="/confidentialite" element={<ConfidentialitePage />} />
+      <Route path="/cookies" element={<CookiesPage />} />
       {/* Dashboard */}
       <Route path="/dashboard" element={
         <ProtectedRoute session={session}><DashboardLayout session={session!} /></ProtectedRoute>

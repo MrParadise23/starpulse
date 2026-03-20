@@ -228,15 +228,24 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ borderTop:'1px solid #f0f0ec', padding:'32px 24px' }}>
-        <div style={{ maxWidth:1080, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ width:24, height:24, borderRadius:6, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <footer style={{ borderTop:'1px solid #f0f0ec', padding:'40px 24px 32px' }}>
+        <div style={{ maxWidth:1080, margin:'0 auto' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16, marginBottom:20 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:24, height:24, borderRadius:6, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:14, color:'#888' }}>StarPulse</span>
             </div>
-            <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:14, color:'#888' }}>StarPulse</span>
+            <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+              <Link to="/mentions-legales" style={{ fontSize:12, color:'#aaa', textDecoration:'none' }}>Mentions légales</Link>
+              <Link to="/cgv" style={{ fontSize:12, color:'#aaa', textDecoration:'none' }}>CGV</Link>
+              <Link to="/cgu" style={{ fontSize:12, color:'#aaa', textDecoration:'none' }}>CGU</Link>
+              <Link to="/confidentialite" style={{ fontSize:12, color:'#aaa', textDecoration:'none' }}>Politique de confidentialité</Link>
+              <Link to="/cookies" style={{ fontSize:12, color:'#aaa', textDecoration:'none' }}>Cookies</Link>
+            </div>
           </div>
-          <p style={{ fontSize:12, color:'#bbb' }}>2026 StarPulse. Tous droits reserves.</p>
+          <p style={{ fontSize:12, color:'#bbb' }}>&copy; 2026 StarPulse. Tous droits réservés.</p>
         </div>
       </footer>
 
