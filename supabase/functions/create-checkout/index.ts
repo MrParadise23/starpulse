@@ -53,8 +53,37 @@ serve(async (req) => {
 
     // ===== SUBSCRIPTION CHECKOUT =====
     if (mode === "subscription") {
-      if (!price_id || !establishment_id) {
-        throw new Error("Missing price_id or establishment_id")
+      if (!price_id) {
+        throw new Error("Missing price_id")
+      }
+
+      // If no establishment_id provided, auto-create one
+      let finalEstablishmentId = establishment_id
+      if (!finalEstablishmentId) {
+        const { data: newEst, error: estError } = await supabase
+          .from("establishments")
+          .insert({
+            user_id: user.id,
+            name: "Mon établissement",
+            category: "autre",
+            is_active: false,
+            primary_color: "#2563eb",
+            routing_question: "Comment s'est passée votre expérience ?",
+            satisfaction_threshold: 4,
+            ai_tone: "chaleureux et professionnel",
+            ai_response_length: "medium",
+            rating_format: "stars",
+            secondary_color: "#1d4ed8",
+            google_connection_status: "not_connected",
+            total_google_reviews: 0,
+          })
+          .select()
+          .single()
+        if (estError || !newEst) {
+          throw new Error("Failed to create establishment: " + (estError?.message || "unknown"))
+        }
+        finalEstablishmentId = newEst.id
+        console.log(`Auto-created establishment ${finalEstablishmentId} for user ${user.id}`)
       }
 
       const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -63,15 +92,15 @@ serve(async (req) => {
         line_items: [{ price: price_id, quantity: 1 }],
         metadata: {
           user_id: user.id,
-          establishment_id,
+          establishment_id: finalEstablishmentId,
           plan_interval: plan_interval || "monthly",
         },
-        success_url: success_url || `${req.headers.get("origin")}/dashboard?checkout=success`,
-        cancel_url: cancel_url || `${req.headers.get("origin")}/dashboard?checkout=cancelled`,
+        success_url: success_url || `${req.headers.get("origin")}/dashboard/settings?checkout=success`,
+        cancel_url: cancel_url || `${req.headers.get("origin")}/dashboard/subscription?checkout=cancelled`,
         subscription_data: {
           metadata: {
             user_id: user.id,
-            establishment_id,
+            establishment_id: finalEstablishmentId,
           },
           trial_period_days: 7,
         },

@@ -201,12 +201,10 @@ export default function SubscriptionPage() {
               </div>
               <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:'0 0 8px' }}>Activez StarPulse Pro</h2>
               <p style={{ fontSize:14, color:'#888', margin:'0 0 4px' }}>
-                {establishment ? 'Choisissez votre formule pour débloquer toutes les fonctionnalités.' : 'Créez d\'abord votre établissement dans les Réglages.'}
+                Choisissez votre formule pour débloquer toutes les fonctionnalités. Essai gratuit 7 jours.
               </p>
             </div>
-            {establishment && (
-              <PricingPage session={session} establishmentId={establishment.id} embedded />
-            )}
+            <PricingPage session={session} establishmentId={establishment?.id} embedded />
           </section>
         )}
       </div>

@@ -32,12 +32,6 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
       return
     }
 
-    if (!establishmentId) {
-      alert("Veuillez d'abord créer votre établissement dans les Réglages.")
-      navigate('/dashboard/settings')
-      return
-    }
-
     setLoading(true)
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -45,7 +39,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
           mode: 'subscription',
           price_id: yearly ? PRICE_YEARLY : PRICE_MONTHLY,
           plan_interval: yearly ? 'yearly' : 'monthly',
-          establishment_id: establishmentId,
+          establishment_id: establishmentId || null,
         }
       })
       if (error) throw error

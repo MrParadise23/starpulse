@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
@@ -35,10 +35,20 @@ function NavIcon({ type, size = 18 }: { type: string; size?: number }) {
 
 export default function DashboardLayout({ session }: { session: Session }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [establishments, setEstablishments] = useState<Establishment[]>([])
   const [activeEst, setActiveEst] = useState<Establishment | null>(null)
   const [estDropdownOpen, setEstDropdownOpen] = useState(false)
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null)
+
+  // Pages accessible without subscription
+  const freePages = ['/dashboard/settings', '/dashboard/subscription', '/dashboard/nfc-shop']
+  const currentPath = location.pathname.replace(/\/$/, '') || '/dashboard'
+  const isFreePage = freePages.includes(currentPath)
+  
+  // Determine if we should block access: no active subscription on any establishment
+  const shouldBlock = !isFreePage && hasActiveSubscription === false
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -49,6 +59,34 @@ export default function DashboardLayout({ session }: { session: Session }) {
   }, [estDropdownOpen])
 
   useEffect(() => { loadEstablishments() }, [])
+
+  // Check subscription status whenever activeEst changes
+  useEffect(() => {
+    async function checkSub() {
+      if (activeEst) {
+        // Check by establishment_id
+        const { data } = await supabase
+          .from('subscriptions')
+          .select('id, status')
+          .eq('establishment_id', activeEst.id)
+          .in('status', ['active', 'trialing', 'canceling'])
+          .limit(1)
+          .single()
+        setHasActiveSubscription(!!data)
+      } else {
+        // No establishment yet — check if user has ANY active subscription
+        const { data } = await supabase
+          .from('subscriptions')
+          .select('id, status')
+          .eq('user_id', session.user.id)
+          .in('status', ['active', 'trialing', 'canceling'])
+          .limit(1)
+          .single()
+        setHasActiveSubscription(!!data)
+      }
+    }
+    checkSub()
+  }, [activeEst])
 
   async function loadEstablishments() {
     const { data } = await supabase.from('establishments').select('*').eq('user_id', session.user.id).eq('is_active', true).order('created_at', { ascending: false })
@@ -172,7 +210,29 @@ export default function DashboardLayout({ session }: { session: Session }) {
       </aside>
       <main style={{ marginLeft:0, paddingTop:56, minHeight:'100vh' }} className="main-content">
         <div style={{ padding:'24px 16px', maxWidth:960, margin:'0 auto' }}>
-          <Outlet context={{ establishment: activeEst, session, refreshEstablishments: loadEstablishments, establishments, switchEstablishment }} />
+          {/* Paywall: block pages if no active subscription */}
+          {shouldBlock ? (
+            <div style={{ textAlign:'center', maxWidth:480, margin:'80px auto', padding:'0 20px', animation:'fadeUp 0.5s ease-out' }}>
+              <div style={{ width:64, height:64, borderRadius:20, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 24px', boxShadow:'0 8px 32px rgba(37,99,235,0.25)' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', margin:'0 0 8px', letterSpacing:'-0.02em' }}>
+                Activez StarPulse Pro
+              </h1>
+              <p style={{ fontSize:15, color:'#888', lineHeight:1.6, margin:'0 0 28px' }}>
+                Souscrivez pour accéder à toutes les fonctionnalités. Essai gratuit de 7 jours, sans engagement.
+              </p>
+              <NavLink to="/dashboard/subscription" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 28px', borderRadius:14, border:'none', background:'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui', textDecoration:'none', boxShadow:'0 4px 16px rgba(37,99,235,0.3)' }}>
+                Voir les offres
+              </NavLink>
+              <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            </div>
+              </div>
+              <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            </div>
+          ) : (
+            <Outlet context={{ establishment: activeEst, session, refreshEstablishments: loadEstablishments, establishments, switchEstablishment }} />
+          )}
         </div>
       </main>
       <style>{`

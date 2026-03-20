@@ -42,7 +42,7 @@ export default function Overview() {
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         </div>
         <h1 style={{ fontFamily: '"Outfit",system-ui', fontWeight: 700, fontSize: 24, color: '#1a1a18', margin: '0 0 8px', letterSpacing: '-0.02em' }}>Bienvenue sur StarPulse</h1>
-        <p style={{ fontSize: 15, color: '#888', lineHeight: 1.6, margin: '0 0 28px' }}>Configurez votre premier établissement pour commencer à collecter et gérer vos avis clients.</p>
+        <p style={{ fontSize: 15, color: '#888', lineHeight: 1.6, margin: '0 0 28px' }}>Configurez votre établissement pour commencer à collecter vos avis clients.</p>
         <Link to="/dashboard/settings" style={{
           display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 14, border: 'none',
           background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: '#fff', fontSize: 15, fontWeight: 600,
@@ -50,7 +50,6 @@ export default function Overview() {
           transition: 'transform 0.1s', letterSpacing: '-0.01em'
         }}>
           Configurer mon établissement
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </Link>
       </div>
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
