@@ -52,6 +52,7 @@ export interface Plate {
   is_active: boolean
   activated_at: string | null
   created_at: string
+  archived: boolean
 }
 
 export interface Scan {
