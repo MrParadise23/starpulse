@@ -227,9 +227,6 @@ export default function DashboardLayout({ session }: { session: Session }) {
               </NavLink>
               <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
             </div>
-              </div>
-              <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
-            </div>
           ) : (
             <Outlet context={{ establishment: activeEst, session, refreshEstablishments: loadEstablishments, establishments, switchEstablishment }} />
           )}
