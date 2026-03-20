@@ -140,7 +140,7 @@ export default function PlatesPage() {
             <span style={{ fontSize:11, color:'#92400e', fontWeight:500 }}>Désactivé</span>
           </div>
         )}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12, flex:1, minWidth:0 }}>
             <div style={{ width:40, height:40, borderRadius:10, background: plate.plate_type==='nfc'?'rgba(37,99,235,0.06)':'rgba(124,58,237,0.06)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               {plate.plate_type === 'nfc'
@@ -170,68 +170,57 @@ export default function PlatesPage() {
             </div>
           </div>
           {!isEditing && (
-            <div style={{ display:'flex', alignItems:'center', gap:4, flexWrap:'wrap', justifyContent:'flex-end' }}>
-              <div style={{ textAlign:'right', marginRight:8 }}>
-                <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0 }}>{plate.scan_count}</p>
-                <p style={{ fontSize:11, color:'#bbb', margin:0 }}>scans</p>
-              </div>
-
-              {isArchived ? (
-                <button onClick={() => restorePlate(plate)}
-                  style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 12px', borderRadius:8, border:'1px solid #d1d5db', background:'#fff', fontSize:12, fontWeight:500, color:'#059669', cursor:'pointer' }}>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6" transform="scale(0.58)"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" transform="scale(0.58)"/></svg>
-                  Restaurer
-                </button>
-              ) : (
-                <>
-                  {/* Toggle activer/désactiver */}
-                  <button onClick={() => toggleActive(plate)}
-                    style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:8, border:'none', background: isActive ? 'rgba(5,150,105,0.08)' : 'rgba(217,119,6,0.08)', fontSize:12, fontWeight:500, color: isActive ? '#059669' : '#d97706', cursor:'pointer' }}
-                    title={isActive ? 'Désactiver' : 'Réactiver'}>
-                    {isActive ? (
-                      <><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="7" cy="7" r="5"/><path d="M5 7l1.5 1.5L9 5.5" /></svg>Actif</>
-                    ) : (
-                      <><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="7" cy="7" r="5"/><path d="M5.5 5.5l3 3M8.5 5.5l-3 3"/></svg>Inactif</>
-                    )}
-                  </button>
-
-                  {/* Télécharger QR - seulement pour QR codes */}
-                  {plate.plate_type === 'qr' && (
-                    <button onClick={() => downloadQr(plate)}
-                      style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:8, border:'none', background:'rgba(37,99,235,0.08)', fontSize:12, fontWeight:500, color:'#2563eb', cursor:'pointer' }}
-                      title="Télécharger le QR">
-                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" transform="scale(0.58)"/></svg>
-                      QR
-                    </button>
-                  )}
-
-                  {/* Prévisualiser */}
-                  <button onClick={() => openPreview(plate)} style={iconBtn} title="Prévisualiser le parcours client">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" transform="scale(0.67)"/><circle cx="8" cy="8" r="2"/></svg>
-                  </button>
-
-                  {/* Renommer */}
-                  <button onClick={() => { setEditingId(plate.id); setEditLabel(plate.label || '') }} style={iconBtn} title="Renommer">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" transform="scale(0.58)"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z" transform="scale(0.58)"/></svg>
-                  </button>
-
-                  {/* Copier le lien */}
-                  <button onClick={() => copyUrl(plate)} style={iconBtn} title="Copier le lien">
-                    {copiedId === plate.id
-                      ? <svg width="16" height="16" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5" transform="scale(0.67)"/></svg>
-                      : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" transform="scale(0.58)"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" transform="scale(0.58)"/></svg>
-                    }
-                  </button>
-
-                  {/* Archiver */}
-                  <button onClick={() => archivePlate(plate)} style={{ ...iconBtn, color:'#ddd' }} title="Archiver">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4" transform="scale(0.67)"/></svg>
-                  </button>
-                </>
-              )}
+            <div style={{ textAlign:'right', flexShrink:0 }}>
+              <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0 }}>{plate.scan_count}</p>
+              <p style={{ fontSize:11, color:'#bbb', margin:0 }}>scans</p>
             </div>
           )}
         </div>
+        {!isEditing && !isArchived && (
+          <div style={{ display:'flex', alignItems:'center', gap:4, flexWrap:'wrap', marginTop:10, paddingTop:10, borderTop:'1px solid #f5f5f0' }}>
+            <button onClick={() => toggleActive(plate)}
+              style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:8, border:'none', background: isActive ? 'rgba(5,150,105,0.08)' : 'rgba(217,119,6,0.08)', fontSize:12, fontWeight:500, color: isActive ? '#059669' : '#d97706', cursor:'pointer' }}
+              title={isActive ? 'Désactiver' : 'Réactiver'}>
+              {isActive ? (
+                <><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="7" cy="7" r="5"/><path d="M5 7l1.5 1.5L9 5.5" /></svg>Actif</>
+              ) : (
+                <><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="7" cy="7" r="5"/><path d="M5.5 5.5l3 3M8.5 5.5l-3 3"/></svg>Inactif</>
+              )}
+            </button>
+            {plate.plate_type === 'qr' && (
+              <button onClick={() => downloadQr(plate)}
+                style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:8, border:'none', background:'rgba(37,99,235,0.08)', fontSize:12, fontWeight:500, color:'#2563eb', cursor:'pointer' }}
+                title="Télécharger le QR">
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" transform="scale(0.58)"/></svg>
+                QR
+              </button>
+            )}
+            <button onClick={() => openPreview(plate)} style={iconBtn} title="Prévisualiser le parcours client">
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" transform="scale(0.67)"/><circle cx="8" cy="8" r="2"/></svg>
+            </button>
+            <button onClick={() => { setEditingId(plate.id); setEditLabel(plate.label || '') }} style={iconBtn} title="Renommer">
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" transform="scale(0.58)"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z" transform="scale(0.58)"/></svg>
+            </button>
+            <button onClick={() => copyUrl(plate)} style={iconBtn} title="Copier le lien">
+              {copiedId === plate.id
+                ? <svg width="16" height="16" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5" transform="scale(0.67)"/></svg>
+                : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" transform="scale(0.58)"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" transform="scale(0.58)"/></svg>
+              }
+            </button>
+            <button onClick={() => archivePlate(plate)} style={{ ...iconBtn, color:'#ddd' }} title="Archiver">
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4" transform="scale(0.67)"/></svg>
+            </button>
+          </div>
+        )}
+        {isArchived && (
+          <div style={{ display:'flex', alignItems:'center', gap:4, marginTop:10, paddingTop:10, borderTop:'1px solid #f5f5f0' }}>
+            <button onClick={() => restorePlate(plate)}
+              style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 12px', borderRadius:8, border:'1px solid #d1d5db', background:'#fff', fontSize:12, fontWeight:500, color:'#059669', cursor:'pointer' }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6" transform="scale(0.58)"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" transform="scale(0.58)"/></svg>
+              Restaurer
+            </button>
+          </div>
+        )}
         {plate.plate_type === 'qr' && !isEditing && !isArchived && (
           <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #f5f5f0', display:'flex', alignItems:'center', gap:14 }}>
             <img src={getQrImageUrl(plate)} alt="QR Code" style={{ width:72, height:72, borderRadius:10, border:'1px solid #f0f0ec' }}/>
