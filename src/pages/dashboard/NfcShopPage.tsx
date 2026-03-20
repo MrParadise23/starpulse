@@ -57,7 +57,7 @@ export default function NfcShopPage() {
             <p style={{ fontSize:13, color:'#666', margin:0, lineHeight:1.6 }}>
               Chaque tag NFC est pré-encodé avec un lien unique vers votre page d'avis StarPulse. 
               Collez-les sur vos tables, comptoir ou menu. Le client pose son téléphone dessus → il arrive directement sur votre smart routing.
-              Livraison en 3-5 jours ouvrés.
+              Livraison rapide en France métropolitaine et Europe.
             </p>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function NfcShopPage() {
           { q: 'Les tags sont-ils compatibles avec tous les téléphones ?', a: 'Oui, tous les smartphones récents (iPhone XS+ et Android avec NFC) peuvent lire nos tags sans application.' },
           { q: 'Comment activer un tag NFC ?', a: 'Les tags arrivent pré-encodés. Collez-les et ils sont immédiatement opérationnels , aucune configuration nécessaire.' },
           { q: 'Puis-je commander pour plusieurs établissements ?', a: 'Oui, vous pouvez passer plusieurs commandes. Chaque tag sera lié à votre compte et configurable depuis le dashboard.' },
-          { q: 'Quel est le délai de livraison ?', a: '3 à 5 jours ouvrés en France métropolitaine. Livraison également disponible en Belgique, Suisse et Luxembourg.' },
+          { q: 'Quel est le délai de livraison ?', a: 'Les tags sont expédiés dans les meilleurs délais après commande. Livraison disponible en France métropolitaine, Belgique, Suisse et Luxembourg.' },
         ].map((item, i) => (
           <div key={i} style={{ padding:'12px 0', borderBottom: i < 3 ? '1px solid #f5f5f0' : 'none' }}>
             <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:'0 0 4px' }}>{item.q}</p>

@@ -200,7 +200,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
           Tags NFC
         </h3>
         <p style={{ fontSize:14, color:'#888', margin:'0 0 28px', maxWidth:420, marginLeft:'auto', marginRight:'auto' }}>
-          Tags pré-encodés, prêts à coller. Livraison en 3-5 jours ouvrés.
+          Tags pré-encodés, prêts à coller. Livraison rapide en France et Europe.
         </p>
       </div>
 

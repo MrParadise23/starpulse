@@ -171,7 +171,7 @@ export default function LandingPage() {
         {/* NFC Tags */}
         <div style={{ textAlign:'center', marginTop:56, marginBottom:24 }}>
           <h3 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:22, letterSpacing:'-0.02em', margin:'0 0 8px' }}>Tags NFC</h3>
-          <p style={{ fontSize:14, color:'#888', margin:0 }}>Pré-encodés, prêts à coller. Livraison en 3-5 jours.</p>
+          <p style={{ fontSize:14, color:'#888', margin:0 }}>Pré-encodés, prêts à coller. Livraison rapide.</p>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(155px, 1fr))', gap:12, maxWidth:700, margin:'0 auto' }}>
           {[
