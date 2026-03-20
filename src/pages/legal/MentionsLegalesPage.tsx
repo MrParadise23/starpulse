@@ -13,10 +13,7 @@ export default function MentionsLegalesPage() {
 
       <S t="1. Éditeur du site">
         <p>Le site <strong>star-pulse.com</strong> (ci-après « le Site ») est édité par :</p>
-        <p><strong>Louis Rocca Serra EI</strong> (Entrepreneur individuel, micro-entreprise)<br/>SIRET : 92872729600016<br/>Code NAF : 7311Z<br/>Bonifacio, France</p>
-        <p style={{ background:'#fef3c7', border:'1px solid #fde68a', borderRadius:12, padding:'12px 16px', margin:'12px 0', fontSize:13, color:'#92400e' }}>
-          ⚠️ L'adresse complète du siège sera ajoutée prochainement.
-        </p>
+        <p><strong>Louis Rocca Serra EI</strong> (Entrepreneur individuel, micro-entreprise)<br/>SIRET : 92872729600016<br/>Code NAF : 7311Z<br/>17 Quai Comparetti, 20169 Bonifacio, France</p>
         <p>Email de contact : <strong>contact@star-pulse.com</strong></p>
         <p>Directeur de la publication : <strong>Louis Rocca Serra</strong></p>
       </S>
