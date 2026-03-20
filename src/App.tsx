@@ -7,6 +7,8 @@ import RoutingPage from './pages/RoutingPage'
 import ActivatePage from './pages/ActivatePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardLayout from './pages/dashboard/DashboardLayout'
 import Overview from './pages/dashboard/Overview'
 import PlatesPage from './pages/dashboard/PlatesPage'
@@ -51,6 +53,8 @@ export default function App() {
       {/* Auth */}
       <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={session ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+      <Route path="/forgot-password" element={session ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       {/* Pricing public */}
       <Route path="/pricing" element={<PricingPage session={session} />} />
       {/* Dashboard */}

@@ -46,6 +46,9 @@ export default function LoginPage() {
             </div>
           </div>
           {error && <div style={{ background:'#fef2f2', color:'#b91c1c', fontSize:13, padding:'10px 14px', borderRadius:10, marginBottom:16 }}>{error}</div>}
+          <div style={{ textAlign:'right', marginBottom:16 }}>
+            <Link to="/forgot-password" style={{ fontSize:13, color:'#2563eb', textDecoration:'none', fontWeight:500 }}>Mot de passe oublié ?</Link>
+          </div>
           <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px 0', borderRadius:14, border:'none', background:loading?'#93a3b8':'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:loading?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:loading?'none':'0 4px 16px rgba(37,99,235,0.3)', transition:'background 0.2s,transform 0.1s', letterSpacing:'-0.01em' }} onMouseDown={(e) => {if(!loading)(e.target as HTMLElement).style.transform='scale(0.98)'}} onMouseUp={(e) => (e.target as HTMLElement).style.transform='scale(1)'}>
             {loading?<div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>:'Se connecter'}
           </button>
