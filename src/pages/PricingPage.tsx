@@ -96,7 +96,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
               Un prix simple,<br/>sans surprise
             </h2>
             <p style={{ fontSize:15, color:'#888', margin:'0 0 28px', maxWidth:480, marginLeft:'auto', marginRight:'auto' }}>
-              Tout inclus. Pas de frais cachés. Essai gratuit 14 jours. Annulez quand vous voulez.
+              Tout inclus. Pas de frais cachés. Essai gratuit 7 jours. Annulez quand vous voulez.
             </p>
           </>
         )}
@@ -165,7 +165,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
                 'Dashboard temps réel',
                 'Retours privés + recontact client',
                 'Programme affiliation 20%',
-                'Essai gratuit 14 jours',
+                'Essai gratuit 7 jours',
                 ...(yearly ? ['1 tag NFC offert avec votre abonnement'] : []),
                 'Support prioritaire',
               ].map((f, i) => (
@@ -188,7 +188,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
               {loading ? 'Redirection...' : session ? 'S\'abonner maintenant' : 'Commencer l\'essai gratuit'}
             </button>
             <p style={{ fontSize:12, color:'#bbb', marginTop:12 }}>
-              {session ? 'Paiement sécurisé par Stripe. Annulez à tout moment.' : 'Essai gratuit 14 jours. Aucune carte requise à l\'inscription.'}
+              {session ? 'Paiement sécurisé par Stripe. Annulez à tout moment.' : 'Essai gratuit 7 jours. Aucune carte requise à l\'inscription.'}
             </p>
           </div>
         </div>
