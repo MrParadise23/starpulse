@@ -136,6 +136,31 @@ export default function SettingsPage() {
     setCanAddError('')
   }
 
+  async function handleNewEstablishmentCheckout() {
+    setCheckoutLoading(true)
+    try {
+      const origin = window.location.origin
+      const { data: checkoutData, error: checkoutErr } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          mode: 'subscription',
+          price_id: newPlanInterval === 'yearly' ? PRICE_YEARLY : PRICE_MONTHLY,
+          plan_interval: newPlanInterval,
+          establishment_id: null,
+          success_url: `${origin}/dashboard/settings?checkout=success`,
+          cancel_url: `${origin}/dashboard/settings?checkout=cancelled`,
+        }
+      })
+      if (checkoutErr) throw checkoutErr
+      if (checkoutData?.url) {
+        window.location.href = checkoutData.url
+        return
+      }
+    } catch (err: any) {
+      alert("Erreur : " + (err.message || "Réessayez."))
+    }
+    setCheckoutLoading(false)
+  }
+
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
@@ -153,47 +178,8 @@ export default function SettingsPage() {
       ai_rules: aiRules.trim() || null,
     }
 
-    if (isCreatingNew) {
-      // New establishment flow: create as draft (is_active: false) then launch Stripe checkout
-      estData.is_active = false
-      const { data: newEst, error: insertErr } = await supabase.from('establishments').insert(estData).select().single()
-      if (insertErr || !newEst) {
-        alert("Erreur lors de la création : " + (insertErr?.message || "Réessayez."))
-        setSaving(false)
-        return
-      }
-      // Create default QR code
-      if (redirectUrl.trim()) {
-        const qrCode = Math.random().toString(36).substring(2, 8).toUpperCase()
-        await supabase.from('plates').insert({ code: qrCode, establishment_id: newEst.id, label: 'QR principal', plate_type: 'qr', is_active: true, activated_at: new Date().toISOString() })
-      }
-      // Launch Stripe checkout for this new establishment
-      setSaving(false)
-      setCheckoutLoading(true)
-      try {
-        const origin = window.location.origin
-        const { data: checkoutData, error: checkoutErr } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            mode: 'subscription',
-            price_id: newPlanInterval === 'yearly' ? PRICE_YEARLY : PRICE_MONTHLY,
-            plan_interval: newPlanInterval,
-            establishment_id: newEst.id,
-            success_url: `${origin}/dashboard/settings?new_establishment=success&draft_id=${newEst.id}`,
-            cancel_url: `${origin}/dashboard/settings?new_establishment=cancelled&draft_id=${newEst.id}`,
-          }
-        })
-        if (checkoutErr) throw checkoutErr
-        if (checkoutData?.url) {
-          window.location.href = checkoutData.url
-          return
-        }
-      } catch (err: any) {
-        await supabase.from('establishments').delete().eq('id', newEst.id)
-        alert("Erreur lors du paiement : " + (err.message || "Réessayez."))
-      }
-      setCheckoutLoading(false)
-    } else if (isNew) {
-      // First establishment creation (subscription handled separately via SubscriptionPage)
+    if (isNew) {
+      // First establishment creation (after payment)
       const { data: newEst } = await supabase.from('establishments').insert(estData).select().single()
       if (newEst) {
         if (redirectUrl.trim()) {
@@ -231,10 +217,10 @@ export default function SettingsPage() {
               {isCreatingNew ? 'Nouvel établissement' : isNew ? 'Configurer mon établissement' : 'Réglages'}
             </h1>
             <p className="text-gray-500 text-sm">
-              {isCreatingNew ? 'Renseignez les informations du nouvel établissement.' : isNew ? 'Renseignez les informations de votre établissement.' : 'Paramètres de votre établissement, smart routing et IA.'}
+              {isCreatingNew ? 'Choisissez votre formule pour ce nouvel établissement.' : isNew ? 'Renseignez les informations de votre établissement.' : 'Paramètres de votre établissement, smart routing et IA.'}
             </p>
           </div>
-          {!isNew && (
+          {!isNew && !isCreatingNew && (
             <button onClick={handleAddEstablishment}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'10px 18px', borderRadius:12, border:'1.5px solid #e8e8e4', background:'#fff', fontSize:13, fontWeight:500, color:'#555', cursor:'pointer', transition:'all 0.15s', fontFamily:'"Outfit",system-ui', whiteSpace:'nowrap' }}
               onMouseEnter={(e) => { (e.currentTarget).style.borderColor='#2563eb'; (e.currentTarget).style.color='#2563eb' }}
@@ -258,6 +244,55 @@ export default function SettingsPage() {
           </button>
         )}
       </div>
+
+      {/* If creating new establishment: show only plan picker + checkout */}
+      {isCreatingNew ? (
+        <div className="max-w-lg" style={{ marginTop:24 }}>
+          <section style={sectionStyle}>
+            <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Abonnement pour ce nouvel établissement</h2>
+            <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Chaque établissement nécessite son propre abonnement. Essai gratuit 7 jours.</p>
+            <div style={{ display:'flex', gap:12 }}>
+              <button onClick={() => setNewPlanInterval('monthly')}
+                style={{
+                  flex:1, padding:'16px', borderRadius:14, border: newPlanInterval === 'monthly' ? '2px solid #2563eb' : '1.5px solid #e8e8e4',
+                  background: newPlanInterval === 'monthly' ? 'rgba(37,99,235,0.04)' : '#fff',
+                  cursor:'pointer', textAlign:'center', transition:'all 0.15s',
+                }}>
+                <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em' }}>29<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span></div>
+                <div style={{ fontSize:12, color:'#888', marginTop:4 }}>Sans engagement</div>
+              </button>
+              <button onClick={() => setNewPlanInterval('yearly')}
+                style={{
+                  flex:1, padding:'16px', borderRadius:14, border: newPlanInterval === 'yearly' ? '2px solid #2563eb' : '1.5px solid #e8e8e4',
+                  background: newPlanInterval === 'yearly' ? 'rgba(37,99,235,0.04)' : '#fff',
+                  cursor:'pointer', textAlign:'center', transition:'all 0.15s', position:'relative',
+                }}>
+                <div style={{ position:'absolute', top:-10, right:12, padding:'2px 8px', borderRadius:6, background:'#dcfce7', color:'#16a34a', fontSize:10, fontWeight:700 }}>-28%</div>
+                <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em' }}>249<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/an</span></div>
+                <div style={{ fontSize:12, color:'#888', marginTop:4 }}>~20,75 EUR/mois</div>
+              </button>
+            </div>
+          </section>
+          {checkoutLoading ? (
+            <div style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 28px', borderRadius:14, background:'#f5f5f0', marginTop:16 }}>
+              <div style={{ width:20, height:20, borderRadius:'50%', border:'3px solid #e8e8e4', borderTopColor:'#2563eb', animation:'spin 0.8s linear infinite' }}/>
+              <span style={{ fontSize:15, fontWeight:600, color:'#555', fontFamily:'"Outfit",system-ui' }}>Redirection vers le paiement...</span>
+              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+          ) : (
+            <button onClick={handleNewEstablishmentCheckout}
+              style={{
+                display:'flex', alignItems:'center', gap:8, padding:'14px 28px', borderRadius:14, border:'none',
+                background:'linear-gradient(135deg,#2563eb,#1d4ed8)',
+                color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui',
+                cursor:'pointer', boxShadow:'0 4px 16px rgba(37,99,235,0.3)',
+                transition:'all 0.2s', letterSpacing:'-0.01em', marginTop:16,
+              }}>
+              Souscrire et ajouter l'établissement
+            </button>
+          )}
+        </div>
+      ) : (
 
       <div className="space-y-6 max-w-lg">
 
@@ -490,56 +525,19 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Choix du plan pour nouvel établissement */}
-        {isCreatingNew && (
-          <section style={sectionStyle}>
-            <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', marginBottom:4 }}>Abonnement pour cet établissement</h2>
-            <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>Chaque établissement nécessite son propre abonnement.</p>
-            <div style={{ display:'flex', gap:12 }}>
-              <button onClick={() => setNewPlanInterval('monthly')}
-                style={{
-                  flex:1, padding:'16px', borderRadius:14, border: newPlanInterval === 'monthly' ? '2px solid #2563eb' : '1.5px solid #e8e8e4',
-                  background: newPlanInterval === 'monthly' ? 'rgba(37,99,235,0.04)' : '#fff',
-                  cursor:'pointer', textAlign:'center', transition:'all 0.15s',
-                }}>
-                <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em' }}>29<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span></div>
-                <div style={{ fontSize:12, color:'#888', marginTop:4 }}>Mensuel, sans engagement</div>
-              </button>
-              <button onClick={() => setNewPlanInterval('yearly')}
-                style={{
-                  flex:1, padding:'16px', borderRadius:14, border: newPlanInterval === 'yearly' ? '2px solid #2563eb' : '1.5px solid #e8e8e4',
-                  background: newPlanInterval === 'yearly' ? 'rgba(37,99,235,0.04)' : '#fff',
-                  cursor:'pointer', textAlign:'center', transition:'all 0.15s', position:'relative',
-                }}>
-                <div style={{ position:'absolute', top:-10, right:12, padding:'2px 8px', borderRadius:6, background:'#dcfce7', color:'#16a34a', fontSize:10, fontWeight:700 }}>-28%</div>
-                <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, color:'#1a1a18', letterSpacing:'-0.02em' }}>249<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/an</span></div>
-                <div style={{ fontSize:12, color:'#888', marginTop:4 }}>~20,75 EUR/mois</div>
-              </button>
-            </div>
-            <p style={{ fontSize:11, color:'#bbb', marginTop:10, textAlign:'center' }}>Essai gratuit 7 jours. Paiement sécurisé par Stripe.</p>
-          </section>
-        )}
-
         {/* Bouton sauvegarder */}
-        {checkoutLoading ? (
-          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 28px', borderRadius:14, background:'#f5f5f0' }}>
-            <div style={{ width:20, height:20, borderRadius:'50%', border:'3px solid #e8e8e4', borderTopColor:'#2563eb', animation:'spin 0.8s linear infinite' }}/>
-            <span style={{ fontSize:15, fontWeight:600, color:'#555', fontFamily:'"Outfit",system-ui' }}>Redirection vers le paiement...</span>
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-          </div>
-        ) : (
-          <button onClick={handleSave} disabled={saving || !name.trim()}
-            style={{
-              display:'flex', alignItems:'center', gap:8, padding:'14px 28px', borderRadius:14, border:'none',
-              background: saving ? '#93a3b8' : 'linear-gradient(135deg,#2563eb,#1d4ed8)',
-              color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui',
-              cursor: saving ? 'wait' : 'pointer', boxShadow: saving ? 'none' : '0 4px 16px rgba(37,99,235,0.3)',
-              transition:'all 0.2s', letterSpacing:'-0.01em'
-            }}>
-            {saving ? 'Création en cours...' : saved ? 'Enregistré !' : isCreatingNew ? 'Créer et souscrire' : isNew ? "Créer l'établissement" : 'Enregistrer les modifications'}
-          </button>
-        )}
+        <button onClick={handleSave} disabled={saving || !name.trim()}
+          style={{
+            display:'flex', alignItems:'center', gap:8, padding:'14px 28px', borderRadius:14, border:'none',
+            background: saving ? '#93a3b8' : 'linear-gradient(135deg,#2563eb,#1d4ed8)',
+            color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui',
+            cursor: saving ? 'wait' : 'pointer', boxShadow: saving ? 'none' : '0 4px 16px rgba(37,99,235,0.3)',
+            transition:'all 0.2s', letterSpacing:'-0.01em'
+          }}>
+          {saving ? 'Enregistrement...' : saved ? 'Enregistré !' : isNew ? "Créer l'établissement" : 'Enregistrer les modifications'}
+        </button>
       </div>
+      )}
     </div>
   )
 }
