@@ -210,8 +210,13 @@ export default function DashboardLayout({ session }: { session: Session }) {
       </aside>
       <main style={{ marginLeft:0, paddingTop:56, minHeight:'100vh' }} className="main-content">
         <div style={{ padding:'24px 16px', maxWidth:960, margin:'0 auto' }}>
-          {/* Paywall: block pages if no active subscription */}
-          {shouldBlock ? (
+          {/* Loading while checking subscription */}
+          {hasActiveSubscription === null && !isFreePage ? (
+            <div style={{ display:'flex', justifyContent:'center', padding:80 }}>
+              <div style={{ width:28, height:28, borderRadius:'50%', border:'3px solid #e8e8e4', borderTopColor:'#2563eb', animation:'spin 0.8s linear infinite' }}/>
+              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+          ) : shouldBlock ? (
             <div style={{ textAlign:'center', maxWidth:480, margin:'80px auto', padding:'0 20px', animation:'fadeUp 0.5s ease-out' }}>
               <div style={{ width:64, height:64, borderRadius:20, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 24px', boxShadow:'0 8px 32px rgba(37,99,235,0.25)' }}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
