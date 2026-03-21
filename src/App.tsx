@@ -50,7 +50,7 @@ export default function App() {
   return (
     <Routes>
       {/* Landing page publique */}
-      <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+      <Route path="/" element={<Navigate to={session ? "/dashboard" : "/login"} replace />} />
       {/* Smart routing client */}
       <Route path="/t/:code" element={<RoutingPage />} />
       <Route path="/r/:code" element={<RoutingPage />} />
