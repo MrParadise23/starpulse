@@ -23,7 +23,7 @@ interface Referral {
   created_at: string
   commission_end_date: string | null
   profiles?: { full_name: string | null; email: string } | null
-  subscription?: { status: string; price_monthly: number; billing_period: string; plan_interval: string; trial_ends_at: string | null; cancelled_at: string | null } | null
+  subscription?: { status: string; price_monthly: number; billing_period: string; plan_interval: string; trial_ends_at: string | null; cancelled_at: string | null; current_period_end: string | null } | null
 }
 
 interface Commission {
@@ -72,7 +72,7 @@ export default function AffiliatePage() {
         for (const ref of refData) {
           const { data: subData } = await supabase
             .from('subscriptions')
-            .select('status, price_monthly, billing_period, plan_interval, trial_ends_at, cancelled_at')
+            .select('status, price_monthly, billing_period, plan_interval, trial_ends_at, cancelled_at, current_period_end')
             .eq('user_id', ref.referred_user_id)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -280,7 +280,9 @@ export default function AffiliatePage() {
                             Ce filleul a résilié son abonnement{isTrial ? ' pendant sa période d\'essai' : ''}. Accès actif jusqu'au <span style={{ fontWeight:600 }}>
                               {isTrial && sub.trial_ends_at
                                 ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
-                                : 'fin de période'}
+                                : sub.current_period_end
+                                  ? new Date(sub.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
+                                  : 'fin de période'}
                             </span>, aucune commission ne sera générée.
                           </p>
                         </div>
