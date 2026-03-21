@@ -198,6 +198,7 @@ serve(async (req) => {
       }
 
       // ===== INVOICE PAID =====
+      case "invoice.payment_succeeded":
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice
         if (invoice.subscription) {
