@@ -262,7 +262,7 @@ export default function AffiliatePage() {
                       <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:badge.bg, color:badge.color, flexShrink:0 }}>{badge.label}</span>
                     )}
                     {ref.subscriptions.length > 1 && (
-                      <span style={{ fontSize:11, color:'#888' }}>{ref.subscriptions.length} abonnements</span>
+                      <span style={{ fontSize:11, fontWeight:600, color:'#8b5cf6', background:'rgba(139,92,246,0.08)', padding:'3px 10px', borderRadius:8 }}>{ref.subscriptions.length} abonnements</span>
                     )}
                   </div>
                   <p style={{ fontSize:12, color:'#888', margin:'0 0 10px' }}>
