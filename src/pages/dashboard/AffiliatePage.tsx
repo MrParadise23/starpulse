@@ -22,8 +22,8 @@ interface Referral {
   status: string
   created_at: string
   commission_end_date: string | null
-  referred_profiles?: { email: string; full_name: string | null } | null
-  referred_subscriptions?: { status: string; plan_interval: string; price_monthly: number } | null
+  profiles?: { full_name: string | null; email: string } | null
+  subscriptions?: { status: string }[] | null
 }
 
 interface Commission {
@@ -61,13 +61,32 @@ export default function AffiliatePage() {
       setAffiliate(affData)
       setIban(affData.iban || '')
 
-      // Load referrals
+      // Load referrals with profile info
       const { data: refData } = await supabase
         .from('referrals')
-        .select('*')
+        .select(`
+          *,
+          profiles:referred_user_id ( full_name, email )
+        `)
         .eq('affiliate_id', affData.id)
         .order('created_at', { ascending: false })
-      setReferrals(refData || [])
+
+      // For each referral, fetch subscription status
+      const referralsWithSub: Referral[] = []
+      if (refData) {
+        for (const ref of refData) {
+          const { data: subData } = await supabase
+            .from('subscriptions')
+            .select('status')
+            .eq('user_id', ref.referred_user_id)
+            .limit(1)
+          referralsWithSub.push({
+            ...ref,
+            subscriptions: subData || []
+          })
+        }
+      }
+      setReferrals(referralsWithSub)
 
       // Load commissions
       const { data: commData } = await supabase
@@ -95,6 +114,29 @@ export default function AffiliatePage() {
     setTimeout(() => setSavedIban(false), 2000)
   }
 
+  function getReferralStatus(ref: Referral): 'active' | 'inactive' | 'expired' {
+    const sub = ref.subscriptions?.[0]
+    const hasActiveSub = sub && ['active', 'trialing'].includes(sub.status)
+    const commissionExpired = ref.commission_end_date && new Date(ref.commission_end_date) < new Date()
+    if (commissionExpired) return 'expired'
+    if (!hasActiveSub) return 'inactive'
+    return 'active'
+  }
+
+  function getStatusBadge(status: 'active' | 'inactive' | 'expired') {
+    const styles = {
+      active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
+      inactive: { bg: '#fef3c7', color: '#d97706', label: 'Inactif' },
+      expired: { bg: '#f5f5f0', color: '#888', label: 'Expiré' },
+    }
+    const s = styles[status]
+    return (
+      <span style={{ padding:'4px 12px', borderRadius:8, fontSize:12, fontWeight:600, background:s.bg, color:s.color }}>
+        {s.label}
+      </span>
+    )
+  }
+
   if (loading) return (
     <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
       <div style={{ width:28, height:28, borderRadius:'50%', border:'3px solid #e8e8e4', borderTopColor:'#2563eb', animation:'spin 0.8s linear infinite' }}/>
@@ -106,7 +148,7 @@ export default function AffiliatePage() {
 
   const baseUrl = window.location.origin
   const referralLink = `${baseUrl}/register?ref=${affiliate.referral_code}`
-  const activeReferrals = referrals.filter(r => r.status === 'active').length
+  const activeReferrals = referrals.filter(r => getReferralStatus(r) === 'active').length
   const pendingCommissions = commissions.filter(c => c.status === 'pending').reduce((sum, c) => sum + c.amount, 0)
   const paidCommissions = commissions.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0)
 
@@ -245,27 +287,29 @@ export default function AffiliatePage() {
           </div>
         ) : (
           <div>
-            {referrals.map(ref => (
-              <div key={ref.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #f5f5f0' }}>
-                <div>
-                  <p style={{ fontSize:14, fontWeight:500, color:'#1a1a18', margin:'0 0 2px' }}>
-                    Filleul inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
-                  </p>
-                  {ref.commission_end_date && (
-                    <p style={{ fontSize:12, color:'#888', margin:0 }}>
-                      Commissions jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
+            {referrals.map(ref => {
+              const status = getReferralStatus(ref)
+              const name = ref.profiles?.full_name || ref.profiles?.email || 'Utilisateur inconnu'
+              const email = ref.profiles?.email || ''
+              return (
+                <div key={ref.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 0', borderBottom:'1px solid #f5f5f0' }}>
+                  <div style={{ minWidth:0 }}>
+                    <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:'0 0 2px', fontFamily:'"Outfit",system-ui' }}>
+                      {name}
                     </p>
-                  )}
+                    <p style={{ fontSize:12, color:'#888', margin:'0 0 2px' }}>
+                      {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
+                    </p>
+                    {ref.commission_end_date && (
+                      <p style={{ fontSize:11, color:'#aaa', margin:0 }}>
+                        Commissions jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
+                  </div>
+                  {getStatusBadge(status)}
                 </div>
-                <span style={{
-                  padding:'4px 12px', borderRadius:8, fontSize:12, fontWeight:600,
-                  background: ref.status === 'active' ? '#dcfce7' : '#f5f5f0',
-                  color: ref.status === 'active' ? '#16a34a' : '#888',
-                }}>
-                  {ref.status === 'active' ? 'Actif' : 'Inactif'}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
