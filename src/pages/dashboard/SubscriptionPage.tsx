@@ -213,7 +213,7 @@ export default function SubscriptionPage() {
                         <div style={{ marginTop:10, padding:'10px 14px', background:'#fff', borderRadius:10, display:'flex', alignItems:'center', gap:8 }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                           <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
-                            Abonnement annulé · Accès maintenu jusqu'au <span style={{ fontWeight:600 }}>{endDate}</span>
+                            Abonnement annulé · {sub.status === 'trialing' ? 'Période d\'essai active' : 'Accès maintenu'} jusqu'au <span style={{ fontWeight:600 }}>{endDate}</span>
                           </p>
                         </div>
                       )}
