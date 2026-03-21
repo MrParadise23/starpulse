@@ -26,6 +26,7 @@ function NavIcon({ type, size = 18 }: { type: string; size?: number }) {
     case 'settings': return <svg {...p} viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     case 'shop': return <svg {...p} viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
     case 'credit': return <svg {...p} viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    case 'admin': return <svg {...p} viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     case 'logout': return <svg {...p} viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     case 'menu': return <svg {...p} viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     case 'x': return <svg {...p} viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -42,15 +43,15 @@ export default function DashboardLayout({ session }: { session: Session }) {
   const [estDropdownOpen, setEstDropdownOpen] = useState(false)
   const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null)
 
+  const isAdmin = session.user.email === 'louis.roccasolutions@gmail.com'
+
   // Pages accessible without subscription
-  const freePages = ['/dashboard/subscription']
+  const freePages = ['/dashboard/subscription', '/dashboard/admin']
   const currentPath = location.pathname.replace(/\/$/, '') || '/dashboard'
   const isFreePage = freePages.includes(currentPath)
   
-  // Determine if we should block access: no active subscription on any establishment
   const shouldBlock = !isFreePage && hasActiveSubscription === false
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     if (!estDropdownOpen) return
     function handleClick() { setEstDropdownOpen(false) }
@@ -60,11 +61,9 @@ export default function DashboardLayout({ session }: { session: Session }) {
 
   useEffect(() => { loadEstablishments() }, [])
 
-  // Check subscription status whenever activeEst changes
   useEffect(() => {
     async function checkSub() {
       if (activeEst) {
-        // Check by establishment_id
         const { data } = await supabase
           .from('subscriptions')
           .select('id, status')
@@ -74,7 +73,6 @@ export default function DashboardLayout({ session }: { session: Session }) {
           .single()
         setHasActiveSubscription(!!data)
       } else {
-        // No establishment yet — check if user has ANY active subscription
         const { data } = await supabase
           .from('subscriptions')
           .select('id, status')
@@ -129,7 +127,6 @@ export default function DashboardLayout({ session }: { session: Session }) {
               </div>
               <button onClick={() => setSidebarOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'#aaa', padding:4 }} className="lg:hidden"><NavIcon type="x" size={16}/></button>
             </div>
-            {/* Establishment switcher */}
             {activeEst && (
               <div style={{ position:'relative' }}>
                 <button
@@ -190,6 +187,19 @@ export default function DashboardLayout({ session }: { session: Session }) {
                 {item.label}
               </NavLink>
             ))}
+            {isAdmin && (
+              <NavLink to="/dashboard/admin" onClick={() => setSidebarOpen(false)}
+                style={({ isActive }) => ({
+                  display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10,
+                  fontSize:13, fontWeight:isActive?600:400, textDecoration:'none', transition:'all 0.15s',
+                  color: isActive ? '#dc2626' : '#888',
+                  background: isActive ? 'rgba(220,38,38,0.06)' : 'transparent',
+                  marginTop:8, borderTop:'1px solid #f0f0ec', paddingTop:18,
+                })}>
+                <NavIcon type="admin" size={17}/>
+                Administration
+              </NavLink>
+            )}
           </nav>
           <div style={{ padding:'12px 8px', borderTop:'1px solid #f0f0ec' }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', marginBottom:4 }}>
@@ -210,7 +220,6 @@ export default function DashboardLayout({ session }: { session: Session }) {
       </aside>
       <main style={{ marginLeft:0, paddingTop:56, minHeight:'100vh' }} className="main-content">
         <div style={{ padding:'24px 16px', maxWidth:960, margin:'0 auto' }}>
-          {/* Wait silently while checking subscription */}
           {hasActiveSubscription === null && !isFreePage ? (
             <div/>
           ) : shouldBlock ? (
