@@ -88,6 +88,39 @@ export default function RegisterPage() {
             {loading?<div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>:'Créer mon compte'}
           </button>
         </form>
+        <p style={{ textAlign:'center', fontSize:14, color:'#888', marginTop:24, animation:'fadeUp 0.5s ease-out 0.2s both' }}>Déjà un compte ? <Link to="/login" style={{ color:'#2563eb', fontWeight:600, textDecoration:'none' }}>Se connecter</Link></p>
+        <p style={{ textAlign:'center', fontSize:11, color:'#c0c0b8', marginTop:32, letterSpacing:'0.02em' }}>StarPulse · Gérez vos avis, boostez votre réputation.</p>
+      </div>
+      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{margin:0;padding:0;box-sizing:border-box}input::placeholder{color:#bbb}`}</style>
+    </div>
+  )
+}
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Mot de passe</label>
+            <div style={{ position:'relative' }}>
+              <input type={showPw?'text':'password'} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="6 caractères minimum" style={{...inputStyle,paddingRight:44}} onFocus={handleFocus} onBlur={handleBlur}/>
+              <button type="button" onClick={() => setShowPw(!showPw)} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', padding:4, color:'#aaa' }}>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d={showPw?"M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24":"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"} transform="scale(0.75)"/>{showPw&&<line x1="0.75" y1="0.75" x2="17.25" y2="17.25"/>}{!showPw&&<circle cx="9" cy="9" r="2.25"/>}</svg>
+              </button>
+            </div>
+          </div>
+          <div style={{ marginBottom:20 }}>
+            <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Code parrainage <span style={{ color:'#aaa', fontWeight:400 }}>(optionnel)</span></label>
+            <input type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="ex: LOUIS42" style={{...inputStyle, letterSpacing:'0.05em'}} onFocus={handleFocus} onBlur={handleBlur}/>
+          </div>
+          <div style={{ marginBottom:18, display:'flex', alignItems:'flex-start', gap:10 }}>
+            <input type="checkbox" id="accept-terms" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
+              style={{ marginTop:3, width:16, height:16, accentColor:'#2563eb', cursor:'pointer', flexShrink:0 }}/>
+            <label htmlFor="accept-terms" style={{ fontSize:12, color:'#888', lineHeight:1.5, cursor:'pointer' }}>
+              J'accepte les <a href="/cgv" target="_blank" style={{ color:'#2563eb', textDecoration:'none', fontWeight:500 }}>Conditions Générales de Vente</a>, les <a href="/cgu" target="_blank" style={{ color:'#2563eb', textDecoration:'none', fontWeight:500 }}>Conditions Générales d'Utilisation</a> et la <a href="/confidentialite" target="_blank" style={{ color:'#2563eb', textDecoration:'none', fontWeight:500 }}>Politique de confidentialité</a>.
+            </label>
+          </div>
+          {error && <div style={{ background:'#fef2f2', color:'#b91c1c', fontSize:13, padding:'10px 14px', borderRadius:10, marginBottom:16 }}>{error}</div>}
+          <button type="submit" disabled={loading} style={{ width:'100%', padding:'14px 0', borderRadius:14, border:'none', background:loading?'#93a3b8':'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:15, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:loading?'wait':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, boxShadow:loading?'none':'0 4px 16px rgba(37,99,235,0.3)', transition:'background 0.2s,transform 0.1s', letterSpacing:'-0.01em' }} onMouseDown={(e) => {if(!loading)(e.target as HTMLElement).style.transform='scale(0.98)'}} onMouseUp={(e) => (e.target as HTMLElement).style.transform='scale(1)'}>
+            {loading?<div style={{ width:18, height:18, border:'2px solid #fff', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>:'Créer mon compte'}
+          </button>
+        </form>
         <div style={{ textAlign:'center', marginTop:24, animation:'fadeUp 0.5s ease-out 0.2s both' }}>
           <span style={{ fontSize:12, color:'#999', fontFamily:'"DM Sans",system-ui' }}>Opérationnel en 5 min.</span>
         </div>
