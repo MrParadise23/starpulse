@@ -23,7 +23,7 @@ interface Referral {
   created_at: string
   commission_end_date: string | null
   profiles?: { full_name: string | null; email: string } | null
-  subscription?: { status: string; price_monthly: number; billing_period: string; plan_interval: string; trial_ends_at: string | null } | null
+  subscription?: { status: string; price_monthly: number; billing_period: string; plan_interval: string; trial_ends_at: string | null; cancelled_at: string | null } | null
 }
 
 interface Commission {
@@ -72,7 +72,7 @@ export default function AffiliatePage() {
         for (const ref of refData) {
           const { data: subData } = await supabase
             .from('subscriptions')
-            .select('status, price_monthly, billing_period, plan_interval, trial_ends_at')
+            .select('status, price_monthly, billing_period, plan_interval, trial_ends_at, cancelled_at')
             .eq('user_id', ref.referred_user_id)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -106,13 +106,15 @@ export default function AffiliatePage() {
     setTimeout(() => setSavedIban(false), 2000)
   }
 
-  function getReferralStatus(ref: Referral): 'active' | 'inactive' | 'expired' {
+  function getReferralStatus(ref: Referral): 'active' | 'cancelled' | 'inactive' | 'expired' {
     const sub = ref.subscription
-    const hasActiveSub = sub && ['active', 'trialing'].includes(sub.status)
     const commissionExpired = ref.commission_end_date && new Date(ref.commission_end_date) < new Date()
     if (commissionExpired) return 'expired'
-    if (!hasActiveSub) return 'inactive'
-    return 'active'
+    if (!sub) return 'inactive'
+    // Cancelled but still in period (trial or active)
+    if (sub.cancelled_at) return 'cancelled'
+    if (['active', 'trialing'].includes(sub.status)) return 'active'
+    return 'inactive'
   }
 
   function isYearly(sub: Referral['subscription']) {
@@ -123,17 +125,6 @@ export default function AffiliatePage() {
   function getSubPrice(sub: Referral['subscription']) {
     if (!sub) return 0
     return isYearly(sub) ? sub.price_monthly * 12 : sub.price_monthly
-  }
-
-  // Estimate total potential earnings across all active referrals
-  function getTotalEstimatedMonthly() {
-    if (!affiliate) return 0
-    return referrals.reduce((sum, ref) => {
-      if (getReferralStatus(ref) !== 'active' || !ref.subscription) return sum
-      const sub = ref.subscription
-      const monthly = isYearly(sub) ? (sub.price_monthly * 12 * affiliate.commission_rate) / 12 : sub.price_monthly * affiliate.commission_rate
-      return sum + monthly
-    }, 0)
   }
 
   if (loading) return (
@@ -147,16 +138,16 @@ export default function AffiliatePage() {
 
   const baseUrl = window.location.origin
   const referralLink = `${baseUrl}/register?ref=${affiliate.referral_code}`
-  const activeReferrals = referrals.filter(r => getReferralStatus(r) === 'active').length
+  const rate = affiliate.commission_rate * 100
   const pendingCommissions = commissions.filter(c => c.status === 'pending').reduce((sum, c) => sum + c.amount, 0)
   const paidCommissions = commissions.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0)
-  const estimatedMonthly = getTotalEstimatedMonthly()
-  const rate = affiliate.commission_rate * 100
 
   const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px', marginBottom:20 } as const
-  const statusStyles = {
+
+  const statusConfig = {
     active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
-    inactive: { bg: '#fef3c7', color: '#d97706', label: 'Inactif' },
+    cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Annulé' },
+    inactive: { bg: '#f5f5f0', color: '#888', label: 'Inactif' },
     expired: { bg: '#f5f5f0', color: '#888', label: 'Expiré' },
   }
 
@@ -170,22 +161,22 @@ export default function AffiliatePage() {
         </p>
       </div>
 
-      {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:12, marginBottom:20 }}>
-        {[
-          { value: activeReferrals.toString(), label: 'Filleuls actifs', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>, iconBg: 'rgba(37,99,235,0.06)' },
-          { value: `${estimatedMonthly.toFixed(2)} €`, label: 'Revenu estimé / mois', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>, iconBg: 'rgba(139,92,246,0.06)' },
-          { value: `${pendingCommissions.toFixed(2)} €`, label: 'À recevoir', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>, iconBg: 'rgba(245,158,11,0.06)' },
-          { value: `${paidCommissions.toFixed(2)} €`, label: 'Déjà encaissé', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>, iconBg: 'rgba(5,150,105,0.06)' },
-        ].map((stat, i) => (
-          <div key={i} style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'18px' }}>
-            <div style={{ width:34, height:34, borderRadius:10, background:stat.iconBg, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-              {stat.icon}
-            </div>
-            <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:24, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{stat.value}</p>
-            <p style={{ fontSize:11, color:'#888', margin:0 }}>{stat.label}</p>
+      {/* Stats — 2 blocs seulement */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:12, marginBottom:20 }}>
+        <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'18px' }}>
+          <div style={{ width:34, height:34, borderRadius:10, background:'rgba(245,158,11,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           </div>
-        ))}
+          <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:24, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{pendingCommissions.toFixed(2)} €</p>
+          <p style={{ fontSize:11, color:'#888', margin:0 }}>À recevoir</p>
+        </div>
+        <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'18px' }}>
+          <div style={{ width:34, height:34, borderRadius:10, background:'rgba(5,150,105,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          </div>
+          <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:24, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{paidCommissions.toFixed(2)} €</p>
+          <p style={{ fontSize:11, color:'#888', margin:0 }}>Déjà encaissé</p>
+        </div>
       </div>
 
       {/* Lien et code */}
@@ -231,52 +222,72 @@ export default function AffiliatePage() {
           <div>
             {referrals.map(ref => {
               const status = getReferralStatus(ref)
-              const st = statusStyles[status]
+              const st = statusConfig[status]
               const name = ref.profiles?.full_name || ref.profiles?.email || 'Utilisateur inconnu'
               const email = ref.profiles?.email || ''
               const sub = ref.subscription
               const yearly = isYearly(sub)
               const subPrice = getSubPrice(sub)
               const commission = sub ? subPrice * affiliate.commission_rate : 0
+              const isCancelled = status === 'cancelled'
               const isTrial = sub?.status === 'trialing'
-              const trialEnd = sub?.trial_ends_at ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' }) : null
 
               return (
                 <div key={ref.id} style={{ padding:'16px 0', borderBottom:'1px solid #f5f5f0' }}>
-                  {/* Top row: name + badge */}
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, marginBottom:6, flexWrap:'wrap' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
-                      <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>
-                        {name}
-                      </p>
-                      <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:st.bg, color:st.color, flexShrink:0 }}>
-                        {st.label}
-                      </span>
-                    </div>
+                  {/* Name + badge */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
+                    <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>
+                      {name}
+                    </p>
+                    <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:st.bg, color:st.color, flexShrink:0 }}>
+                      {st.label}
+                    </span>
                   </div>
 
-                  {/* Info line */}
+                  {/* Email + date */}
                   <p style={{ fontSize:12, color:'#888', margin:'0 0 8px' }}>
                     {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
                   </p>
 
-                  {/* Commission breakdown */}
+                  {/* Commission card */}
                   {sub && status !== 'expired' && (
-                    <div style={{ background:'#f9f9f6', borderRadius:12, padding:'12px 14px', marginBottom:6 }}>
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
-                        <div style={{ fontSize:13, color:'#555' }}>
-                          Abonnement {yearly ? 'annuel' : 'mensuel'} · <span style={{ fontWeight:600, color:'#1a1a18' }}>{subPrice.toFixed(0)}€{yearly ? '/an' : '/mois'}</span>
-                          <span style={{ color:'#aaa', margin:'0 6px' }}>→</span>
-                          <span style={{ fontWeight:600, color:'#1a1a18' }}>{rate}%</span>
-                          <span style={{ color:'#aaa', margin:'0 6px' }}>=</span>
-                        </div>
-                        <span style={{ fontSize:15, fontWeight:700, color:'#2563eb', fontFamily:'"Outfit",system-ui' }}>
-                          {commission.toFixed(2)}€{yearly ? '/an' : '/mois'}
-                        </span>
+                    <div style={{
+                      background: isCancelled ? '#fefce8' : '#f9f9f6',
+                      border: isCancelled ? '1px solid #fde68a' : '1px solid transparent',
+                      borderRadius:12, padding:'14px 16px', marginBottom:6
+                    }}>
+                      {/* Commission breakdown — single centered block */}
+                      <div style={{ textAlign:'center' }}>
+                        <p style={{ fontSize:13, color:'#555', margin:'0 0 6px' }}>
+                          Abonnement {yearly ? 'annuel' : 'mensuel'} à <span style={{ fontWeight:600, color:'#1a1a18' }}>{subPrice.toFixed(0)}€{yearly ? '/an' : '/mois'}</span>
+                        </p>
+                        <p style={{ fontSize:22, fontWeight:800, fontFamily:'"Outfit",system-ui', letterSpacing:'-0.03em', margin:'0 0 2px',
+                          color: isCancelled ? '#888' : '#2563eb',
+                          textDecoration: isCancelled ? 'line-through' : 'none'
+                        }}>
+                          {commission.toFixed(2)}€<span style={{ fontSize:13, fontWeight:500, color:'#888', textDecoration:'none' }}>{yearly ? '/an' : '/mois'}</span>
+                        </p>
+                        <p style={{ fontSize:11, color:'#aaa', margin:0 }}>
+                          Votre commission ({rate}%)
+                        </p>
                       </div>
-                      {isTrial && trialEnd && (
-                        <p style={{ fontSize:11, color:'#888', margin:'6px 0 0', borderTop:'1px solid #f0f0ec', paddingTop:6 }}>
-                          En période d'essai · Première facturation le {trialEnd}
+
+                      {/* Status messages */}
+                      {isCancelled && (
+                        <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid #f0f0ec', display:'flex', alignItems:'center', gap:6, justifyContent:'center' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          <p style={{ fontSize:12, color:'#92400e', margin:0 }}>
+                            Abonnement annulé{isTrial ? ' · Période d\'essai' : ''} jusqu'au <span style={{ fontWeight:600 }}>
+                              {isTrial && sub.trial_ends_at
+                                ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
+                                : 'fin de période'}
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                      {!isCancelled && isTrial && sub.trial_ends_at && (
+                        <p style={{ fontSize:11, color:'#888', margin:'8px 0 0', textAlign:'center', borderTop:'1px solid #f0f0ec', paddingTop:8 }}>
+                          En période d'essai · Première facturation le {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}
                         </p>
                       )}
                     </div>
@@ -356,7 +367,7 @@ export default function AffiliatePage() {
           <p style={{ margin:'0 0 6px' }}>1. Partagez votre lien ou code à un commerçant</p>
           <p style={{ margin:'0 0 6px' }}>2. Il s'inscrit et s'abonne à StarPulse</p>
           <p style={{ margin:'0 0 6px' }}>3. Vous touchez {rate}% sur chaque paiement pendant {affiliate.commission_duration_months} mois</p>
-          <p style={{ margin:0 }}>4. Vos commissions sont versées par virement mensuel</p>
+          <p style={{ margin:0 }}>4. Vos commissions sont versées par virement</p>
         </div>
       </div>
     </div>
