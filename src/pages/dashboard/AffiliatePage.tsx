@@ -61,17 +61,12 @@ export default function AffiliatePage() {
       setAffiliate(affData)
       setIban(affData.iban || '')
 
-      // Load referrals with profile info
       const { data: refData } = await supabase
         .from('referrals')
-        .select(`
-          *,
-          profiles:referred_user_id ( full_name, email )
-        `)
+        .select(`*, profiles:referred_user_id ( full_name, email )`)
         .eq('affiliate_id', affData.id)
         .order('created_at', { ascending: false })
 
-      // For each referral, fetch subscription details
       const referralsWithSub: Referral[] = []
       if (refData) {
         for (const ref of refData) {
@@ -81,15 +76,11 @@ export default function AffiliatePage() {
             .eq('user_id', ref.referred_user_id)
             .order('created_at', { ascending: false })
             .limit(1)
-          referralsWithSub.push({
-            ...ref,
-            subscription: subData?.[0] || null
-          })
+          referralsWithSub.push({ ...ref, subscription: subData?.[0] || null })
         }
       }
       setReferrals(referralsWithSub)
 
-      // Load commissions
       const { data: commData } = await supabase
         .from('commissions')
         .select('*')
@@ -124,50 +115,25 @@ export default function AffiliatePage() {
     return 'active'
   }
 
-  function getStatusBadge(status: 'active' | 'inactive' | 'expired') {
-    const styles = {
-      active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
-      inactive: { bg: '#fef3c7', color: '#d97706', label: 'Inactif' },
-      expired: { bg: '#f5f5f0', color: '#888', label: 'Expiré' },
-    }
-    const s = styles[status]
-    return (
-      <span style={{ padding:'4px 12px', borderRadius:8, fontSize:12, fontWeight:600, background:s.bg, color:s.color }}>
-        {s.label}
-      </span>
-    )
+  function isYearly(sub: Referral['subscription']) {
+    if (!sub) return false
+    return sub.billing_period === 'yearly' || sub.plan_interval === 'yearly' || sub.plan_interval === 'year'
   }
 
-  function getSubscriptionLabel(sub: Referral['subscription']) {
-    if (!sub) return null
-    const isYearly = sub.billing_period === 'yearly' || sub.plan_interval === 'yearly' || sub.plan_interval === 'year'
-    const planLabel = isYearly ? 'Annuel' : 'Mensuel'
-    const price = isYearly ? `${(sub.price_monthly * 12).toFixed(0)}€/an` : `${sub.price_monthly.toFixed(0)}€/mois`
-    return `${planLabel} · ${price}`
+  function getSubPrice(sub: Referral['subscription']) {
+    if (!sub) return 0
+    return isYearly(sub) ? sub.price_monthly * 12 : sub.price_monthly
   }
 
-  function getCommissionEstimate(ref: Referral) {
-    if (!ref.subscription || !affiliate) return null
-    const sub = ref.subscription
-    const rate = affiliate.commission_rate
-    const isYearly = sub.billing_period === 'yearly' || sub.plan_interval === 'yearly' || sub.plan_interval === 'year'
-
-    if (sub.status === 'trialing') {
-      const trialEnd = sub.trial_ends_at ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : null
-      const perPayment = isYearly ? (sub.price_monthly * 12 * rate) : (sub.price_monthly * rate)
-      const perPaymentLabel = isYearly ? '/an' : '/mois'
-      return {
-        estimate: `${perPayment.toFixed(2)}€${perPaymentLabel}`,
-        detail: trialEnd ? `Période d'essai · Facturation le ${trialEnd}` : `Période d'essai en cours`
-      }
-    }
-
-    const perPayment = isYearly ? (sub.price_monthly * 12 * rate) : (sub.price_monthly * rate)
-    const perPaymentLabel = isYearly ? '/an' : '/mois'
-    return {
-      estimate: `${perPayment.toFixed(2)}€${perPaymentLabel}`,
-      detail: `Commission estimée`
-    }
+  // Estimate total potential earnings across all active referrals
+  function getTotalEstimatedMonthly() {
+    if (!affiliate) return 0
+    return referrals.reduce((sum, ref) => {
+      if (getReferralStatus(ref) !== 'active' || !ref.subscription) return sum
+      const sub = ref.subscription
+      const monthly = isYearly(sub) ? (sub.price_monthly * 12 * affiliate.commission_rate) / 12 : sub.price_monthly * affiliate.commission_rate
+      return sum + monthly
+    }, 0)
   }
 
   if (loading) return (
@@ -184,22 +150,47 @@ export default function AffiliatePage() {
   const activeReferrals = referrals.filter(r => getReferralStatus(r) === 'active').length
   const pendingCommissions = commissions.filter(c => c.status === 'pending').reduce((sum, c) => sum + c.amount, 0)
   const paidCommissions = commissions.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0)
+  const estimatedMonthly = getTotalEstimatedMonthly()
+  const rate = affiliate.commission_rate * 100
 
   const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px', marginBottom:20 } as const
+  const statusStyles = {
+    active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
+    inactive: { bg: '#fef3c7', color: '#d97706', label: 'Inactif' },
+    expired: { bg: '#f5f5f0', color: '#888', label: 'Expiré' },
+  }
 
   return (
     <div>
-      <div className="mb-6">
+      {/* Header */}
+      <div style={{ marginBottom:24 }}>
         <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, letterSpacing:'-0.02em', color:'#1a1a18', margin:'0 0 4px' }}>Affiliation</h1>
         <p style={{ fontSize:14, color:'#888', margin:0 }}>
-          Recommandez StarPulse et touchez {affiliate.commission_rate * 100}% sur chaque abonnement pendant {affiliate.commission_duration_months} mois.
+          Vous touchez {rate}% sur chaque paiement de vos filleuls pendant {affiliate.commission_duration_months} mois.
         </p>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:12, marginBottom:20 }}>
+        {[
+          { value: activeReferrals.toString(), label: 'Filleuls actifs', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>, iconBg: 'rgba(37,99,235,0.06)' },
+          { value: `${estimatedMonthly.toFixed(2)} €`, label: 'Revenu estimé / mois', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>, iconBg: 'rgba(139,92,246,0.06)' },
+          { value: `${pendingCommissions.toFixed(2)} €`, label: 'À recevoir', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>, iconBg: 'rgba(245,158,11,0.06)' },
+          { value: `${paidCommissions.toFixed(2)} €`, label: 'Déjà encaissé', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>, iconBg: 'rgba(5,150,105,0.06)' },
+        ].map((stat, i) => (
+          <div key={i} style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'18px' }}>
+            <div style={{ width:34, height:34, borderRadius:10, background:stat.iconBg, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+              {stat.icon}
+            </div>
+            <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:24, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{stat.value}</p>
+            <p style={{ fontSize:11, color:'#888', margin:0 }}>{stat.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Lien et code */}
       <section style={sectionStyle}>
         <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>Votre lien de parrainage</h2>
-
         <div style={{ marginBottom:12 }}>
           <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#888', marginBottom:4 }}>Lien d'inscription</label>
           <div style={{ display:'flex', gap:8 }}>
@@ -212,7 +203,6 @@ export default function AffiliatePage() {
             </button>
           </div>
         </div>
-
         <div>
           <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#888', marginBottom:4 }}>Code parrainage</label>
           <div style={{ display:'flex', gap:8 }}>
@@ -227,34 +217,85 @@ export default function AffiliatePage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:12, marginBottom:20 }}>
-        <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'20px' }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:'rgba(37,99,235,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      {/* Filleuls */}
+      <section style={sectionStyle}>
+        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>
+          Vos filleuls ({referrals.length})
+        </h2>
+        {referrals.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'32px 20px' }}>
+            <p style={{ fontSize:14, color:'#888', margin:'0 0 8px' }}>Aucun filleul pour le moment.</p>
+            <p style={{ fontSize:13, color:'#aaa', margin:0 }}>Partagez votre lien pour commencer à gagner des commissions.</p>
           </div>
-          <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{activeReferrals}</p>
-          <p style={{ fontSize:12, color:'#888', margin:0 }}>Filleul(s) actif(s)</p>
-        </div>
+        ) : (
+          <div>
+            {referrals.map(ref => {
+              const status = getReferralStatus(ref)
+              const st = statusStyles[status]
+              const name = ref.profiles?.full_name || ref.profiles?.email || 'Utilisateur inconnu'
+              const email = ref.profiles?.email || ''
+              const sub = ref.subscription
+              const yearly = isYearly(sub)
+              const subPrice = getSubPrice(sub)
+              const commission = sub ? subPrice * affiliate.commission_rate : 0
+              const isTrial = sub?.status === 'trialing'
+              const trialEnd = sub?.trial_ends_at ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' }) : null
 
-        <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'20px' }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:'rgba(245,158,11,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              return (
+                <div key={ref.id} style={{ padding:'16px 0', borderBottom:'1px solid #f5f5f0' }}>
+                  {/* Top row: name + badge */}
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, marginBottom:6, flexWrap:'wrap' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0 }}>
+                      <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>
+                        {name}
+                      </p>
+                      <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:st.bg, color:st.color, flexShrink:0 }}>
+                        {st.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Info line */}
+                  <p style={{ fontSize:12, color:'#888', margin:'0 0 8px' }}>
+                    {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
+                  </p>
+
+                  {/* Commission breakdown */}
+                  {sub && status !== 'expired' && (
+                    <div style={{ background:'#f9f9f6', borderRadius:12, padding:'12px 14px', marginBottom:6 }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+                        <div style={{ fontSize:13, color:'#555' }}>
+                          Abonnement {yearly ? 'annuel' : 'mensuel'} · <span style={{ fontWeight:600, color:'#1a1a18' }}>{subPrice.toFixed(0)}€{yearly ? '/an' : '/mois'}</span>
+                          <span style={{ color:'#aaa', margin:'0 6px' }}>→</span>
+                          <span style={{ fontWeight:600, color:'#1a1a18' }}>{rate}%</span>
+                          <span style={{ color:'#aaa', margin:'0 6px' }}>=</span>
+                        </div>
+                        <span style={{ fontSize:15, fontWeight:700, color:'#2563eb', fontFamily:'"Outfit",system-ui' }}>
+                          {commission.toFixed(2)}€{yearly ? '/an' : '/mois'}
+                        </span>
+                      </div>
+                      {isTrial && trialEnd && (
+                        <p style={{ fontSize:11, color:'#888', margin:'6px 0 0', borderTop:'1px solid #f0f0ec', paddingTop:6 }}>
+                          En période d'essai · Première facturation le {trialEnd}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Commission end date */}
+                  {ref.commission_end_date && (
+                    <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>
+                      Commissions actives jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
           </div>
-          <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{pendingCommissions.toFixed(2)} €</p>
-          <p style={{ fontSize:12, color:'#888', margin:0 }}>Commissions à encaisser</p>
-        </div>
+        )}
+      </section>
 
-        <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'20px' }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:'rgba(5,150,105,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
-          </div>
-          <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{paidCommissions.toFixed(2)} €</p>
-          <p style={{ fontSize:12, color:'#888', margin:0 }}>Déjà encaissé</p>
-        </div>
-      </div>
-
-      {/* IBAN pour paiement */}
+      {/* IBAN */}
       <section style={sectionStyle}>
         <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 4px' }}>Coordonnées bancaires</h2>
         <p style={{ fontSize:13, color:'#888', margin:'0 0 16px' }}>Pour recevoir vos commissions par virement bancaire.</p>
@@ -308,74 +349,14 @@ export default function AffiliatePage() {
         </section>
       )}
 
-      {/* Liste filleuls */}
-      <section style={sectionStyle}>
-        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>
-          Vos filleuls ({referrals.length})
-        </h2>
-        {referrals.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'32px 20px' }}>
-            <p style={{ fontSize:14, color:'#888', margin:'0 0 8px' }}>Aucun filleul pour le moment.</p>
-            <p style={{ fontSize:13, color:'#aaa', margin:0 }}>Partagez votre lien ou code parrainage pour commencer à gagner des commissions.</p>
-          </div>
-        ) : (
-          <div>
-            {referrals.map(ref => {
-              const status = getReferralStatus(ref)
-              const name = ref.profiles?.full_name || ref.profiles?.email || 'Utilisateur inconnu'
-              const email = ref.profiles?.email || ''
-              const subLabel = getSubscriptionLabel(ref.subscription)
-              const estimate = getCommissionEstimate(ref)
-              return (
-                <div key={ref.id} style={{ padding:'16px 0', borderBottom:'1px solid #f5f5f0' }}>
-                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
-                    <div style={{ minWidth:0, flex:1 }}>
-                      <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:'0 0 3px', fontFamily:'"Outfit",system-ui' }}>
-                        {name}
-                      </p>
-                      <p style={{ fontSize:12, color:'#888', margin:'0 0 2px' }}>
-                        {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
-                      </p>
-                      {subLabel && (
-                        <p style={{ fontSize:12, color:'#555', margin:'4px 0 0', fontWeight:500 }}>
-                          Abonnement {subLabel}
-                        </p>
-                      )}
-                      {estimate && (
-                        <div style={{ marginTop:6, padding:'8px 12px', background:'rgba(37,99,235,0.04)', borderRadius:10, display:'inline-block' }}>
-                          <span style={{ fontSize:13, fontWeight:700, color:'#2563eb', fontFamily:'"Outfit",system-ui' }}>
-                            {estimate.estimate}
-                          </span>
-                          <span style={{ fontSize:11, color:'#888', marginLeft:8 }}>
-                            {estimate.detail}
-                          </span>
-                        </div>
-                      )}
-                      {ref.commission_end_date && (
-                        <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>
-                          Commissions jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
-                        </p>
-                      )}
-                    </div>
-                    <div style={{ flexShrink:0, paddingTop:2 }}>
-                      {getStatusBadge(status)}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </section>
-
       {/* Explication */}
       <div style={{ background:'#f5f5f0', borderRadius:16, padding:'20px 24px' }}>
-        <h3 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:14, color:'#1a1a18', margin:'0 0 8px' }}>Comment fonctionne l'affiliation ?</h3>
+        <h3 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:14, color:'#1a1a18', margin:'0 0 8px' }}>Comment ça marche ?</h3>
         <div style={{ fontSize:13, color:'#666', lineHeight:1.7 }}>
-          <p style={{ margin:'0 0 6px' }}>1. Partagez votre lien ou code à un commerçant intéressé</p>
-          <p style={{ margin:'0 0 6px' }}>2. Il s'inscrit et souscrit un abonnement StarPulse</p>
-          <p style={{ margin:'0 0 6px' }}>3. À chaque paiement, vous touchez {affiliate.commission_rate * 100}% de commission</p>
-          <p style={{ margin:0 }}>4. Les commissions sont versées par virement bancaire mensuel</p>
+          <p style={{ margin:'0 0 6px' }}>1. Partagez votre lien ou code à un commerçant</p>
+          <p style={{ margin:'0 0 6px' }}>2. Il s'inscrit et s'abonne à StarPulse</p>
+          <p style={{ margin:'0 0 6px' }}>3. Vous touchez {rate}% sur chaque paiement pendant {affiliate.commission_duration_months} mois</p>
+          <p style={{ margin:0 }}>4. Vos commissions sont versées par virement mensuel</p>
         </div>
       </div>
     </div>
