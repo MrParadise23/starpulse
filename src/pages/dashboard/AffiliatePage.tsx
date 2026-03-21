@@ -16,6 +16,19 @@ interface Affiliate {
   is_active: boolean
 }
 
+interface SubInfo {
+  id: string
+  status: string
+  price_monthly: number
+  billing_period: string
+  plan_interval: string
+  trial_ends_at: string | null
+  cancelled_at: string | null
+  current_period_end: string | null
+  establishment_id: string
+  establishment_name?: string
+}
+
 interface Referral {
   id: string
   referred_user_id: string
@@ -23,7 +36,7 @@ interface Referral {
   created_at: string
   commission_end_date: string | null
   profiles?: { full_name: string | null; email: string } | null
-  subscription?: { status: string; price_monthly: number; billing_period: string; plan_interval: string; trial_ends_at: string | null; cancelled_at: string | null; current_period_end: string | null } | null
+  subscriptions: SubInfo[]
 }
 
 interface Commission {
@@ -67,19 +80,33 @@ export default function AffiliatePage() {
         .eq('affiliate_id', affData.id)
         .order('created_at', { ascending: false })
 
-      const referralsWithSub: Referral[] = []
+      const referralsWithSubs: Referral[] = []
       if (refData) {
         for (const ref of refData) {
+          // Get ALL subscriptions for this referred user
           const { data: subData } = await supabase
             .from('subscriptions')
-            .select('status, price_monthly, billing_period, plan_interval, trial_ends_at, cancelled_at, current_period_end')
+            .select('id, status, price_monthly, billing_period, plan_interval, trial_ends_at, cancelled_at, current_period_end, establishment_id')
             .eq('user_id', ref.referred_user_id)
             .order('created_at', { ascending: false })
-            .limit(1)
-          referralsWithSub.push({ ...ref, subscription: subData?.[0] || null })
+
+          // Get establishment names for each subscription
+          const subs: SubInfo[] = []
+          if (subData) {
+            for (const sub of subData) {
+              const { data: estData } = await supabase
+                .from('establishments')
+                .select('name')
+                .eq('id', sub.establishment_id)
+                .single()
+              subs.push({ ...sub, establishment_name: estData?.name || 'Établissement' })
+            }
+          }
+
+          referralsWithSubs.push({ ...ref, subscriptions: subs })
         }
       }
-      setReferrals(referralsWithSub)
+      setReferrals(referralsWithSubs)
 
       const { data: commData } = await supabase
         .from('commissions')
@@ -106,25 +133,30 @@ export default function AffiliatePage() {
     setTimeout(() => setSavedIban(false), 2000)
   }
 
-  function getReferralStatus(ref: Referral): 'active' | 'cancelled' | 'inactive' | 'expired' {
-    const sub = ref.subscription
-    const commissionExpired = ref.commission_end_date && new Date(ref.commission_end_date) < new Date()
-    if (commissionExpired) return 'expired'
-    if (!sub) return 'inactive'
-    // Cancelled but still in period (trial or active)
+  function getSubStatus(sub: SubInfo): 'active' | 'cancelled' | 'inactive' {
     if (sub.cancelled_at) return 'cancelled'
     if (['active', 'trialing'].includes(sub.status)) return 'active'
     return 'inactive'
   }
 
-  function isYearly(sub: Referral['subscription']) {
-    if (!sub) return false
+  function isYearly(sub: SubInfo) {
     return sub.billing_period === 'yearly' || sub.plan_interval === 'yearly' || sub.plan_interval === 'year'
   }
 
-  function getSubPrice(sub: Referral['subscription']) {
-    if (!sub) return 0
+  function getSubPrice(sub: SubInfo) {
     return isYearly(sub) ? sub.price_monthly * 12 : sub.price_monthly
+  }
+
+  // Overall referral status: active if at least one sub is active and not cancelled
+  function getReferralStatus(ref: Referral): 'active' | 'partial' | 'inactive' | 'expired' {
+    const commissionExpired = ref.commission_end_date && new Date(ref.commission_end_date) < new Date()
+    if (commissionExpired) return 'expired'
+    if (ref.subscriptions.length === 0) return 'inactive'
+    const activeSubs = ref.subscriptions.filter(s => getSubStatus(s) === 'active')
+    const cancelledSubs = ref.subscriptions.filter(s => getSubStatus(s) === 'cancelled')
+    if (activeSubs.length > 0 && cancelledSubs.length > 0) return 'partial'
+    if (activeSubs.length > 0) return 'active'
+    return 'inactive'
   }
 
   if (loading) return (
@@ -144,16 +176,22 @@ export default function AffiliatePage() {
 
   const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px', marginBottom:20 } as const
 
-  const statusConfig = {
+  const statusBadge = {
     active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
+    partial: { bg: '#fef3c7', color: '#d97706', label: 'Partiel' },
     cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Résilié' },
     inactive: { bg: '#f5f5f0', color: '#888', label: 'Inactif' },
     expired: { bg: '#f5f5f0', color: '#888', label: 'Expiré' },
   }
 
+  const subStatusBadge = {
+    active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
+    cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Résilié' },
+    inactive: { bg: '#f5f5f0', color: '#888', label: 'Inactif' },
+  }
+
   return (
     <div>
-      {/* Header */}
       <div style={{ marginBottom:24 }}>
         <h1 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:24, letterSpacing:'-0.02em', color:'#1a1a18', margin:'0 0 4px' }}>Affiliation</h1>
         <p style={{ fontSize:14, color:'#888', margin:0 }}>
@@ -161,7 +199,7 @@ export default function AffiliatePage() {
         </p>
       </div>
 
-      {/* Stats — 2 blocs seulement */}
+      {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:12, marginBottom:20 }}>
         <div style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'18px' }}>
           <div style={{ width:34, height:34, borderRadius:10, background:'rgba(245,158,11,0.06)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
@@ -185,34 +223,22 @@ export default function AffiliatePage() {
         <div style={{ marginBottom:12 }}>
           <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#888', marginBottom:4 }}>Lien d'inscription</label>
           <div style={{ display:'flex', gap:8 }}>
-            <div style={{ flex:1, background:'#f5f5f0', borderRadius:12, padding:'12px 14px', fontSize:13, color:'#555', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-              {referralLink}
-            </div>
-            <button onClick={() => copyToClipboard(referralLink, 'link')}
-              style={{ padding:'12px 16px', borderRadius:12, border:'none', background: copied==='link' ? '#dcfce7' : 'rgba(37,99,235,0.06)', color: copied==='link' ? '#16a34a' : '#2563eb', fontSize:13, fontWeight:600, cursor:'pointer', flexShrink:0, transition:'all 0.2s' }}>
-              {copied === 'link' ? '✓ Copié' : 'Copier'}
-            </button>
+            <div style={{ flex:1, background:'#f5f5f0', borderRadius:12, padding:'12px 14px', fontSize:13, color:'#555', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{referralLink}</div>
+            <button onClick={() => copyToClipboard(referralLink, 'link')} style={{ padding:'12px 16px', borderRadius:12, border:'none', background: copied==='link' ? '#dcfce7' : 'rgba(37,99,235,0.06)', color: copied==='link' ? '#16a34a' : '#2563eb', fontSize:13, fontWeight:600, cursor:'pointer', flexShrink:0, transition:'all 0.2s' }}>{copied === 'link' ? '✓ Copié' : 'Copier'}</button>
           </div>
         </div>
         <div>
           <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#888', marginBottom:4 }}>Code parrainage</label>
           <div style={{ display:'flex', gap:8 }}>
-            <div style={{ flex:1, background:'#f5f5f0', borderRadius:12, padding:'12px 14px', fontSize:15, fontWeight:700, color:'#1a1a18', fontFamily:'monospace', letterSpacing:'0.1em' }}>
-              {affiliate.referral_code}
-            </div>
-            <button onClick={() => copyToClipboard(affiliate.referral_code, 'code')}
-              style={{ padding:'12px 16px', borderRadius:12, border:'none', background: copied==='code' ? '#dcfce7' : 'rgba(37,99,235,0.06)', color: copied==='code' ? '#16a34a' : '#2563eb', fontSize:13, fontWeight:600, cursor:'pointer', flexShrink:0, transition:'all 0.2s' }}>
-              {copied === 'code' ? '✓ Copié' : 'Copier'}
-            </button>
+            <div style={{ flex:1, background:'#f5f5f0', borderRadius:12, padding:'12px 14px', fontSize:15, fontWeight:700, color:'#1a1a18', fontFamily:'monospace', letterSpacing:'0.1em' }}>{affiliate.referral_code}</div>
+            <button onClick={() => copyToClipboard(affiliate.referral_code, 'code')} style={{ padding:'12px 16px', borderRadius:12, border:'none', background: copied==='code' ? '#dcfce7' : 'rgba(37,99,235,0.06)', color: copied==='code' ? '#16a34a' : '#2563eb', fontSize:13, fontWeight:600, cursor:'pointer', flexShrink:0, transition:'all 0.2s' }}>{copied === 'code' ? '✓ Copié' : 'Copier'}</button>
           </div>
         </div>
       </section>
 
       {/* Filleuls */}
       <section style={sectionStyle}>
-        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>
-          Vos filleuls ({referrals.length})
-        </h2>
+        <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#1a1a18', margin:'0 0 16px' }}>Vos filleuls ({referrals.length})</h2>
         {referrals.length === 0 ? (
           <div style={{ textAlign:'center', padding:'32px 20px' }}>
             <p style={{ fontSize:14, color:'#888', margin:'0 0 8px' }}>Aucun filleul pour le moment.</p>
@@ -221,83 +247,86 @@ export default function AffiliatePage() {
         ) : (
           <div>
             {referrals.map(ref => {
-              const status = getReferralStatus(ref)
-              const st = statusConfig[status]
+              const refStatus = getReferralStatus(ref)
+              const badge = statusBadge[refStatus]
               const name = ref.profiles?.full_name || ref.profiles?.email || 'Utilisateur inconnu'
               const email = ref.profiles?.email || ''
-              const sub = ref.subscription
-              const yearly = isYearly(sub)
-              const subPrice = getSubPrice(sub)
-              const commission = sub ? subPrice * affiliate.commission_rate : 0
-              const isCancelled = status === 'cancelled'
-              const isTrial = sub?.status === 'trialing'
 
               return (
                 <div key={ref.id} style={{ padding:'16px 0', borderBottom:'1px solid #f5f5f0' }}>
                   {/* Name + badge */}
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
-                    <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>
-                      {name}
-                    </p>
-                    <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:st.bg, color:st.color, flexShrink:0 }}>
-                      {st.label}
-                    </span>
+                    <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>{name}</p>
+                    <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:badge.bg, color:badge.color, flexShrink:0 }}>{badge.label}</span>
                   </div>
-
-                  {/* Email + date */}
-                  <p style={{ fontSize:12, color:'#888', margin:'0 0 8px' }}>
+                  <p style={{ fontSize:12, color:'#888', margin:'0 0 10px' }}>
                     {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
                   </p>
 
-                  {/* Commission card */}
-                  {sub && status !== 'expired' && (
-                    <div style={{
-                      background: isCancelled ? '#fefce8' : '#f9f9f6',
-                      border: isCancelled ? '1px solid #fde68a' : '1px solid transparent',
-                      borderRadius:12, padding:'14px 16px', marginBottom:6
-                    }}>
-                      {/* Commission breakdown — single centered block */}
-                      <div style={{ textAlign:'center' }}>
-                        <p style={{ fontSize:13, color:'#555', margin:'0 0 6px' }}>
-                          Abonnement {yearly ? 'annuel' : 'mensuel'} à <span style={{ fontWeight:600, color:'#1a1a18' }}>{subPrice.toFixed(0)}€{yearly ? '/an' : '/mois'}</span>
-                        </p>
-                        <p style={{ fontSize:22, fontWeight:800, fontFamily:'"Outfit",system-ui', letterSpacing:'-0.03em', margin:'0 0 2px',
-                          color: isCancelled ? '#888' : '#2563eb',
-                          textDecoration: isCancelled ? 'line-through' : 'none'
-                        }}>
-                          {commission.toFixed(2)}€<span style={{ fontSize:13, fontWeight:500, color:'#888', textDecoration:'none' }}>{yearly ? '/an' : '/mois'}</span>
-                        </p>
-                        <p style={{ fontSize:11, color:'#aaa', margin:0 }}>
-                          Votre commission ({rate}%)
-                        </p>
-                      </div>
+                  {/* All subscriptions */}
+                  {ref.subscriptions.length > 0 && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      {ref.subscriptions.map(sub => {
+                        const sStatus = getSubStatus(sub)
+                        const sBadge = subStatusBadge[sStatus]
+                        const yearly = isYearly(sub)
+                        const price = getSubPrice(sub)
+                        const commission = price * affiliate.commission_rate
+                        const isCancelled = sStatus === 'cancelled'
+                        const isTrial = sub.status === 'trialing'
 
-                      {/* Status messages */}
-                      {isCancelled && (
-                        <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid #f0f0ec', display:'flex', alignItems:'center', gap:6, justifyContent:'center' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                          <p style={{ fontSize:12, color:'#92400e', margin:0 }}>
-                            Ce filleul a résilié son abonnement{isTrial ? ' pendant sa période d\'essai' : ''}. Accès actif jusqu'au <span style={{ fontWeight:600 }}>
-                              {isTrial && sub.trial_ends_at
-                                ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
-                                : sub.current_period_end
-                                  ? new Date(sub.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
-                                  : 'fin de période'}
-                            </span>, aucune commission ne sera générée.
-                          </p>
-                        </div>
-                      )}
-                      {!isCancelled && isTrial && sub.trial_ends_at && (
-                        <p style={{ fontSize:11, color:'#888', margin:'8px 0 0', textAlign:'center', borderTop:'1px solid #f0f0ec', paddingTop:8 }}>
-                          En période d'essai · Première facturation le {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}
-                        </p>
-                      )}
+                        return (
+                          <div key={sub.id} style={{
+                            background: isCancelled ? '#fefce8' : '#f9f9f6',
+                            border: isCancelled ? '1px solid #fde68a' : '1px solid #f0f0ec',
+                            borderRadius:12, padding:'14px 16px'
+                          }}>
+                            {/* Establishment name + sub badge */}
+                            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:6 }}>
+                              <p style={{ fontSize:13, fontWeight:600, color:'#1a1a18', margin:0 }}>{sub.establishment_name}</p>
+                              <span style={{ padding:'2px 8px', borderRadius:6, fontSize:10, fontWeight:600, background:sBadge.bg, color:sBadge.color }}>{sBadge.label}</span>
+                            </div>
+
+                            {/* Commission breakdown */}
+                            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+                              <p style={{ fontSize:12, color:'#555', margin:0 }}>
+                                {yearly ? 'Annuel' : 'Mensuel'} · <span style={{ fontWeight:600 }}>{price.toFixed(0)}€{yearly ? '/an' : '/mois'}</span>
+                                <span style={{ color:'#aaa', margin:'0 4px' }}>×</span>
+                                <span style={{ fontWeight:600 }}>{rate}%</span>
+                              </p>
+                              <p style={{ fontSize:16, fontWeight:800, fontFamily:'"Outfit",system-ui', margin:0, letterSpacing:'-0.02em',
+                                color: isCancelled ? '#888' : '#2563eb',
+                                textDecoration: isCancelled ? 'line-through' : 'none'
+                              }}>
+                                {commission.toFixed(2)}€<span style={{ fontSize:11, fontWeight:500, color:'#888', textDecoration:'none' }}>{yearly ? '/an' : '/mois'}</span>
+                              </p>
+                            </div>
+
+                            {/* Status detail */}
+                            {isCancelled && (
+                              <p style={{ fontSize:11, color:'#92400e', margin:'8px 0 0', borderTop:'1px solid #f0f0ec', paddingTop:6 }}>
+                                Résilié{isTrial ? ' (période d\'essai)' : ''} · Actif jusqu'au {
+                                  isTrial && sub.trial_ends_at
+                                    ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
+                                    : sub.current_period_end
+                                      ? new Date(sub.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
+                                      : 'fin de période'
+                                }
+                              </p>
+                            )}
+                            {!isCancelled && isTrial && sub.trial_ends_at && (
+                              <p style={{ fontSize:11, color:'#888', margin:'8px 0 0', borderTop:'1px solid #f0f0ec', paddingTop:6 }}>
+                                Période d'essai · Facturation le {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
 
-                  {/* Commission end date */}
                   {ref.commission_end_date && (
-                    <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>
+                    <p style={{ fontSize:11, color:'#aaa', margin:'8px 0 0' }}>
                       Commissions actives jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
                     </p>
                   )}
@@ -330,10 +359,10 @@ export default function AffiliatePage() {
           <div style={{ overflowX:'auto' }}>
             <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
               <thead>
-                <tr style={{ borderBottom:'1px solid #f0f0ec' }}>
-                  <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:500, color:'#888' }}>Période</th>
-                  <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:500, color:'#888' }}>Montant</th>
-                  <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:500, color:'#888' }}>Statut</th>
+                <tr style={{ borderBottom:'2px solid #f0f0ec' }}>
+                  <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:600, color:'#555' }}>Période</th>
+                  <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:600, color:'#555' }}>Montant</th>
+                  <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:600, color:'#555' }}>Statut</th>
                 </tr>
               </thead>
               <tbody>
@@ -342,9 +371,7 @@ export default function AffiliatePage() {
                     <td style={{ padding:'10px 12px', color:'#555' }}>
                       {new Date(c.period_start).toLocaleDateString('fr-FR')} → {new Date(c.period_end).toLocaleDateString('fr-FR')}
                     </td>
-                    <td style={{ padding:'10px 12px', textAlign:'right', fontWeight:600, color:'#1a1a18', fontFamily:'"Outfit",system-ui' }}>
-                      {c.amount.toFixed(2)} €
-                    </td>
+                    <td style={{ padding:'10px 12px', textAlign:'right', fontWeight:700, color:'#1a1a18', fontFamily:'"Outfit",system-ui' }}>{c.amount.toFixed(2)}€</td>
                     <td style={{ padding:'10px 12px', textAlign:'right' }}>
                       <span style={{
                         display:'inline-block', padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600,
