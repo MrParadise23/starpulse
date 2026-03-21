@@ -43,7 +43,7 @@ export default function DashboardLayout({ session }: { session: Session }) {
   const [estDropdownOpen, setEstDropdownOpen] = useState(false)
   const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null)
 
-  const isAdmin = session.user.email === 'louis.roccasolutions@gmail.com'
+  const isAdmin = session.user.email === 'louis23rs@gmail.com'
 
   // Pages accessible without subscription
   const freePages = ['/dashboard/subscription', '/dashboard/admin']
