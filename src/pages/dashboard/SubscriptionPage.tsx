@@ -78,11 +78,31 @@ export default function SubscriptionPage() {
     setPortalLoading(false)
   }
 
-  const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
-    active: { label: 'Actif', color: '#059669', bg: '#dcfce7' },
-    trialing: { label: 'Essai gratuit', color: '#2563eb', bg: '#dbeafe' },
-    canceling: { label: 'Annulation en cours', color: '#d97706', bg: '#fef3c7' },
-    past_due: { label: 'Paiement en retard', color: '#dc2626', bg: '#fee2e2' },
+  function getEndDate(sub: SubWithEst): string | null {
+    if (sub.cancelled_at) {
+      // If trialing and cancelled, it ends at trial_ends_at
+      if (sub.status === 'trialing' && sub.trial_ends_at) {
+        return new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+      }
+      // If active and cancelled, it ends at current_period_end
+      if (sub.current_period_end) {
+        return new Date(sub.current_period_end).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+      }
+    }
+    return null
+  }
+
+  function getStatusInfo(sub: SubWithEst): { label: string; color: string; bg: string } {
+    if (sub.cancelled_at) {
+      return { label: 'Annulé', color: '#dc2626', bg: '#fee2e2' }
+    }
+    const map: Record<string, { label: string; color: string; bg: string }> = {
+      active: { label: 'Actif', color: '#059669', bg: '#dcfce7' },
+      trialing: { label: 'Essai gratuit', color: '#2563eb', bg: '#dbeafe' },
+      canceling: { label: 'Annulation en cours', color: '#d97706', bg: '#fef3c7' },
+      past_due: { label: 'Paiement en retard', color: '#dc2626', bg: '#fee2e2' },
+    }
+    return map[sub.status] || { label: sub.status, color: '#888', bg: '#f5f5f0' }
   }
 
   const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px' } as const
@@ -92,6 +112,9 @@ export default function SubscriptionPage() {
     if (s.plan_interval === 'yearly') return sum + 20.75
     return sum + 29
   }, 0)
+
+  // Check if any sub is cancelled but still running
+  const hasCancelledSub = allSubs.some(s => s.cancelled_at !== null)
 
   if (loading) return (
     <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
@@ -144,42 +167,59 @@ export default function SubscriptionPage() {
               </div>
 
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                {allSubs.map(sub => (
-                  <div key={sub.id} style={{ background:'#f5f5f0', borderRadius:14, padding:'16px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:12, minWidth:0 }}>
-                      {sub.establishment_logo ? (
-                        <img src={sub.establishment_logo} alt="" style={{ width:32, height:32, borderRadius:8, objectFit:'cover', flexShrink:0 }}/>
-                      ) : (
-                        <div style={{ width:32, height:32, borderRadius:8, background:`${sub.establishment_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          <span style={{ fontSize:13, fontWeight:700, color:sub.establishment_color }}>{sub.establishment_name.charAt(0)}</span>
-                        </div>
-                      )}
-                      <div style={{ minWidth:0 }}>
-                        <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sub.establishment_name}</p>
-                        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:2 }}>
-                          <span style={{
-                            display:'inline-block', padding:'2px 8px', borderRadius:6, fontSize:11, fontWeight:600,
-                            background: statusLabels[sub.status]?.bg || '#f5f5f0',
-                            color: statusLabels[sub.status]?.color || '#888',
-                          }}>
-                            {statusLabels[sub.status]?.label || sub.status}
-                          </span>
-                          {sub.status === 'trialing' && sub.trial_ends_at && (
-                            <span style={{ fontSize:11, color:'#888' }}>
-                              jusqu'au {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short' })}
-                            </span>
+                {allSubs.map(sub => {
+                  const statusInfo = getStatusInfo(sub)
+                  const endDate = getEndDate(sub)
+                  const isCancelled = sub.cancelled_at !== null
+
+                  return (
+                    <div key={sub.id} style={{ background: isCancelled ? '#fefce8' : '#f5f5f0', borderRadius:14, padding:'16px 18px', border: isCancelled ? '1px solid #fde68a' : '1px solid transparent' }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:12, minWidth:0 }}>
+                          {sub.establishment_logo ? (
+                            <img src={sub.establishment_logo} alt="" style={{ width:32, height:32, borderRadius:8, objectFit:'cover', flexShrink:0 }}/>
+                          ) : (
+                            <div style={{ width:32, height:32, borderRadius:8, background:`${sub.establishment_color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                              <span style={{ fontSize:13, fontWeight:700, color:sub.establishment_color }}>{sub.establishment_name.charAt(0)}</span>
+                            </div>
                           )}
+                          <div style={{ minWidth:0 }}>
+                            <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sub.establishment_name}</p>
+                            <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:2, flexWrap:'wrap' }}>
+                              <span style={{
+                                display:'inline-block', padding:'2px 8px', borderRadius:6, fontSize:11, fontWeight:600,
+                                background: statusInfo.bg, color: statusInfo.color,
+                              }}>
+                                {statusInfo.label}
+                              </span>
+                              {!isCancelled && sub.status === 'trialing' && sub.trial_ends_at && (
+                                <span style={{ fontSize:11, color:'#888' }}>
+                                  jusqu'au {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short' })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ textAlign:'right', flexShrink:0 }}>
+                          <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color: isCancelled ? '#888' : '#1a1a18', textDecoration: isCancelled ? 'line-through' : 'none' }}>
+                            {sub.plan_interval === 'yearly' ? '249' : '29'}
+                          </span>
+                          <span style={{ fontSize:12, color:'#888' }}> EUR/{sub.plan_interval === 'yearly' ? 'an' : 'mois'}</span>
                         </div>
                       </div>
+
+                      {/* Cancellation notice */}
+                      {isCancelled && endDate && (
+                        <div style={{ marginTop:10, padding:'10px 14px', background:'#fff', borderRadius:10, display:'flex', alignItems:'center', gap:8 }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
+                            Abonnement annulé · Accès maintenu jusqu'au <span style={{ fontWeight:600 }}>{endDate}</span>
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div style={{ textAlign:'right', flexShrink:0 }}>
-                      <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#1a1a18' }}>
-                        {sub.plan_interval === 'yearly' ? '249' : '29'}
-                      </span>
-                      <span style={{ fontSize:12, color:'#888' }}> EUR/{sub.plan_interval === 'yearly' ? 'an' : 'mois'}</span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </section>
 
@@ -195,10 +235,12 @@ export default function SubscriptionPage() {
                 onMouseEnter={(e) => { (e.currentTarget).style.borderColor='#ccc'; (e.currentTarget).style.boxShadow='0 2px 8px rgba(0,0,0,0.04)' }}
                 onMouseLeave={(e) => { (e.currentTarget).style.borderColor='#e8e8e4'; (e.currentTarget).style.boxShadow='none' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                {portalLoading ? 'Ouverture...' : 'Gérer la facturation (Stripe)'}
+                {portalLoading ? 'Ouverture...' : hasCancelledSub ? 'Réactiver ou gérer la facturation (Stripe)' : 'Gérer la facturation (Stripe)'}
               </button>
               <p style={{ fontSize:11, color:'#aaa', marginTop:8 }}>
-                Changement de plan, moyen de paiement, annulation, factures...
+                {hasCancelledSub
+                  ? 'Vous pouvez réactiver votre abonnement, changer de plan ou consulter vos factures.'
+                  : 'Changement de plan, moyen de paiement, annulation, factures...'}
               </p>
             </section>
           </>
