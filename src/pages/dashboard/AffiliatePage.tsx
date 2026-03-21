@@ -146,7 +146,7 @@ export default function AffiliatePage() {
 
   const statusConfig = {
     active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
-    cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Annulé' },
+    cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Résilié' },
     inactive: { bg: '#f5f5f0', color: '#888', label: 'Inactif' },
     expired: { bg: '#f5f5f0', color: '#888', label: 'Expiré' },
   }
@@ -277,11 +277,11 @@ export default function AffiliatePage() {
                         <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid #f0f0ec', display:'flex', alignItems:'center', gap:6, justifyContent:'center' }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                           <p style={{ fontSize:12, color:'#92400e', margin:0 }}>
-                            Abonnement annulé{isTrial ? ' · Période d\'essai' : ''} jusqu'au <span style={{ fontWeight:600 }}>
+                            Ce filleul a résilié son abonnement{isTrial ? ' pendant sa période d\'essai' : ''}. Accès actif jusqu'au <span style={{ fontWeight:600 }}>
                               {isTrial && sub.trial_ends_at
                                 ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
                                 : 'fin de période'}
-                            </span>
+                            </span>, aucune commission ne sera générée.
                           </p>
                         </div>
                       )}
