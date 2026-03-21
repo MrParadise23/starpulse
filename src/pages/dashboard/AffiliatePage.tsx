@@ -23,7 +23,7 @@ interface Referral {
   created_at: string
   commission_end_date: string | null
   profiles?: { full_name: string | null; email: string } | null
-  subscriptions?: { status: string }[] | null
+  subscription?: { status: string; price_monthly: number; billing_period: string; plan_interval: string; trial_ends_at: string | null } | null
 }
 
 interface Commission {
@@ -71,18 +71,19 @@ export default function AffiliatePage() {
         .eq('affiliate_id', affData.id)
         .order('created_at', { ascending: false })
 
-      // For each referral, fetch subscription status
+      // For each referral, fetch subscription details
       const referralsWithSub: Referral[] = []
       if (refData) {
         for (const ref of refData) {
           const { data: subData } = await supabase
             .from('subscriptions')
-            .select('status')
+            .select('status, price_monthly, billing_period, plan_interval, trial_ends_at')
             .eq('user_id', ref.referred_user_id)
+            .order('created_at', { ascending: false })
             .limit(1)
           referralsWithSub.push({
             ...ref,
-            subscriptions: subData || []
+            subscription: subData?.[0] || null
           })
         }
       }
@@ -115,7 +116,7 @@ export default function AffiliatePage() {
   }
 
   function getReferralStatus(ref: Referral): 'active' | 'inactive' | 'expired' {
-    const sub = ref.subscriptions?.[0]
+    const sub = ref.subscription
     const hasActiveSub = sub && ['active', 'trialing'].includes(sub.status)
     const commissionExpired = ref.commission_end_date && new Date(ref.commission_end_date) < new Date()
     if (commissionExpired) return 'expired'
@@ -135,6 +136,38 @@ export default function AffiliatePage() {
         {s.label}
       </span>
     )
+  }
+
+  function getSubscriptionLabel(sub: Referral['subscription']) {
+    if (!sub) return null
+    const isYearly = sub.billing_period === 'yearly' || sub.plan_interval === 'yearly' || sub.plan_interval === 'year'
+    const planLabel = isYearly ? 'Annuel' : 'Mensuel'
+    const price = isYearly ? `${(sub.price_monthly * 12).toFixed(0)}€/an` : `${sub.price_monthly.toFixed(0)}€/mois`
+    return `${planLabel} · ${price}`
+  }
+
+  function getCommissionEstimate(ref: Referral) {
+    if (!ref.subscription || !affiliate) return null
+    const sub = ref.subscription
+    const rate = affiliate.commission_rate
+    const isYearly = sub.billing_period === 'yearly' || sub.plan_interval === 'yearly' || sub.plan_interval === 'year'
+
+    if (sub.status === 'trialing') {
+      const trialEnd = sub.trial_ends_at ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : null
+      const perPayment = isYearly ? (sub.price_monthly * 12 * rate) : (sub.price_monthly * rate)
+      const perPaymentLabel = isYearly ? '/an' : '/mois'
+      return {
+        estimate: `${perPayment.toFixed(2)}€${perPaymentLabel}`,
+        detail: trialEnd ? `Période d'essai · Facturation le ${trialEnd}` : `Période d'essai en cours`
+      }
+    }
+
+    const perPayment = isYearly ? (sub.price_monthly * 12 * rate) : (sub.price_monthly * rate)
+    const perPaymentLabel = isYearly ? '/an' : '/mois'
+    return {
+      estimate: `${perPayment.toFixed(2)}€${perPaymentLabel}`,
+      detail: `Commission estimée`
+    }
   }
 
   if (loading) return (
@@ -291,22 +324,43 @@ export default function AffiliatePage() {
               const status = getReferralStatus(ref)
               const name = ref.profiles?.full_name || ref.profiles?.email || 'Utilisateur inconnu'
               const email = ref.profiles?.email || ''
+              const subLabel = getSubscriptionLabel(ref.subscription)
+              const estimate = getCommissionEstimate(ref)
               return (
-                <div key={ref.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 0', borderBottom:'1px solid #f5f5f0' }}>
-                  <div style={{ minWidth:0 }}>
-                    <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:'0 0 2px', fontFamily:'"Outfit",system-ui' }}>
-                      {name}
-                    </p>
-                    <p style={{ fontSize:12, color:'#888', margin:'0 0 2px' }}>
-                      {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
-                    </p>
-                    {ref.commission_end_date && (
-                      <p style={{ fontSize:11, color:'#aaa', margin:0 }}>
-                        Commissions jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
+                <div key={ref.id} style={{ padding:'16px 0', borderBottom:'1px solid #f5f5f0' }}>
+                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
+                    <div style={{ minWidth:0, flex:1 }}>
+                      <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:'0 0 3px', fontFamily:'"Outfit",system-ui' }}>
+                        {name}
                       </p>
-                    )}
+                      <p style={{ fontSize:12, color:'#888', margin:'0 0 2px' }}>
+                        {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
+                      </p>
+                      {subLabel && (
+                        <p style={{ fontSize:12, color:'#555', margin:'4px 0 0', fontWeight:500 }}>
+                          Abonnement {subLabel}
+                        </p>
+                      )}
+                      {estimate && (
+                        <div style={{ marginTop:6, padding:'8px 12px', background:'rgba(37,99,235,0.04)', borderRadius:10, display:'inline-block' }}>
+                          <span style={{ fontSize:13, fontWeight:700, color:'#2563eb', fontFamily:'"Outfit",system-ui' }}>
+                            {estimate.estimate}
+                          </span>
+                          <span style={{ fontSize:11, color:'#888', marginLeft:8 }}>
+                            {estimate.detail}
+                          </span>
+                        </div>
+                      )}
+                      {ref.commission_end_date && (
+                        <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>
+                          Commissions jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ flexShrink:0, paddingTop:2 }}>
+                      {getStatusBadge(status)}
+                    </div>
                   </div>
-                  {getStatusBadge(status)}
                 </div>
               )
             })}
