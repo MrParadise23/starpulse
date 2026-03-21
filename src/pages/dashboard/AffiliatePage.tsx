@@ -213,7 +213,8 @@ export default function AffiliatePage() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
           </div>
           <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:24, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{paidCommissions.toFixed(2)} €</p>
-          <p style={{ fontSize:11, color:'#888', margin:0 }}>Déjà encaissé</p>
+          <p style={{ fontSize:11, color:'#888', margin:'0 0 2px' }}>Déjà encaissé</p>
+          <p style={{ fontSize:10, color:'#aaa', margin:0 }}>Versé sur votre compte</p>
         </div>
       </div>
 
@@ -254,10 +255,15 @@ export default function AffiliatePage() {
 
               return (
                 <div key={ref.id} style={{ padding:'16px 0', borderBottom:'1px solid #f5f5f0' }}>
-                  {/* Name + badge */}
+                  {/* Name + badge (badge only if single subscription) */}
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
                     <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>{name}</p>
-                    <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:badge.bg, color:badge.color, flexShrink:0 }}>{badge.label}</span>
+                    {ref.subscriptions.length <= 1 && (
+                      <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:badge.bg, color:badge.color, flexShrink:0 }}>{badge.label}</span>
+                    )}
+                    {ref.subscriptions.length > 1 && (
+                      <span style={{ fontSize:11, color:'#888' }}>{ref.subscriptions.length} abonnements</span>
+                    )}
                   </div>
                   <p style={{ fontSize:12, color:'#888', margin:'0 0 10px' }}>
                     {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
