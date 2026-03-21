@@ -3,7 +3,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
-const ADMIN_EMAIL = 'louis.roccasolutions@gmail.com'
+const ADMIN_EMAIL = 'louis23rs@gmail.com'
 
 interface DashboardContext { session: Session }
 
