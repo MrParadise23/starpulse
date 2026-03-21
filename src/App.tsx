@@ -19,6 +19,7 @@ import AffiliatePage from './pages/dashboard/AffiliatePage'
 import SubscriptionPage from './pages/dashboard/SubscriptionPage'
 import PricingPage from './pages/PricingPage'
 import NfcShopPage from './pages/dashboard/NfcShopPage'
+import AdminPage from './pages/dashboard/AdminPage'
 import MentionsLegalesPage from './pages/legal/MentionsLegalesPage'
 import CgvPage from './pages/legal/CgvPage'
 import CguPage from './pages/legal/CguPage'
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="subscription" element={<SubscriptionPage />} />
         <Route path="nfc-shop" element={<NfcShopPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="admin" element={<AdminPage />} />
       </Route>
       {/* Fallback */}
       <Route path="*" element={<Navigate to={session ? "/dashboard" : "/"} replace />} />
