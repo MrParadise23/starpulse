@@ -86,6 +86,29 @@ serve(async (req) => {
         console.log(`Auto-created establishment ${finalEstablishmentId} for user ${user.id}`)
       }
 
+      // === ANTI-TRIAL-ABUSE: Check if this customer ever had a subscription ===
+      let trialDays: number | undefined = 7
+
+      try {
+        // Check Stripe for any past subscriptions (active, canceled, trialing, etc.)
+        const existingSubs = await stripe.subscriptions.list({
+          customer: customerId,
+          limit: 1,
+          status: "all",
+        })
+
+        if (existingSubs.data.length > 0) {
+          // Customer already had a subscription — no trial
+          trialDays = undefined
+          console.log(`Customer ${customerId} already had a subscription — skipping trial`)
+        } else {
+          console.log(`Customer ${customerId} is new — granting 7-day trial`)
+        }
+      } catch (e) {
+        // If check fails, grant trial anyway (fail-safe)
+        console.log("Trial check failed, granting trial by default:", e)
+      }
+
       const sessionParams: Stripe.Checkout.SessionCreateParams = {
         customer: customerId,
         mode: "subscription",
@@ -102,7 +125,7 @@ serve(async (req) => {
             user_id: user.id,
             establishment_id: finalEstablishmentId,
           },
-          trial_period_days: 7,
+          ...(trialDays ? { trial_period_days: trialDays } : {}),
         },
         allow_promotion_codes: true,
         billing_address_collection: "auto",
