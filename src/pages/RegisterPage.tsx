@@ -89,7 +89,7 @@ export default function RegisterPage() {
           </button>
         </form>
         <div style={{ display:'flex', justifyContent:'center', gap:24, marginTop:24, animation:'fadeUp 0.5s ease-out 0.2s both' }}>
-          {[{icon:'5min',label:'Installation rapide'},{icon:'NFC',label:'QR & NFC inclus'},{icon:'IA',label:'Réponses IA'}].map((f) => (
+          {[{icon:'5min prout',label:'Installation rapide'},{icon:'NFC',label:'QR & NFC inclus'},{icon:'IA',label:'Réponses IA'}].map((f) => (
             <div key={f.label} style={{ textAlign:'center' }}>
               <div style={{ fontSize:12, fontWeight:700, color:'#2563eb', fontFamily:'"Outfit",system-ui', marginBottom:2 }}>{f.icon}</div>
               <div style={{ fontSize:11, color:'#999' }}>{f.label}</div>
