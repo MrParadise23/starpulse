@@ -134,7 +134,13 @@ export default function SubscriptionPage() {
 
   const activeSubs = allSubs.filter(s => ['active', 'trialing'].includes(s.status) && !s.cancelled_at)
   const cancelingSubs = allSubs.filter(s => s.status === 'canceling' || (s.cancelled_at && !['cancelled', 'refunded'].includes(s.status)))
+  const allTrialing = activeSubs.every(s => s.status === 'trialing')
   const totalMonthly = activeSubs.reduce((sum, s) => {
+    if (s.status === 'trialing') return sum // Don't count trial in current cost
+    if (s.plan_interval === 'yearly') return sum + 20.75
+    return sum + 29
+  }, 0)
+  const totalAfterTrial = activeSubs.reduce((sum, s) => {
     if (s.plan_interval === 'yearly') return sum + 20.75
     return sum + 29
   }, 0)
@@ -185,10 +191,21 @@ export default function SubscriptionPage() {
                   <p style={{ fontSize:13, color:'#888', margin:0 }}>{activeSubs.length} établissement{activeSubs.length > 1 ? 's' : ''} actif{activeSubs.length > 1 ? 's' : ''}</p>
                 </div>
                 <div style={{ textAlign:'right' }}>
-                  <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
-                    ~{totalMonthly.toFixed(0)}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span>
-                  </div>
-                  <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>Tous établissements confondus</p>
+                  {allTrialing ? (
+                    <>
+                      <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#059669', letterSpacing:'-0.03em', lineHeight:1 }}>
+                        Gratuit
+                      </div>
+                      <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>Puis ~{totalAfterTrial.toFixed(0)} EUR/mois après l'essai</p>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
+                        ~{totalMonthly.toFixed(0)}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span>
+                      </div>
+                      <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>Tous établissements confondus</p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -227,12 +244,31 @@ export default function SubscriptionPage() {
                           </div>
                         </div>
                         <div style={{ textAlign:'right', flexShrink:0 }}>
-                          <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color: isCancelled ? '#888' : '#1a1a18', textDecoration: isCancelled ? 'line-through' : 'none' }}>
-                            {sub.plan_interval === 'yearly' ? '249' : '29'}
-                          </span>
-                          <span style={{ fontSize:12, color:'#888' }}> EUR/{sub.plan_interval === 'yearly' ? 'an' : 'mois'}</span>
+                          {!isCancelled && sub.status === 'trialing' ? (
+                            <>
+                              <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#059669' }}>Gratuit</span>
+                              <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>puis {sub.plan_interval === 'yearly' ? '249€/an' : '29€/mois'}</p>
+                            </>
+                          ) : (
+                            <>
+                              <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color: isCancelled ? '#888' : '#1a1a18', textDecoration: isCancelled ? 'line-through' : 'none' }}>
+                                {sub.plan_interval === 'yearly' ? '249' : '29'}
+                              </span>
+                              <span style={{ fontSize:12, color:'#888' }}> EUR/{sub.plan_interval === 'yearly' ? 'an' : 'mois'}</span>
+                            </>
+                          )}
                         </div>
                       </div>
+
+                      {/* Trial info message */}
+                      {!isCancelled && sub.status === 'trialing' && sub.trial_ends_at && (
+                        <div style={{ marginTop:10, padding:'10px 14px', background:'#eff6ff', borderRadius:10, display:'flex', alignItems:'center', gap:8, border:'1px solid #dbeafe' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                          <p style={{ fontSize:13, color:'#1e40af', margin:0 }}>
+                            Essai gratuit jusqu'au <span style={{ fontWeight:600 }}>{new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}</span> · Puis {sub.plan_interval === 'yearly' ? '249€/an' : '29€/mois'}, résiliable à tout moment.
+                          </p>
+                        </div>
+                      )}
 
                       {/* Cancellation notice */}
                       {isCancelled && sub.status !== 'refunded' && endDate && (
