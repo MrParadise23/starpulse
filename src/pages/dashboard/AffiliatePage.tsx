@@ -255,72 +255,52 @@ export default function AffiliatePage() {
 
               return (
                 <div key={ref.id} style={{ padding:'16px 0', borderBottom:'1px solid #f5f5f0' }}>
-                  {/* Name + badge (badge only if single subscription) */}
+                  {/* Name + badge */}
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
                     <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>{name}</p>
-                    {ref.subscriptions.length <= 1 && (
-                      <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:badge.bg, color:badge.color, flexShrink:0 }}>{badge.label}</span>
-                    )}
-                    {ref.subscriptions.length > 1 && (
-                      <span style={{ fontSize:11, fontWeight:600, color:'#8b5cf6', background:'rgba(139,92,246,0.08)', padding:'3px 10px', borderRadius:8 }}>{ref.subscriptions.length} abonnements</span>
-                    )}
+                    {(() => {
+                      const activeCount = ref.subscriptions.filter(s => getSubStatus(s) === 'active').length
+                      if (activeCount === 0) return <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:'#fee2e2', color:'#dc2626', flexShrink:0 }}>Résilié</span>
+                      if (activeCount === 1) return <span style={{ padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600, background:'#dcfce7', color:'#16a34a', flexShrink:0 }}>1 abonnement</span>
+                      return <span style={{ fontSize:11, fontWeight:600, color:'#8b5cf6', background:'rgba(139,92,246,0.08)', padding:'3px 10px', borderRadius:8 }}>{activeCount} abonnements</span>
+                    })()}
                   </div>
                   <p style={{ fontSize:12, color:'#888', margin:'0 0 10px' }}>
                     {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
                   </p>
 
-                  {/* All subscriptions */}
-                  {ref.subscriptions.length > 0 && (
+                  {/* Active subscriptions */}
+                  {ref.subscriptions.filter(s => getSubStatus(s) === 'active').length > 0 && (
                     <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                      {ref.subscriptions.map(sub => {
+                      {ref.subscriptions.filter(s => getSubStatus(s) === 'active').map(sub => {
                         const sStatus = getSubStatus(sub)
                         const sBadge = subStatusBadge[sStatus]
                         const yearly = isYearly(sub)
                         const price = getSubPrice(sub)
                         const commission = price * affiliate.commission_rate
-                        const isCancelled = sStatus === 'cancelled'
                         const isTrial = sub.status === 'trialing'
 
                         return (
                           <div key={sub.id} style={{
-                            background: isCancelled ? '#fefce8' : '#f9f9f6',
-                            border: isCancelled ? '1px solid #fde68a' : '1px solid #f0f0ec',
+                            background: '#f9f9f6',
+                            border: '1px solid #f0f0ec',
                             borderRadius:12, padding:'14px 16px'
                           }}>
-                            {/* Establishment name + sub badge */}
                             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:6 }}>
                               <p style={{ fontSize:13, fontWeight:600, color:'#1a1a18', margin:0 }}>{sub.establishment_name}</p>
                               <span style={{ padding:'2px 8px', borderRadius:6, fontSize:10, fontWeight:600, background:sBadge.bg, color:sBadge.color }}>{sBadge.label}</span>
                             </div>
-
-                            {/* Commission breakdown */}
                             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
                               <p style={{ fontSize:12, color:'#555', margin:0 }}>
                                 {yearly ? 'Annuel' : 'Mensuel'} · <span style={{ fontWeight:600 }}>{price.toFixed(0)}€{yearly ? '/an' : '/mois'}</span>
                                 <span style={{ color:'#aaa', margin:'0 4px' }}>×</span>
                                 <span style={{ fontWeight:600 }}>{rate}%</span>
                               </p>
-                              <p style={{ fontSize:16, fontWeight:800, fontFamily:'"Outfit",system-ui', margin:0, letterSpacing:'-0.02em',
-                                color: isCancelled ? '#888' : '#2563eb',
-                                textDecoration: isCancelled ? 'line-through' : 'none'
-                              }}>
-                                {commission.toFixed(2)}€<span style={{ fontSize:11, fontWeight:500, color:'#888', textDecoration:'none' }}>{yearly ? '/an' : '/mois'}</span>
+                              <p style={{ fontSize:16, fontWeight:800, fontFamily:'"Outfit",system-ui', margin:0, letterSpacing:'-0.02em', color:'#2563eb' }}>
+                                {commission.toFixed(2)}€<span style={{ fontSize:11, fontWeight:500, color:'#888' }}>{yearly ? '/an' : '/mois'}</span>
                               </p>
                             </div>
-
-                            {/* Status detail */}
-                            {isCancelled && (
-                              <p style={{ fontSize:11, color:'#92400e', margin:'8px 0 0', borderTop:'1px solid #f0f0ec', paddingTop:6 }}>
-                                Résilié{isTrial ? ' (période d\'essai)' : ''} · Actif jusqu'au {
-                                  isTrial && sub.trial_ends_at
-                                    ? new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
-                                    : sub.current_period_end
-                                      ? new Date(sub.current_period_end).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })
-                                      : 'fin de période'
-                                }
-                              </p>
-                            )}
-                            {!isCancelled && isTrial && sub.trial_ends_at && (
+                            {isTrial && sub.trial_ends_at && (
                               <p style={{ fontSize:11, color:'#888', margin:'8px 0 0', borderTop:'1px solid #f0f0ec', paddingTop:6 }}>
                                 Période d'essai · Facturation le {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}
                               </p>
@@ -328,6 +308,41 @@ export default function AffiliatePage() {
                           </div>
                         )
                       })}
+                    </div>
+                  )}
+
+                  {/* Cancelled/refunded subscriptions — subtle */}
+                  {ref.subscriptions.filter(s => getSubStatus(s) === 'cancelled').length > 0 && (
+                    <div style={{ marginTop: ref.subscriptions.filter(s => getSubStatus(s) === 'active').length > 0 ? 10 : 0 }}>
+                      {ref.subscriptions.filter(s => getSubStatus(s) === 'active').length > 0 && (
+                        <p style={{ fontSize:11, color:'#aaa', margin:'0 0 6px' }}>Anciens abonnements</p>
+                      )}
+                      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                        {ref.subscriptions.filter(s => getSubStatus(s) === 'cancelled').map(sub => {
+                          const yearly = isYearly(sub)
+                          const isTrial = sub.status === 'trialing'
+
+                          return (
+                            <div key={sub.id} style={{
+                              background: '#fafaf8',
+                              border: '1px solid #f0f0ec',
+                              borderRadius:10, padding:'10px 14px'
+                            }}>
+                              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:6 }}>
+                                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                                  <p style={{ fontSize:12, color:'#888', margin:0 }}>{sub.establishment_name}</p>
+                                  <span style={{ padding:'1px 6px', borderRadius:5, fontSize:9, fontWeight:600, background: sub.status === 'refunded' ? '#ede9fe' : '#fee2e2', color: sub.status === 'refunded' ? '#7c3aed' : '#dc2626' }}>
+                                    {sub.status === 'refunded' ? 'Remboursé' : 'Résilié'}
+                                  </span>
+                                </div>
+                                <span style={{ fontSize:11, color:'#aaa', textDecoration:'line-through' }}>
+                                  {yearly ? '249€/an' : '29€/mois'}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
 
