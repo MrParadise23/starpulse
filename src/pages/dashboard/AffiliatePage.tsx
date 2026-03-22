@@ -252,74 +252,58 @@ export default function AffiliatePage() {
               const email = ref.profiles?.email || ''
               const activeSubs = ref.subscriptions.filter(s => getSubStatus(s) === 'active')
               const inactiveSubs = ref.subscriptions.filter(s => getSubStatus(s) === 'cancelled')
-              const totalCommissionPerMonth = activeSubs.reduce((sum, sub) => {
-                const price = getSubPrice(sub)
-                const comm = price * affiliate.commission_rate
-                if (isYearly(sub)) return sum + comm / 12
-                return sum + comm
-              }, 0)
 
               return (
-                <div key={ref.id} style={{ padding:'14px 0', borderBottom:'1px solid #f5f5f0' }}>
-                  {/* Header: name + total commission */}
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, marginBottom:4, flexWrap:'wrap' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>{name}</p>
-                      {activeSubs.length === 0 && <span style={{ padding:'2px 8px', borderRadius:6, fontSize:10, fontWeight:600, background:'#fee2e2', color:'#dc2626' }}>Résilié</span>}
-                    </div>
-                    {activeSubs.length > 0 && (
-                      <p style={{ fontSize:14, fontWeight:700, color:'#2563eb', margin:0, fontFamily:'"Outfit",system-ui' }}>
-                        +{totalCommissionPerMonth.toFixed(2)}€<span style={{ fontSize:10, fontWeight:500, color:'#888' }}>/mois</span>
+                <div key={ref.id} style={{ padding:'14px 0', borderBottom:'1px solid #f0f0ec' }}>
+                  {/* Header */}
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, flexWrap:'wrap' }}>
+                    <div>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>{name}</p>
+                        {activeSubs.length === 0 && <span style={{ padding:'2px 8px', borderRadius:6, fontSize:10, fontWeight:600, background:'#fee2e2', color:'#dc2626' }}>Résilié</span>}
+                      </div>
+                      <p style={{ fontSize:11, color:'#aaa', margin:'2px 0 0' }}>
+                        {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' })}
                       </p>
-                    )}
+                    </div>
                   </div>
-                  <p style={{ fontSize:11, color:'#aaa', margin:'0 0 8px' }}>
-                    {email && name !== email ? email + ' · ' : ''}Inscrit le {new Date(ref.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' })}
-                  </p>
 
-                  {/* Active subs — compact rows */}
+                  {/* Active subs */}
                   {activeSubs.length > 0 && (
-                    <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                    <div style={{ marginTop:10, display:'flex', flexDirection:'column', gap:6 }}>
                       {activeSubs.map(sub => {
                         const yearly = isYearly(sub)
                         const commission = getSubPrice(sub) * affiliate.commission_rate
                         const isTrial = sub.status === 'trialing'
 
                         return (
-                          <div key={sub.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px', background:'#f9f9f6', borderRadius:8, gap:8 }}>
-                            <div style={{ display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
-                              <p style={{ fontSize:12, fontWeight:500, color:'#555', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sub.establishment_name}</p>
-                              {isTrial && sub.trial_ends_at && (
-                                <span style={{ fontSize:10, color:'#2563eb', background:'#dbeafe', padding:'1px 6px', borderRadius:4, fontWeight:500, flexShrink:0 }}>
-                                  Essai → {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short' })}
-                                </span>
+                          <div key={sub.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:'#f9f9f6', borderRadius:10, border:'1px solid #f0f0ec', gap:8, flexWrap:'wrap' }}>
+                            <div style={{ minWidth:0 }}>
+                              <p style={{ fontSize:13, fontWeight:500, color:'#1a1a18', margin:0 }}>{sub.establishment_name}</p>
+                              {isTrial && sub.trial_ends_at ? (
+                                <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>Essai gratuit · Facturation le {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}</p>
+                              ) : (
+                                <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>{yearly ? 'Annuel' : 'Mensuel'}</p>
                               )}
                             </div>
-                            <span style={{ fontSize:12, fontWeight:600, color:'#2563eb', flexShrink:0 }}>
-                              {commission.toFixed(2)}€/{yearly ? 'an' : 'mois'}
-                            </span>
+                            <div style={{ textAlign:'right', flexShrink:0 }}>
+                              <p style={{ fontSize:14, fontWeight:700, color:'#2563eb', margin:0, fontFamily:'"Outfit",system-ui' }}>
+                                {commission.toFixed(2)}€<span style={{ fontSize:10, fontWeight:400, color:'#888' }}>/{yearly ? 'an' : 'mois'}</span>
+                              </p>
+                            </div>
                           </div>
                         )
                       })}
                     </div>
                   )}
 
-                  {ref.commission_end_date && activeSubs.length > 0 && (
-                    <p style={{ fontSize:10, color:'#bbb', margin:'6px 0 0' }}>
-                      Commissions jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
-                    </p>
-                  )}
-
-                  {/* Inactive subs — very subtle */}
+                  {/* Inactive subs — just names, always "Résilié", never "Remboursé" */}
                   {inactiveSubs.length > 0 && (
-                    <div style={{ marginTop:8 }}>
-                      {activeSubs.length > 0 && <p style={{ fontSize:10, color:'#ccc', margin:'0 0 4px' }}>Anciens</p>}
+                    <div style={{ marginTop:8, paddingTop:8, borderTop: activeSubs.length > 0 ? '1px solid #f5f5f0' : 'none' }}>
                       {inactiveSubs.map(sub => (
-                        <div key={sub.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 0' }}>
-                          <p style={{ fontSize:11, color:'#bbb', margin:0 }}>{sub.establishment_name}</p>
-                          <span style={{ fontSize:9, color:'#dc2626', background:'#fee2e2', padding:'1px 5px', borderRadius:4, fontWeight:600 }}>
-                            {sub.status === 'refunded' ? 'Remboursé' : 'Résilié'}
-                          </span>
+                        <div key={sub.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'3px 0' }}>
+                          <span style={{ fontSize:11, color:'#ccc' }}>{sub.establishment_name}</span>
+                          <span style={{ fontSize:9, color:'#aaa', background:'#f5f5f0', padding:'1px 6px', borderRadius:4, fontWeight:500 }}>Résilié</span>
                         </div>
                       ))}
                     </div>
@@ -379,7 +363,7 @@ export default function AffiliatePage() {
                           background: c.status === 'paid' ? '#dcfce7' : c.status === 'pending' ? '#fef3c7' : c.status === 'refunded' ? '#fee2e2' : '#f5f5f0',
                           color: c.status === 'paid' ? '#16a34a' : c.status === 'pending' ? '#d97706' : c.status === 'refunded' ? '#dc2626' : '#888',
                         }}>
-                          {c.status === 'paid' ? 'Versé' : c.status === 'pending' ? 'En attente' : c.status === 'refunded' ? (isCancelledDuringTrial ? 'Essai annulé' : 'Annulé') : c.status}
+                          {c.status === 'paid' ? 'Versé' : c.status === 'pending' ? 'En attente' : c.status === 'refunded' ? 'Annulé' : c.status}
                         </span>
                       </td>
                     </tr>
