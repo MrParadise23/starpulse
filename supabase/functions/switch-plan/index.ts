@@ -72,15 +72,17 @@ serve(async (req) => {
     })
 
     // Update the subscription item with the new price
-    // proration_behavior: "create_prorations" gives credit for unused time on monthly
-    // For upgrade (monthly → yearly): prorate the remaining monthly period
-    // For downgrade (yearly → monthly): prorate at next period
+    // If currently in trial: keep the trial, no proration (customer pays nothing until trial ends)
+    // If active (monthly → yearly): prorate the remaining monthly period
+    // If active (yearly → monthly): apply at next period
+    const isTrialing = stripeSub.status === "trialing"
+
     await stripe.subscriptions.update(sub.stripe_subscription_id, {
       items: [{
         id: currentItem.id,
         price: newPrice.id,
       }],
-      proration_behavior: isUpgrade ? "create_prorations" : "none",
+      proration_behavior: isTrialing ? "none" : (isUpgrade ? "create_prorations" : "none"),
       description: `StarPulse · ${estName}`,
     })
 
