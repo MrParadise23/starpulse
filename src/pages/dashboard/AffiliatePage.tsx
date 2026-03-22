@@ -42,6 +42,7 @@ interface Referral {
 interface Commission {
   id: string
   referral_id: string
+  establishment_id: string | null
   amount: number
   period_start: string
   period_end: string
@@ -288,8 +289,9 @@ export default function AffiliatePage() {
                             </div>
                             <div style={{ textAlign:'right', flexShrink:0 }}>
                               <p style={{ fontSize:14, fontWeight:700, color:'#2563eb', margin:0, fontFamily:'"Outfit",system-ui' }}>
-                                {commission.toFixed(2)}€<span style={{ fontSize:10, fontWeight:400, color:'#888' }}>/{yearly ? 'an' : 'mois'}</span>
+                                +{commission.toFixed(2)}€<span style={{ fontSize:10, fontWeight:400, color:'#888' }}>/{yearly ? 'an' : 'mois'}</span>
                               </p>
+                              <p style={{ fontSize:10, color:'#888', margin:'1px 0 0' }}>Votre commission</p>
                             </div>
                           </div>
                         )
@@ -338,6 +340,7 @@ export default function AffiliatePage() {
             <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
               <thead>
                 <tr style={{ borderBottom:'2px solid #f0f0ec' }}>
+                  <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:600, color:'#555' }}>Commerce</th>
                   <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:600, color:'#555' }}>Période</th>
                   <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:600, color:'#555' }}>Montant</th>
                   <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:600, color:'#555' }}>Statut</th>
@@ -346,11 +349,20 @@ export default function AffiliatePage() {
               <tbody>
                 {commissions.map(c => {
                   const sameDate = c.period_start === c.period_end
-                  const isCancelledDuringTrial = c.status === 'refunded' && sameDate
+                  const ref = referrals.find(r => r.id === c.referral_id)
+                  const refName = ref?.profiles?.full_name || ref?.profiles?.email || '—'
+                  // Find establishment name from referral's subscriptions
+                  const estName = c.establishment_id
+                    ? ref?.subscriptions.find(s => s.establishment_id === c.establishment_id)?.establishment_name
+                    : null
 
                   return (
                     <tr key={c.id} style={{ borderBottom:'1px solid #f5f5f0' }}>
                       <td style={{ padding:'10px 12px', color:'#555' }}>
+                        <p style={{ margin:0, fontWeight:500, fontSize:13 }}>{estName || refName}</p>
+                        {estName && <p style={{ margin:'1px 0 0', fontSize:11, color:'#aaa' }}>{refName}</p>}
+                      </td>
+                      <td style={{ padding:'10px 12px', color:'#888' }}>
                         {sameDate
                           ? new Date(c.period_start).toLocaleDateString('fr-FR')
                           : <>{new Date(c.period_start).toLocaleDateString('fr-FR')} → {new Date(c.period_end).toLocaleDateString('fr-FR')}</>
