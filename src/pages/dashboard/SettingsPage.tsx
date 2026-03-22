@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import type { Establishment } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
@@ -22,6 +22,7 @@ const CATEGORIES = [
 
 export default function SettingsPage() {
   const { establishment, session, refreshEstablishments, establishments, switchEstablishment } = useOutletContext<DashboardContext>()
+  const navigate = useNavigate()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
@@ -30,6 +31,9 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [newPlanInterval, setNewPlanInterval] = useState<'monthly'|'yearly'>('yearly')
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const PRICE_MONTHLY = 'price_1TCjEzLMRsVfhf6RMRE1sO8K'
   const PRICE_YEARLY = 'price_1TCjGwLMRsVfhf6R06JFRqRr'
@@ -540,6 +544,83 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+
+        {/* Supprimer mon compte */}
+        {!isNew && (
+          <section style={{ ...sectionStyle, borderColor: '#fecaca', background: '#fef2f2' }}>
+            <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:16, color:'#dc2626', marginBottom:4 }}>Zone dangereuse</h2>
+            <p style={{ fontSize:13, color:'#888', marginBottom:16 }}>La suppression de votre compte est irréversible. Toutes vos données seront définitivement effacées.</p>
+            {!deleteConfirmOpen ? (
+              <button onClick={() => setDeleteConfirmOpen(true)}
+                style={{ padding:'10px 20px', borderRadius:10, border:'1px solid #fca5a5', background:'#fff', color:'#dc2626', fontSize:13, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor:'pointer', transition:'all 0.15s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#fff' }}>
+                Supprimer mon compte
+              </button>
+            ) : (
+              <div style={{ background:'#fff', borderRadius:12, padding:16, border:'1px solid #fca5a5' }}>
+                <p style={{ fontSize:13, color:'#333', marginBottom:8, fontWeight:500 }}>
+                  Cette action supprimera définitivement :
+                </p>
+                <ul style={{ fontSize:13, color:'#666', marginBottom:12, paddingLeft:20 }}>
+                  <li>Tous vos établissements et leurs données</li>
+                  <li>Tous vos avis, retours privés et tags</li>
+                  <li>Vos abonnements Stripe (annulés automatiquement)</li>
+                  <li>Votre compte utilisateur</li>
+                </ul>
+                <p style={{ fontSize:13, color:'#333', marginBottom:8 }}>
+                  Tapez <strong>SUPPRIMER</strong> pour confirmer :
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="SUPPRIMER"
+                  style={{ width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #e5e5e5', fontSize:13, fontFamily:'inherit', marginBottom:12, boxSizing:'border-box' }}
+                />
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmText('') }}
+                    style={{ padding:'10px 20px', borderRadius:10, border:'1px solid #e5e5e5', background:'#fff', color:'#666', fontSize:13, fontWeight:500, fontFamily:'"Outfit",system-ui', cursor:'pointer' }}>
+                    Annuler
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (deleteConfirmText !== 'SUPPRIMER') return
+                      setDeleting(true)
+                      try {
+                        const { data: { session: currentSession } } = await supabase.auth.getSession()
+                        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession?.access_token}` },
+                          body: JSON.stringify({ user_id: session.user.id })
+                        })
+                        if (!res.ok) {
+                          const errData = await res.json().catch(() => ({}))
+                          throw new Error(errData.error || 'Erreur lors de la suppression')
+                        }
+                        await supabase.auth.signOut()
+                        navigate('/login', { state: { message: 'Votre compte a été supprimé avec succès.' } })
+                      } catch (err: any) {
+                        alert('Erreur : ' + (err.message || 'Impossible de supprimer le compte'))
+                        setDeleting(false)
+                      }
+                    }}
+                    disabled={deleteConfirmText !== 'SUPPRIMER' || deleting}
+                    style={{
+                      padding:'10px 20px', borderRadius:10, border:'none',
+                      background: deleteConfirmText === 'SUPPRIMER' && !deleting ? '#dc2626' : '#e5e5e5',
+                      color: deleteConfirmText === 'SUPPRIMER' && !deleting ? '#fff' : '#999',
+                      fontSize:13, fontWeight:600, fontFamily:'"Outfit",system-ui',
+                      cursor: deleteConfirmText === 'SUPPRIMER' && !deleting ? 'pointer' : 'not-allowed',
+                      transition:'all 0.15s'
+                    }}>
+                    {deleting ? 'Suppression en cours...' : 'Confirmer la suppression'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Bouton sauvegarder */}
         <button onClick={handleSave} disabled={saving || !name.trim()}
