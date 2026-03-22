@@ -132,7 +132,8 @@ export default function SubscriptionPage() {
 
   const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px' } as const
 
-  const activeSubs = allSubs.filter(s => ['active', 'trialing', 'canceling'].includes(s.status))
+  const activeSubs = allSubs.filter(s => ['active', 'trialing'].includes(s.status) && !s.cancelled_at)
+  const cancelingSubs = allSubs.filter(s => s.status === 'canceling' || (s.cancelled_at && !['cancelled', 'refunded'].includes(s.status)))
   const totalMonthly = activeSubs.reduce((sum, s) => {
     if (s.plan_interval === 'yearly') return sum + 20.75
     return sum + 29
@@ -274,6 +275,16 @@ export default function SubscriptionPage() {
                             }}>
                             {switchingPlan === sub.id ? 'Changement...' : 'Passer à l\'annuel'}
                           </button>
+                        </div>
+                      )}
+
+                      {/* Yearly savings message */}
+                      {!isCancelled && (sub.plan_interval === 'yearly' || sub.plan_interval === 'year') && ['active', 'trialing'].includes(sub.status) && (
+                        <div style={{ marginTop:10, padding:'8px 14px', background:'#f0fdf4', borderRadius:8, display:'flex', alignItems:'center', gap:6 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                          <p style={{ fontSize:12, color:'#059669', margin:0, fontWeight:500 }}>
+                            Vous économisez 99€/an par rapport à l'abonnement mensuel
+                          </p>
                         </div>
                       )}
                     </div>
