@@ -270,6 +270,50 @@ serve(async (req) => {
         break
       }
 
+      // ===== CHARGE REFUNDED =====
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge
+        const paymentIntent = charge.payment_intent as string
+        if (!paymentIntent) break
+        try {
+          const invoices = await stripe.invoices.list({ payment_intent: paymentIntent, limit: 1 })
+          if (invoices.data.length > 0) {
+            const invoice = invoices.data[0]
+            const subscriptionId = invoice.subscription as string
+            if (subscriptionId) {
+              const { data: sub } = await supabase
+                .from("subscriptions")
+                .select("user_id")
+                .eq("stripe_subscription_id", subscriptionId)
+                .single()
+              if (sub) {
+                const { data: referral } = await supabase
+                  .from("referrals")
+                  .select("id")
+                  .eq("referred_user_id", sub.user_id)
+                  .eq("status", "active")
+                  .single()
+                if (referral) {
+                  const pStart = new Date(invoice.period_start * 1000).toISOString().split("T")[0]
+                  const pEnd = new Date(invoice.period_end * 1000).toISOString().split("T")[0]
+                  const { error } = await supabase
+                    .from("commissions")
+                    .update({ status: "refunded" })
+                    .eq("referral_id", referral.id)
+                    .eq("period_start", pStart)
+                    .eq("period_end", pEnd)
+                  if (error) console.error("Error updating commission on refund:", error)
+                  else console.log(`Commission refunded for referral ${referral.id}, period ${pStart} - ${pEnd}`)
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error processing refund commission:", e)
+        }
+        break
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }
