@@ -197,7 +197,12 @@ export default function SubscriptionPage() {
               {/* Summary bar removed — cards speak for themselves */}
 
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                {allSubs.map(sub => {
+                {[...allSubs].sort((a, b) => {
+                  const order: Record<string, number> = { active: 0, trialing: 0, canceling: 1, past_due: 1, refunded: 2, cancelled: 2 }
+                  const aOrder = a.cancelled_at && !['refunded', 'cancelled'].includes(a.status) ? 1 : (order[a.status] ?? 2)
+                  const bOrder = b.cancelled_at && !['refunded', 'cancelled'].includes(b.status) ? 1 : (order[b.status] ?? 2)
+                  return aOrder - bOrder
+                }).map(sub => {
                   const statusInfo = getStatusInfo(sub)
                   const endDate = getEndDate(sub)
                   const isCancelled = sub.cancelled_at !== null
