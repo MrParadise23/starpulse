@@ -119,10 +119,38 @@ serve(async (req) => {
         console.log("Trial check failed, granting trial by default:", e)
       }
 
+      // Determine price details based on the price_id
+      // Live prices
+      const priceMap: Record<string, { amount: number; interval: "month" | "year"; product: string; label: string }> = {
+        // Live prices
+        "price_1TCjEzLMRsVfhf6RMRE1sO8K": { amount: 2900, interval: "month", product: "prod_UB5PuRTzAQrb77", label: "Mensuel" },
+        "price_1TCjGwLMRsVfhf6R06JFRqRr": { amount: 24900, interval: "year", product: "prod_UB5RZLGMlKBKeE", label: "Annuel" },
+        // Test prices (fallback)
+        "price_1TCJcSLMRsVfhf6RykLYqoSx": { amount: 2900, interval: "month", product: "prod_UB5PuRTzAQrb77", label: "Mensuel" },
+        "price_1TCJdCLMRsVfhf6RCBzCAUP3": { amount: 24900, interval: "year", product: "prod_UB5RZLGMlKBKeE", label: "Annuel" },
+      }
+
+      const priceInfo = priceMap[price_id]
+
+      // Build line_items: use price_data with custom product name if we have price info, otherwise fallback to price_id
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = priceInfo
+        ? [{
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: `StarPulse ${priceInfo.label} · ${establishmentName}`,
+              },
+              unit_amount: priceInfo.amount,
+              recurring: { interval: priceInfo.interval },
+            },
+            quantity: 1,
+          }]
+        : [{ price: price_id, quantity: 1 }]
+
       const sessionParams: Stripe.Checkout.SessionCreateParams = {
         customer: customerId,
         mode: "subscription",
-        line_items: [{ price: price_id, quantity: 1 }],
+        line_items: lineItems,
         metadata: {
           user_id: user.id,
           establishment_id: finalEstablishmentId,

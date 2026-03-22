@@ -59,6 +59,37 @@ serve(async (req) => {
       description: `StarPulse · ${name}`,
     })
 
+    // Also update the product name on the subscription item
+    // so it shows the commerce name in the billing portal title
+    try {
+      const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id)
+      if (stripeSub.items.data.length > 0) {
+        const item = stripeSub.items.data[0]
+        const productId = typeof item.price.product === "string" ? item.price.product : item.price.product.id
+        // Get current product name to determine plan label
+        const product = await stripe.products.retrieve(productId)
+        const isAnnual = item.price.recurring?.interval === "year"
+        const planLabel = isAnnual ? "Annuel" : "Mensuel"
+        
+        // Update the product name — but only if it's a per-subscription product (inline price)
+        // For shared products, we create a new inline product instead
+        const newProductName = `StarPulse ${planLabel} · ${name}`
+        
+        // Check if this product is shared (used by multiple subscriptions)
+        const prices = await stripe.prices.list({ product: productId, limit: 5 })
+        const isSharedProduct = prices.data.length > 1 || product.name === "StarPulse Mensuel" || product.name === "StarPulse Annuel"
+        
+        if (!isSharedProduct) {
+          // Safe to rename — this product is unique to this subscription
+          await stripe.products.update(productId, { name: newProductName })
+          console.log(`Updated product ${productId} name to: ${newProductName}`)
+        }
+      }
+    } catch (e) {
+      // Non-critical — description update already succeeded
+      console.log("Could not update product name:", e)
+    }
+
     console.log(`Updated Stripe subscription ${sub.stripe_subscription_id} description to: StarPulse · ${name}`)
 
     return new Response(JSON.stringify({ ok: true }), {
