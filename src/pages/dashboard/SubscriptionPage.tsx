@@ -193,10 +193,10 @@ export default function SubscriptionPage() {
                 <div style={{ textAlign:'right' }}>
                   {allTrialing ? (
                     <>
-                      <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#059669', letterSpacing:'-0.03em', lineHeight:1 }}>
-                        Gratuit
+                      <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
+                        0<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span>
                       </div>
-                      <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>Puis ~{totalAfterTrial.toFixed(0)} EUR/mois après l'essai</p>
+                      <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>Puis ~{totalAfterTrial.toFixed(0)}€/mois après l'essai</p>
                     </>
                   ) : (
                     <>
@@ -246,7 +246,7 @@ export default function SubscriptionPage() {
                         <div style={{ textAlign:'right', flexShrink:0 }}>
                           {!isCancelled && sub.status === 'trialing' ? (
                             <>
-                              <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#059669' }}>Gratuit</span>
+                              <span style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:18, color:'#1a1a18' }}>0€</span>
                               <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>puis {sub.plan_interval === 'yearly' ? '249€/an' : '29€/mois'}</p>
                             </>
                           ) : (
@@ -262,11 +262,16 @@ export default function SubscriptionPage() {
 
                       {/* Trial info message */}
                       {!isCancelled && sub.status === 'trialing' && sub.trial_ends_at && (
-                        <div style={{ marginTop:10, padding:'10px 14px', background:'#eff6ff', borderRadius:10, display:'flex', alignItems:'center', gap:8, border:'1px solid #dbeafe' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                          <p style={{ fontSize:13, color:'#1e40af', margin:0 }}>
-                            Essai gratuit jusqu'au <span style={{ fontWeight:600 }}>{new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}</span> · Puis {sub.plan_interval === 'yearly' ? '249€/an' : '29€/mois'}, résiliable à tout moment.
-                          </p>
+                        <div style={{ marginTop:8, padding:'10px 14px', background:'#f9fafb', borderRadius:10, display:'flex', alignItems:'start', gap:8 }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                          <div>
+                            <p style={{ fontSize:12, color:'#555', margin:0 }}>
+                              Essai gratuit jusqu'au <span style={{ fontWeight:600 }}>{new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}</span> · Puis {sub.plan_interval === 'yearly' ? '249€/an' : '29€/mois'}
+                            </p>
+                            {(sub.plan_interval === 'yearly' || sub.plan_interval === 'year') && (
+                              <p style={{ fontSize:11, color:'#059669', margin:'3px 0 0', fontWeight:500 }}>Vous économisez 99€/an par rapport au mensuel</p>
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -314,9 +319,9 @@ export default function SubscriptionPage() {
                         </div>
                       )}
 
-                      {/* Yearly savings message */}
-                      {!isCancelled && (sub.plan_interval === 'yearly' || sub.plan_interval === 'year') && ['active', 'trialing'].includes(sub.status) && (
-                        <div style={{ marginTop:10, padding:'8px 14px', background:'#f0fdf4', borderRadius:8, display:'flex', alignItems:'center', gap:6 }}>
+                      {/* Yearly savings message — only for active (trialing already shows it above) */}
+                      {!isCancelled && (sub.plan_interval === 'yearly' || sub.plan_interval === 'year') && sub.status === 'active' && (
+                        <div style={{ marginTop:8, padding:'8px 14px', background:'#f0fdf4', borderRadius:8, display:'flex', alignItems:'center', gap:6 }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
                           <p style={{ fontSize:12, color:'#059669', margin:0, fontWeight:500 }}>
                             Vous économisez 99€/an par rapport à l'abonnement mensuel
