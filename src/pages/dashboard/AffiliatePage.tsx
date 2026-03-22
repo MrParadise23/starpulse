@@ -177,18 +177,15 @@ export default function AffiliatePage() {
 
   const sectionStyle = { background:'#fff', borderRadius:20, border:'1px solid #f0f0ec', padding:'24px', marginBottom:20 } as const
 
-  const statusBadge = {
-    active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
-    partial: { bg: '#fef3c7', color: '#d97706', label: 'Abonnement partiel' },
-    cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Résilié' },
-    inactive: { bg: '#fee2e2', color: '#dc2626', label: 'Aucun abonnement actif' },
-    expired: { bg: '#f5f5f0', color: '#888', label: 'Commission expirée' },
-  }
+  function getReferralBadge(ref: Referral) {
+    const refStatus = getReferralStatus(ref)
+    const activeSubs = ref.subscriptions.filter(s => getSubStatus(s) === 'active')
+    const activeCount = activeSubs.length
 
-  const subStatusBadge = {
-    active: { bg: '#dcfce7', color: '#16a34a', label: 'Actif' },
-    cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Abonnement résilié' },
-    inactive: { bg: '#f5f5f0', color: '#888', label: 'Inactif' },
+    if (refStatus === 'expired') return { bg: '#f5f5f0', color: '#888', label: 'Commission expirée' }
+    if (refStatus === 'inactive') return { bg: '#fee2e2', color: '#dc2626', label: 'Aucun abonnement actif' }
+    if (refStatus === 'partial') return { bg: '#dcfce7', color: '#16a34a', label: `${activeCount} abonnement${activeCount > 1 ? 's' : ''} actif${activeCount > 1 ? 's' : ''}` }
+    return null // active = no badge needed
   }
 
   return (
@@ -251,8 +248,7 @@ export default function AffiliatePage() {
             {referrals.map(ref => {
               const name = ref.profiles?.full_name || ref.profiles?.email || 'Utilisateur inconnu'
               const email = ref.profiles?.email || ''
-              const refStatus = getReferralStatus(ref)
-              const badge = statusBadge[refStatus]
+              const badge = getReferralBadge(ref)
               const activeSubs = ref.subscriptions.filter(s => getSubStatus(s) === 'active')
               const inactiveSubs = ref.subscriptions.filter(s => getSubStatus(s) === 'cancelled')
 
@@ -263,7 +259,7 @@ export default function AffiliatePage() {
                     <div>
                       <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
                         <p style={{ fontSize:14, fontWeight:600, color:'#1a1a18', margin:0, fontFamily:'"Outfit",system-ui' }}>{name}</p>
-                        {refStatus !== 'active' && (
+                        {badge && (
                           <span style={{ padding:'2px 8px', borderRadius:6, fontSize:10, fontWeight:600, background:badge.bg, color:badge.color }}>{badge.label}</span>
                         )}
                       </div>
@@ -303,13 +299,13 @@ export default function AffiliatePage() {
                     </div>
                   )}
 
-                  {/* Inactive subs — show establishment name + explicit "Abonnement résilié" */}
+                  {/* Inactive subs — show establishment name + explicit per-commerce label */}
                   {inactiveSubs.length > 0 && (
                     <div style={{ marginTop:8, paddingTop:8, borderTop: activeSubs.length > 0 ? '1px solid #f5f5f0' : 'none' }}>
                       {inactiveSubs.map(sub => (
                         <div key={sub.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'3px 0' }}>
                           <span style={{ fontSize:11, color:'#ccc' }}>{sub.establishment_name}</span>
-                          <span style={{ fontSize:9, color:'#aaa', background:'#f5f5f0', padding:'1px 6px', borderRadius:4, fontWeight:500 }}>Abonnement résilié</span>
+                          <span style={{ fontSize:9, color:'#aaa', background:'#f5f5f0', padding:'1px 6px', borderRadius:4, fontWeight:500 }}>Résilié pour ce commerce</span>
                         </div>
                       ))}
                     </div>
