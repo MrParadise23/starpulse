@@ -298,6 +298,13 @@ serve(async (req) => {
             const invoice = invoices.data[0]
             const subscriptionId = invoice.subscription as string
             if (subscriptionId) {
+              // Mark the subscription as refunded
+              await supabase
+                .from("subscriptions")
+                .update({ status: "refunded", cancelled_at: new Date().toISOString() })
+                .eq("stripe_subscription_id", subscriptionId)
+              console.log(`Subscription ${subscriptionId} marked as refunded`)
+
               const { data: sub } = await supabase
                 .from("subscriptions")
                 .select("user_id")

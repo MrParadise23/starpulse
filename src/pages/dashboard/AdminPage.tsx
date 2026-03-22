@@ -156,7 +156,8 @@ export default function AdminPage() {
   const totalClients = clients.length
   const allSubs = clients.flatMap(c => c.subscriptions)
   const activeSubs = allSubs.filter(s => ['active', 'trialing'].includes(s.status) && !s.cancelled_at)
-  const cancelledSubs = allSubs.filter(s => s.cancelled_at || s.status === 'cancelled')
+  const cancelledSubs = allSubs.filter(s => (s.cancelled_at || s.status === 'cancelled') && s.status !== 'refunded')
+  const refundedSubs = allSubs.filter(s => s.status === 'refunded')
   const mrr = activeSubs.reduce((sum, s) => {
     if (s.plan_interval === 'yearly' || s.plan_interval === 'year') return sum + 20.75
     return sum + s.price_monthly
@@ -171,7 +172,10 @@ export default function AdminPage() {
   })
 
   function getSubStatusLabel(sub: SubRow & { establishment_name: string }) {
-    if (sub.cancelled_at) return { label: 'Résilié', color: '#dc2626', bg: '#fee2e2' }
+    if (sub.status === 'refunded') return { label: 'Remboursé', color: '#7c3aed', bg: '#ede9fe' }
+    if (sub.status === 'cancelled' && !sub.cancelled_at) return { label: 'Résilié', color: '#dc2626', bg: '#fee2e2' }
+    if (sub.status === 'cancelled') return { label: 'Résilié', color: '#dc2626', bg: '#fee2e2' }
+    if (sub.status === 'canceling' || (sub.cancelled_at && sub.status !== 'cancelled' && sub.status !== 'refunded')) return { label: 'En résiliation', color: '#ea580c', bg: '#fff7ed' }
     if (sub.status === 'trialing') return { label: 'Essai', color: '#2563eb', bg: '#dbeafe' }
     if (sub.status === 'active') return { label: 'Actif', color: '#059669', bg: '#dcfce7' }
     if (sub.status === 'past_due') return { label: 'Impayé', color: '#dc2626', bg: '#fee2e2' }
@@ -217,6 +221,7 @@ export default function AdminPage() {
               { value: activeSubs.length.toString(), label: 'Abonnements actifs', color: '#059669' },
               { value: `${mrr.toFixed(0)}€`, label: 'MRR', color: '#8b5cf6' },
               { value: cancelledSubs.length.toString(), label: 'Résiliés', color: '#dc2626' },
+              { value: refundedSubs.length.toString(), label: 'Remboursés', color: '#7c3aed' },
             ].map((stat, i) => (
               <div key={i} style={{ background:'#fff', borderRadius:16, border:'1px solid #f0f0ec', padding:'18px' }}>
                 <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:24, color:'#1a1a18', letterSpacing:'-0.03em', margin:'0 0 2px' }}>{stat.value}</p>
