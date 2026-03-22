@@ -197,28 +197,8 @@ export default function SubscriptionPage() {
               {/* Summary bar */}
               <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
                 <div style={{ flex:1, minWidth:120, background:'#f9f9f6', borderRadius:12, padding:'14px 16px' }}>
-                  <p style={{ fontSize:11, color:'#888', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>Établissements</p>
+                  <p style={{ fontSize:11, color:'#888', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>Établissements actifs</p>
                   <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:0 }}>{activeSubs.length}</p>
-                </div>
-                <div style={{ flex:1, minWidth:120, background:'#f9f9f6', borderRadius:12, padding:'14px 16px' }}>
-                  <p style={{ fontSize:11, color:'#888', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>
-                    {allTrialing ? 'Après l\'essai' : 'Facturation'}
-                  </p>
-                  <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:0 }}>
-                    {allTrialing ? (
-                      <>
-                        {hasYearly && !hasMonthly && `${totalPerYear}€/an`}
-                        {!hasYearly && hasMonthly && `${totalPerMonth}€/mois`}
-                        {hasYearly && hasMonthly && `${totalPerYear}€/an`}
-                      </>
-                    ) : (
-                      <>
-                        {hasYearly && !hasMonthly && `${totalPerYear}€/an`}
-                        {!hasYearly && hasMonthly && `${totalPerMonth}€/mois`}
-                        {hasYearly && hasMonthly && `~${(monthlyEquivOfYearly + totalPerMonth).toFixed(0)}€/mois`}
-                      </>
-                    )}
-                  </p>
                 </div>
                 {savingsPerYear > 0 && (
                   <div style={{ flex:1, minWidth:120, background:'#f0fdf4', borderRadius:12, padding:'14px 16px' }}>
