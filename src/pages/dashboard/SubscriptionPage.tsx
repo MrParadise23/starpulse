@@ -194,20 +194,7 @@ export default function SubscriptionPage() {
             <section style={sectionStyle}>
               <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:18, color:'#1a1a18', margin:'0 0 16px' }}>Vos abonnements</h2>
 
-              {/* Summary bar */}
-              <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
-                <div style={{ flex:1, minWidth:120, background:'#f9f9f6', borderRadius:12, padding:'14px 16px' }}>
-                  <p style={{ fontSize:11, color:'#888', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>Établissements actifs</p>
-                  <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:0 }}>{activeSubs.length}</p>
-                </div>
-                {savingsPerYear > 0 && (
-                  <div style={{ flex:1, minWidth:120, background:'#f0fdf4', borderRadius:12, padding:'14px 16px' }}>
-                    <p style={{ fontSize:11, color:'#059669', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>Économies</p>
-                    <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#059669', margin:0 }}>{savingsPerYear}€/an</p>
-                    <p style={{ fontSize:10, color:'#059669', margin:'3px 0 0', opacity:0.7 }}>sur {yearlySubs.length > 1 ? `vos ${yearlySubs.length} abonnements annuels` : 'votre abonnement annuel'}</p>
-                  </div>
-                )}
-              </div>
+              {/* Summary bar removed — cards speak for themselves */}
 
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                 {allSubs.map(sub => {
@@ -308,6 +295,16 @@ export default function SubscriptionPage() {
                   )
                 })}
               </div>
+
+              {/* Subtle savings message */}
+              {savingsPerYear > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:14, paddingTop:14, borderTop:'1px solid #f0f0ec' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  <p style={{ fontSize:12, color:'#059669', margin:0, fontWeight:500 }}>
+                    {savingsPerYear}€ économisés par an grâce à {yearlySubs.length > 1 ? `vos ${yearlySubs.length} abonnements annuels` : 'votre abonnement annuel'}
+                  </p>
+                </div>
+              )}
             </section>
 
             {/* Billing portal */}
