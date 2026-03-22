@@ -224,6 +224,7 @@ export default function SubscriptionPage() {
                   <div style={{ flex:1, minWidth:120, background:'#f0fdf4', borderRadius:12, padding:'14px 16px' }}>
                     <p style={{ fontSize:11, color:'#059669', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>Économies</p>
                     <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#059669', margin:0 }}>{savingsPerYear}€/an</p>
+                    <p style={{ fontSize:10, color:'#059669', margin:'3px 0 0', opacity:0.7 }}>sur {yearlySubs.length > 1 ? `vos ${yearlySubs.length} abonnements annuels` : 'votre abonnement annuel'}</p>
                   </div>
                 )}
               </div>
