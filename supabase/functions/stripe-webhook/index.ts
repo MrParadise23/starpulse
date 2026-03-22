@@ -9,6 +9,20 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+// Helper: send transactional email via send-email function
+async function sendEmail(type: string, to: string, data: Record<string, string> = {}) {
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+      body: JSON.stringify({ type, to, data }),
+    })
+    console.log(`Email sent: ${type} to ${to}`)
+  } catch (e) {
+    console.error(`Failed to send email ${type} to ${to}:`, e)
+  }
+}
+
 // Helper: calculate and create affiliate commission
 async function processAffiliateCommission(userId: string, amountPaid: number, periodStart: number, periodEnd: number, establishmentId?: string) {
   if (amountPaid <= 0) {
@@ -196,6 +210,19 @@ serve(async (req) => {
             .update({ referred_establishment_id: establishmentId })
             .eq("referred_user_id", userId)
             .is("referred_establishment_id", null)
+
+          // Send subscription confirmation email
+          try {
+            const { data: userProfile } = await supabase.from("profiles").select("email").eq("id", userId).single()
+            const { data: estData } = await supabase.from("establishments").select("name").eq("id", establishmentId).single()
+            if (userProfile?.email) {
+              await sendEmail("subscription_confirmed", userProfile.email, {
+                plan: planInterval === "yearly" ? "Annuel (249€/an)" : "Mensuel (29€/mois)",
+                establishment: estData?.name || "",
+                trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toLocaleDateString("fr-FR") : "",
+              })
+            }
+          } catch (e) { console.log("Email send error (non-blocking):", e) }
         }
 
         if (session.mode === "payment") {
@@ -274,6 +301,23 @@ serve(async (req) => {
           })
           .eq("stripe_subscription_id", subscription.id)
         console.log(`Subscription ${subscription.id} updated`)
+
+        // Send cancellation email if subscription was just set to cancel
+        if (cancelAtPeriodEnd) {
+          try {
+            const { data: sub } = await supabase.from("subscriptions").select("user_id, establishment_id").eq("stripe_subscription_id", subscription.id).single()
+            if (sub) {
+              const { data: profile } = await supabase.from("profiles").select("email").eq("id", sub.user_id).single()
+              const { data: est } = await supabase.from("establishments").select("name").eq("id", sub.establishment_id).single()
+              if (profile?.email) {
+                await sendEmail("subscription_cancelled", profile.email, {
+                  establishment: est?.name || "",
+                  end_date: new Date(subscription.current_period_end * 1000).toLocaleDateString("fr-FR"),
+                })
+              }
+            }
+          } catch (e) { console.log("Email send error (non-blocking):", e) }
+        }
         break
       }
 
