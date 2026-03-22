@@ -282,7 +282,7 @@ export default function AffiliatePage() {
                             <div style={{ minWidth:0 }}>
                               <p style={{ fontSize:13, fontWeight:500, color:'#1a1a18', margin:0 }}>{sub.establishment_name}</p>
                               {isTrial && sub.trial_ends_at ? (
-                                <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>Essai gratuit · Facturation le {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}</p>
+                                <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>En essai gratuit jusqu'au {new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}</p>
                               ) : (
                                 <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>{yearly ? 'Annuel' : 'Mensuel'}</p>
                               )}
