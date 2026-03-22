@@ -59,6 +59,8 @@ serve(async (req) => {
 
       // If no establishment_id provided, auto-create one
       let finalEstablishmentId = establishment_id
+      let establishmentName = "Mon établissement"
+
       if (!finalEstablishmentId) {
         const { data: newEst, error: estError } = await supabase
           .from("establishments")
@@ -84,6 +86,14 @@ serve(async (req) => {
         }
         finalEstablishmentId = newEst.id
         console.log(`Auto-created establishment ${finalEstablishmentId} for user ${user.id}`)
+      } else {
+        // Fetch existing establishment name
+        const { data: est } = await supabase
+          .from("establishments")
+          .select("name")
+          .eq("id", finalEstablishmentId)
+          .single()
+        if (est?.name) establishmentName = est.name
       }
 
       // === ANTI-TRIAL-ABUSE: Check if this customer ever had a subscription ===
@@ -121,6 +131,7 @@ serve(async (req) => {
         success_url: success_url || `${req.headers.get("origin")}/dashboard/settings?checkout=success`,
         cancel_url: cancel_url || `${req.headers.get("origin")}/dashboard/subscription?checkout=cancelled`,
         subscription_data: {
+          description: `StarPulse · ${establishmentName}`,
           metadata: {
             user_id: user.id,
             establishment_id: finalEstablishmentId,

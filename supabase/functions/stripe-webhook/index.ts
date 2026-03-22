@@ -172,6 +172,23 @@ serve(async (req) => {
             .eq("id", establishmentId)
           console.log(`Establishment ${establishmentId} activated`)
 
+          // Update Stripe subscription description with establishment name
+          try {
+            const { data: est } = await supabase
+              .from("establishments")
+              .select("name")
+              .eq("id", establishmentId)
+              .single()
+            if (est?.name && est.name !== "Mon établissement") {
+              await stripe.subscriptions.update(subscription.id, {
+                description: `StarPulse · ${est.name}`,
+              })
+              console.log(`Stripe subscription ${subscription.id} description set to: StarPulse · ${est.name}`)
+            }
+          } catch (e) {
+            console.log("Could not update subscription description:", e)
+          }
+
           // Link referral to establishment
           await supabase
             .from("referrals")
