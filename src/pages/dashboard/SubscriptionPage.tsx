@@ -260,21 +260,6 @@ export default function SubscriptionPage() {
                         </div>
                       </div>
 
-                      {/* Trial info message */}
-                      {!isCancelled && sub.status === 'trialing' && sub.trial_ends_at && (
-                        <div style={{ marginTop:8, padding:'10px 14px', background:'#f9fafb', borderRadius:10, display:'flex', alignItems:'start', gap:8 }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                          <div>
-                            <p style={{ fontSize:12, color:'#555', margin:0 }}>
-                              Essai gratuit jusqu'au <span style={{ fontWeight:600 }}>{new Date(sub.trial_ends_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long' })}</span> · Puis {sub.plan_interval === 'yearly' ? '249€/an' : '29€/mois'}
-                            </p>
-                            {(sub.plan_interval === 'yearly' || sub.plan_interval === 'year') && (
-                              <p style={{ fontSize:11, color:'#059669', margin:'3px 0 0', fontWeight:500 }}>Vous économisez 99€/an par rapport au mensuel</p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
                       {/* Cancellation notice */}
                       {isCancelled && sub.status !== 'refunded' && endDate && (
                         <div style={{ marginTop:10, padding:'10px 14px', background:'#fff', borderRadius:10, display:'flex', alignItems:'center', gap:8 }}>
