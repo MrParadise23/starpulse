@@ -304,8 +304,8 @@ export default function SubscriptionPage() {
                         </div>
                       )}
 
-                      {/* Yearly savings message — only for active (trialing already shows it above) */}
-                      {!isCancelled && (sub.plan_interval === 'yearly' || sub.plan_interval === 'year') && sub.status === 'active' && (
+                      {/* Yearly savings message */}
+                      {!isCancelled && (sub.plan_interval === 'yearly' || sub.plan_interval === 'year') && ['active', 'trialing'].includes(sub.status) && (
                         <div style={{ marginTop:8, padding:'8px 14px', background:'#f0fdf4', borderRadius:8, display:'flex', alignItems:'center', gap:6 }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
                           <p style={{ fontSize:12, color:'#059669', margin:0, fontWeight:500 }}>
