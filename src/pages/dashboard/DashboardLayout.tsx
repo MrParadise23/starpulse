@@ -87,7 +87,7 @@ export default function DashboardLayout({ session }: { session: Session }) {
   }, [activeEst])
 
   async function loadEstablishments() {
-    const { data } = await supabase.from('establishments').select('*').eq('user_id', session.user.id).eq('is_active', true).order('created_at', { ascending: false })
+    const { data } = await supabase.from('establishments').select('*').eq('user_id', session.user.id).eq('is_active', true).order('created_at', { ascending: true })
     if (data && data.length > 0) {
       setEstablishments(data)
       setActiveEst(prev => {
@@ -95,6 +95,15 @@ export default function DashboardLayout({ session }: { session: Session }) {
           const stillExists = data.find(e => e.id === prev.id)
           if (stillExists) return stillExists
         }
+        // Restore last visited establishment from localStorage
+        try {
+          const lastId = localStorage.getItem('starpulse_last_est')
+          if (lastId) {
+            const found = data.find(e => e.id === lastId)
+            if (found) return found
+          }
+        } catch {}
+        // Fallback: first created establishment
         return data[0]
       })
     }
@@ -103,6 +112,7 @@ export default function DashboardLayout({ session }: { session: Session }) {
   function switchEstablishment(est: Establishment) {
     setActiveEst(est)
     setEstDropdownOpen(false)
+    try { localStorage.setItem('starpulse_last_est', est.id) } catch {}
   }
 
   const userName = session.user.user_metadata?.full_name || session.user.email
