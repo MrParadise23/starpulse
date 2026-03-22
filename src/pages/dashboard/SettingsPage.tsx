@@ -194,6 +194,22 @@ export default function SettingsPage() {
     } else {
       // Update existing establishment
       await supabase.from('establishments').update(estData).eq('id', establishment!.id)
+      // Sync establishment name to Stripe subscription description
+      if (name.trim() !== establishment!.name) {
+        try {
+          const { data: { session: authSession } } = await supabase.auth.getSession()
+          await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-subscription-name`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authSession?.access_token}`,
+            },
+            body: JSON.stringify({ establishment_id: establishment!.id, name: name.trim() }),
+          })
+        } catch (e) {
+          console.log('Could not sync name to Stripe:', e)
+        }
+      }
       await refreshEstablishments()
       setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
     }
