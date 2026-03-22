@@ -10,7 +10,7 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // Helper: calculate and create affiliate commission
-async function processAffiliateCommission(userId: string, amountPaid: number, periodStart: number, periodEnd: number) {
+async function processAffiliateCommission(userId: string, amountPaid: number, periodStart: number, periodEnd: number, establishmentId?: string) {
   if (amountPaid <= 0) {
     console.log("Skipping commission: amount is 0 (trial)")
     return
@@ -73,6 +73,7 @@ async function processAffiliateCommission(userId: string, amountPaid: number, pe
       period_start: pStart,
       period_end: pEnd,
       status: "pending",
+      ...(establishmentId ? { establishment_id: establishmentId } : {}),
     })
 
   if (commError) {
@@ -234,13 +235,13 @@ serve(async (req) => {
           // === AFFILIATE COMMISSION ===
           const { data: sub } = await supabase
             .from("subscriptions")
-            .select("user_id")
+            .select("user_id, establishment_id")
             .eq("stripe_subscription_id", invoice.subscription as string)
             .single()
 
           if (sub) {
             const amountPaid = (invoice.amount_paid || 0) / 100
-            await processAffiliateCommission(sub.user_id, amountPaid, invoice.period_start, invoice.period_end)
+            await processAffiliateCommission(sub.user_id, amountPaid, invoice.period_start, invoice.period_end, sub.establishment_id)
           }
         }
         break
