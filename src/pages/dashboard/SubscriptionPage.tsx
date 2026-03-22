@@ -194,15 +194,8 @@ export default function SubscriptionPage() {
             <section style={sectionStyle}>
               <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:18, color:'#1a1a18', margin:'0 0 16px' }}>Vos abonnements</h2>
 
-              {/* Summary bar removed — cards speak for themselves */}
-
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                {[...allSubs].sort((a, b) => {
-                  const order: Record<string, number> = { active: 0, trialing: 0, canceling: 1, past_due: 1, refunded: 2, cancelled: 2 }
-                  const aOrder = a.cancelled_at && !['refunded', 'cancelled'].includes(a.status) ? 1 : (order[a.status] ?? 2)
-                  const bOrder = b.cancelled_at && !['refunded', 'cancelled'].includes(b.status) ? 1 : (order[b.status] ?? 2)
-                  return aOrder - bOrder
-                }).map(sub => {
+                {allSubs.filter(s => !['refunded', 'cancelled'].includes(s.status)).map(sub => {
                   const statusInfo = getStatusInfo(sub)
                   const endDate = getEndDate(sub)
                   const isCancelled = sub.cancelled_at !== null
@@ -253,21 +246,11 @@ export default function SubscriptionPage() {
                       </div>
 
                       {/* Cancellation notice */}
-                      {isCancelled && sub.status !== 'refunded' && endDate && (
+                      {isCancelled && endDate && (
                         <div style={{ marginTop:10, padding:'10px 14px', background:'#fff', borderRadius:10, display:'flex', alignItems:'center', gap:8 }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                           <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
                             Abonnement annulé · {sub.status === 'trialing' ? 'Période d\'essai active' : 'Accès maintenu'} jusqu'au <span style={{ fontWeight:600 }}>{endDate}</span>
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Refund notice */}
-                      {sub.status === 'refunded' && (
-                        <div style={{ marginTop:10, padding:'10px 14px', background:'#f5f3ff', borderRadius:10, display:'flex', alignItems:'center', gap:8, border:'1px solid #e9e5ff' }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                          <p style={{ fontSize:13, color:'#5b21b6', margin:0 }}>
-                            Abonnement remboursé{sub.cancelled_at ? ` le ${new Date(sub.cancelled_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}` : ''} · Le montant a été recrédité sur votre moyen de paiement.
                           </p>
                         </div>
                       )}
@@ -314,6 +297,43 @@ export default function SubscriptionPage() {
                 </div>
               )}
             </section>
+
+            {/* Inactive subscriptions — history */}
+            {allSubs.some(s => ['refunded', 'cancelled'].includes(s.status)) && (
+              <section style={{ ...sectionStyle, background:'#fafaf8' }}>
+                <p style={{ fontSize:13, fontWeight:500, color:'#aaa', margin:'0 0 12px' }}>Anciens abonnements</p>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {allSubs.filter(s => ['refunded', 'cancelled'].includes(s.status)).map(sub => {
+                    const statusInfo = getStatusInfo(sub)
+                    return (
+                      <div key={sub.id} style={{ background:'#fff', borderRadius:10, padding:'12px 16px', border:'1px solid #f0f0ec' }}>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0 }}>
+                            <div style={{ width:28, height:28, borderRadius:7, background:'#f0f0ec', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                              <span style={{ fontSize:11, fontWeight:700, color:'#aaa' }}>{sub.establishment_name.charAt(0)}</span>
+                            </div>
+                            <div style={{ minWidth:0 }}>
+                              <p style={{ fontSize:13, fontWeight:500, color:'#888', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sub.establishment_name}</p>
+                              <span style={{ display:'inline-block', padding:'1px 6px', borderRadius:5, fontSize:10, fontWeight:600, background:statusInfo.bg, color:statusInfo.color, marginTop:2 }}>
+                                {statusInfo.label}
+                              </span>
+                            </div>
+                          </div>
+                          <span style={{ fontSize:12, color:'#aaa', textDecoration:'line-through' }}>
+                            {sub.plan_interval === 'yearly' ? '249€/an' : '29€/mois'}
+                          </span>
+                        </div>
+                        {sub.status === 'refunded' && sub.cancelled_at && (
+                          <p style={{ fontSize:11, color:'#888', margin:'8px 0 0' }}>
+                            Remboursé le {new Date(sub.cancelled_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
 
             {/* Billing portal */}
             <section style={sectionStyle}>
