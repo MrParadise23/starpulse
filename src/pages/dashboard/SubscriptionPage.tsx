@@ -192,57 +192,40 @@ export default function SubscriptionPage() {
           <>
             {/* Récap global */}
             <section style={sectionStyle}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:20 }}>
-                <div>
-                  <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:18, color:'#1a1a18', margin:'0 0 4px' }}>Récapitulatif</h2>
-                  <p style={{ fontSize:13, color:'#888', margin:0 }}>{activeSubs.length} établissement{activeSubs.length > 1 ? 's' : ''} actif{activeSubs.length > 1 ? 's' : ''}</p>
+              <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:600, fontSize:18, color:'#1a1a18', margin:'0 0 16px' }}>Vos abonnements</h2>
+
+              {/* Summary bar */}
+              <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
+                <div style={{ flex:1, minWidth:120, background:'#f9f9f6', borderRadius:12, padding:'14px 16px' }}>
+                  <p style={{ fontSize:11, color:'#888', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>Établissements</p>
+                  <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:0 }}>{activeSubs.length}</p>
                 </div>
-                <div style={{ textAlign:'right' }}>
-                  {allTrialing ? (
-                    <div>
-                      <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
-                        0<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR</span>
-                      </div>
-                      <p style={{ fontSize:12, color:'#888', margin:'6px 0 0' }}>
-                        {hasYearly && !hasMonthly && <>Puis <span style={{ fontWeight:600, color:'#555' }}>{totalPerYear}€/an</span></>}
-                        {!hasYearly && hasMonthly && <>Puis <span style={{ fontWeight:600, color:'#555' }}>{totalPerMonth}€/mois</span></>}
-                        {hasYearly && hasMonthly && <>Puis <span style={{ fontWeight:600, color:'#555' }}>{totalPerYear}€/an + {totalPerMonth}€/mois</span></>}
-                      </p>
-                      {hasYearly && (
-                        <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>soit ~{monthlyEquivOfYearly.toFixed(0)}€/mois</p>
-                      )}
-                      {savingsPerYear > 0 && (
-                        <div style={{ display:'inline-flex', alignItems:'center', gap:4, marginTop:6, padding:'3px 10px', background:'#f0fdf4', borderRadius:6 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                          <span style={{ fontSize:11, color:'#059669', fontWeight:600 }}>{savingsPerYear}€ économisés/an</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
-                        {hasYearly && !hasMonthly
-                          ? <>{totalPerYear}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/an</span></>
-                          : !hasYearly && hasMonthly
-                            ? <>{totalPerMonth}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span></>
-                            : <>~{(monthlyEquivOfYearly + totalPerMonth).toFixed(0)}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span></>
-                        }
-                      </div>
-                      {hasYearly && (
-                        <p style={{ fontSize:12, color:'#888', margin:'4px 0 0' }}>soit ~{monthlyEquivOfYearly.toFixed(0)}€/mois</p>
-                      )}
-                      {hasYearly && hasMonthly && (
-                        <p style={{ fontSize:11, color:'#888', margin:'2px 0 0' }}>{totalPerYear}€/an + {totalPerMonth}€/mois</p>
-                      )}
-                      {savingsPerYear > 0 && (
-                        <div style={{ display:'inline-flex', alignItems:'center', gap:4, marginTop:6, padding:'3px 10px', background:'#f0fdf4', borderRadius:6 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                          <span style={{ fontSize:11, color:'#059669', fontWeight:600 }}>{savingsPerYear}€ économisés/an</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <div style={{ flex:1, minWidth:120, background:'#f9f9f6', borderRadius:12, padding:'14px 16px' }}>
+                  <p style={{ fontSize:11, color:'#888', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>
+                    {allTrialing ? 'Après l\'essai' : 'Facturation'}
+                  </p>
+                  <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:0 }}>
+                    {allTrialing ? (
+                      <>
+                        {hasYearly && !hasMonthly && `${totalPerYear}€/an`}
+                        {!hasYearly && hasMonthly && `${totalPerMonth}€/mois`}
+                        {hasYearly && hasMonthly && `${totalPerYear}€/an`}
+                      </>
+                    ) : (
+                      <>
+                        {hasYearly && !hasMonthly && `${totalPerYear}€/an`}
+                        {!hasYearly && hasMonthly && `${totalPerMonth}€/mois`}
+                        {hasYearly && hasMonthly && `~${(monthlyEquivOfYearly + totalPerMonth).toFixed(0)}€/mois`}
+                      </>
+                    )}
+                  </p>
                 </div>
+                {savingsPerYear > 0 && (
+                  <div style={{ flex:1, minWidth:120, background:'#f0fdf4', borderRadius:12, padding:'14px 16px' }}>
+                    <p style={{ fontSize:11, color:'#059669', margin:'0 0 4px', textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:500 }}>Économies</p>
+                    <p style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#059669', margin:0 }}>{savingsPerYear}€/an</p>
+                  </div>
+                )}
               </div>
 
               <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
