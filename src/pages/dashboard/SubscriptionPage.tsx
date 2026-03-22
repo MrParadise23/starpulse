@@ -29,6 +29,7 @@ export default function SubscriptionPage() {
   const [allSubs, setAllSubs] = useState<SubWithEst[]>([])
   const [loading, setLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [switchingPlan, setSwitchingPlan] = useState<string | null>(null)
   const [searchParams] = useSearchParams()
 
   const checkoutStatus = searchParams.get('checkout')
@@ -76,6 +77,27 @@ export default function SubscriptionPage() {
       alert("Erreur : " + (err.message || "Impossible d'ouvrir le portail de facturation"))
     }
     setPortalLoading(false)
+  }
+
+  async function switchPlan(subId: string, targetInterval: 'monthly' | 'yearly') {
+    if (!confirm(targetInterval === 'yearly'
+      ? 'Passer à l\'abonnement annuel (249€/an au lieu de 348€/an) ? Un prorata sera appliqué pour la période en cours.'
+      : 'Passer à l\'abonnement mensuel (29€/mois) ? Le changement prendra effet à la prochaine facturation.'
+    )) return
+
+    setSwitchingPlan(subId)
+    try {
+      const { data, error } = await supabase.functions.invoke('switch-plan', {
+        body: { subscription_id: subId, target_interval: targetInterval }
+      })
+      if (error) throw error
+      if (data?.ok) {
+        await loadAllSubscriptions()
+      }
+    } catch (err: any) {
+      alert("Erreur : " + (err.message || "Impossible de changer de plan"))
+    }
+    setSwitchingPlan(null)
   }
 
   function getEndDate(sub: SubWithEst): string | null {
@@ -215,6 +237,30 @@ export default function SubscriptionPage() {
                           <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
                             Abonnement annulé · {sub.status === 'trialing' ? 'Période d\'essai active' : 'Accès maintenu'} jusqu'au <span style={{ fontWeight:600 }}>{endDate}</span>
                           </p>
+                        </div>
+                      )}
+
+                      {/* Upgrade to yearly banner */}
+                      {!isCancelled && (sub.plan_interval === 'monthly' || sub.plan_interval === 'month') && ['active', 'trialing'].includes(sub.status) && (
+                        <div style={{ marginTop:10, padding:'12px 16px', background:'linear-gradient(135deg, #eff6ff, #f0fdf4)', borderRadius:10, border:'1px solid #dbeafe', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+                          <div style={{ minWidth:0 }}>
+                            <p style={{ fontSize:13, fontWeight:600, color:'#1a1a18', margin:'0 0 2px' }}>
+                              Passez à l'annuel et économisez 99€/an
+                            </p>
+                            <p style={{ fontSize:11, color:'#888', margin:0 }}>
+                              249€/an au lieu de 348€ · soit 20,75€/mois
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => switchPlan(sub.id, 'yearly')}
+                            disabled={switchingPlan === sub.id}
+                            style={{
+                              padding:'8px 18px', borderRadius:10, border:'none', cursor: switchingPlan === sub.id ? 'wait' : 'pointer',
+                              background:'linear-gradient(135deg, #2563eb, #1d4ed8)', color:'#fff', fontSize:13, fontWeight:600,
+                              fontFamily:'"Outfit",system-ui', whiteSpace:'nowrap', flexShrink:0, opacity: switchingPlan === sub.id ? 0.7 : 1,
+                            }}>
+                            {switchingPlan === sub.id ? 'Changement...' : 'Passer à l\'annuel'}
+                          </button>
                         </div>
                       )}
                     </div>
