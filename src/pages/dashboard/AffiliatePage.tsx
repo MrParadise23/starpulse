@@ -311,6 +311,12 @@ export default function AffiliatePage() {
                     </div>
                   )}
 
+                  {ref.commission_end_date && (
+                    <p style={{ fontSize:11, color:'#aaa', margin:'8px 0 0' }}>
+                      Commissions actives jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
+
                   {/* Cancelled/refunded subscriptions — subtle */}
                   {ref.subscriptions.filter(s => getSubStatus(s) === 'cancelled').length > 0 && (
                     <div style={{ marginTop: ref.subscriptions.filter(s => getSubStatus(s) === 'active').length > 0 ? 10 : 0 }}>
@@ -346,11 +352,6 @@ export default function AffiliatePage() {
                     </div>
                   )}
 
-                  {ref.commission_end_date && (
-                    <p style={{ fontSize:11, color:'#aaa', margin:'8px 0 0' }}>
-                      Commissions actives jusqu'au {new Date(ref.commission_end_date).toLocaleDateString('fr-FR')}
-                    </p>
-                  )}
                 </div>
               )
             })}
@@ -396,10 +397,10 @@ export default function AffiliatePage() {
                     <td style={{ padding:'10px 12px', textAlign:'right' }}>
                       <span style={{
                         display:'inline-block', padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600,
-                        background: c.status === 'paid' ? '#dcfce7' : c.status === 'pending' ? '#fef3c7' : '#f5f5f0',
-                        color: c.status === 'paid' ? '#16a34a' : c.status === 'pending' ? '#d97706' : '#888',
+                        background: c.status === 'paid' ? '#dcfce7' : c.status === 'pending' ? '#fef3c7' : c.status === 'refunded' ? '#ede9fe' : '#f5f5f0',
+                        color: c.status === 'paid' ? '#16a34a' : c.status === 'pending' ? '#d97706' : c.status === 'refunded' ? '#7c3aed' : '#888',
                       }}>
-                        {c.status === 'paid' ? 'Versé' : c.status === 'pending' ? 'En attente' : c.status}
+                        {c.status === 'paid' ? 'Versé' : c.status === 'pending' ? 'En attente' : c.status === 'refunded' ? 'Annulé' : c.status}
                       </span>
                     </td>
                   </tr>
