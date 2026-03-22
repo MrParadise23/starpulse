@@ -80,10 +80,16 @@ export default function SubscriptionPage() {
   }
 
   async function switchPlan(subId: string, targetInterval: 'monthly' | 'yearly') {
-    if (!confirm(targetInterval === 'yearly'
-      ? 'Passer à l\'abonnement annuel (249€/an au lieu de 348€/an) ? Un prorata sera appliqué pour la période en cours.'
+    const sub = allSubs.find(s => s.id === subId)
+    const isTrialing = sub?.status === 'trialing'
+
+    const message = targetInterval === 'yearly'
+      ? isTrialing
+        ? 'Passer à l\'abonnement annuel (249€/an au lieu de 348€/an) ? Votre essai gratuit continue jusqu\'à la fin prévue.'
+        : 'Passer à l\'abonnement annuel (249€/an au lieu de 348€/an) ? Un prorata sera appliqué pour la période en cours.'
       : 'Passer à l\'abonnement mensuel (29€/mois) ? Le changement prendra effet à la prochaine facturation.'
-    )) return
+
+    if (!confirm(message)) return
 
     setSwitchingPlan(subId)
     try {
