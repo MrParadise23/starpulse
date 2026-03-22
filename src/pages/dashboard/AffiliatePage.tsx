@@ -388,23 +388,31 @@ export default function AffiliatePage() {
                 </tr>
               </thead>
               <tbody>
-                {commissions.map(c => (
-                  <tr key={c.id} style={{ borderBottom:'1px solid #f5f5f0' }}>
-                    <td style={{ padding:'10px 12px', color:'#555' }}>
-                      {new Date(c.period_start).toLocaleDateString('fr-FR')} → {new Date(c.period_end).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td style={{ padding:'10px 12px', textAlign:'right', fontWeight:700, color:'#1a1a18', fontFamily:'"Outfit",system-ui' }}>{c.amount.toFixed(2)}€</td>
-                    <td style={{ padding:'10px 12px', textAlign:'right' }}>
-                      <span style={{
-                        display:'inline-block', padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600,
-                        background: c.status === 'paid' ? '#dcfce7' : c.status === 'pending' ? '#fef3c7' : c.status === 'refunded' ? '#ede9fe' : '#f5f5f0',
-                        color: c.status === 'paid' ? '#16a34a' : c.status === 'pending' ? '#d97706' : c.status === 'refunded' ? '#7c3aed' : '#888',
-                      }}>
-                        {c.status === 'paid' ? 'Versé' : c.status === 'pending' ? 'En attente' : c.status === 'refunded' ? 'Annulé' : c.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {commissions.map(c => {
+                  const sameDate = c.period_start === c.period_end
+                  const isCancelledDuringTrial = c.status === 'refunded' && sameDate
+
+                  return (
+                    <tr key={c.id} style={{ borderBottom:'1px solid #f5f5f0' }}>
+                      <td style={{ padding:'10px 12px', color:'#555' }}>
+                        {sameDate
+                          ? <>{new Date(c.period_start).toLocaleDateString('fr-FR')}{isCancelledDuringTrial ? <span style={{ color:'#aaa', fontSize:11 }}> · Annulé pendant l'essai</span> : ''}</>
+                          : <>{new Date(c.period_start).toLocaleDateString('fr-FR')} → {new Date(c.period_end).toLocaleDateString('fr-FR')}</>
+                        }
+                      </td>
+                      <td style={{ padding:'10px 12px', textAlign:'right', fontWeight:700, color: c.status === 'refunded' ? '#aaa' : '#1a1a18', fontFamily:'"Outfit",system-ui', textDecoration: c.status === 'refunded' ? 'line-through' : 'none' }}>{c.amount.toFixed(2)}€</td>
+                      <td style={{ padding:'10px 12px', textAlign:'right' }}>
+                        <span style={{
+                          display:'inline-block', padding:'3px 10px', borderRadius:8, fontSize:11, fontWeight:600,
+                          background: c.status === 'paid' ? '#dcfce7' : c.status === 'pending' ? '#fef3c7' : c.status === 'refunded' ? '#fee2e2' : '#f5f5f0',
+                          color: c.status === 'paid' ? '#16a34a' : c.status === 'pending' ? '#d97706' : c.status === 'refunded' ? '#dc2626' : '#888',
+                        }}>
+                          {c.status === 'paid' ? 'Versé' : c.status === 'pending' ? 'En attente' : c.status === 'refunded' ? 'Annulé' : c.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
