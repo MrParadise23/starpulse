@@ -37,6 +37,14 @@ export default function RegisterPage() {
         })
       }
     }
+    // Send welcome email (fire and forget)
+    if (authData.user) {
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ type: 'welcome', to: email.trim(), data: { name: fullName.trim() } })
+      }).catch(() => {})
+    }
     navigate(redirectTo)
   }
 
