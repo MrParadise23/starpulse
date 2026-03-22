@@ -301,7 +301,10 @@ export default function SubscriptionPage() {
                 <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:14, paddingTop:14, borderTop:'1px solid #f0f0ec' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
                   <p style={{ fontSize:12, color:'#059669', margin:0, fontWeight:500 }}>
-                    {savingsPerYear}€ économisés par an grâce à {yearlySubs.length > 1 ? `vos ${yearlySubs.length} abonnements annuels` : 'votre abonnement annuel'}
+                    {allTrialing
+                      ? `Vous allez économiser ${savingsPerYear}€ par an grâce à ${yearlySubs.length > 1 ? `vos ${yearlySubs.length} abonnements annuels` : 'votre abonnement annuel'}`
+                      : `${savingsPerYear}€ économisés par an grâce à ${yearlySubs.length > 1 ? `vos ${yearlySubs.length} abonnements annuels` : 'votre abonnement annuel'}`
+                    }
                   </p>
                 </div>
               )}
