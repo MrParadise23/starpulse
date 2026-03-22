@@ -140,16 +140,26 @@ export default function SubscriptionPage() {
 
   const activeSubs = allSubs.filter(s => ['active', 'trialing'].includes(s.status) && !s.cancelled_at)
   const cancelingSubs = allSubs.filter(s => s.status === 'canceling' || (s.cancelled_at && !['cancelled', 'refunded'].includes(s.status)))
-  const allTrialing = activeSubs.every(s => s.status === 'trialing')
-  const totalMonthly = activeSubs.reduce((sum, s) => {
-    if (s.status === 'trialing') return sum // Don't count trial in current cost
-    if (s.plan_interval === 'yearly') return sum + 20.75
-    return sum + 29
+  const allTrialing = activeSubs.length > 0 && activeSubs.every(s => s.status === 'trialing')
+
+  // Calculate real annual total and monthly equivalent
+  const totalYearly = activeSubs.reduce((sum, s) => {
+    if (s.status === 'trialing') return sum
+    if (s.plan_interval === 'yearly' || s.plan_interval === 'year') return sum + 249
+    return sum + 29 * 12
   }, 0)
-  const totalAfterTrial = activeSubs.reduce((sum, s) => {
-    if (s.plan_interval === 'yearly') return sum + 20.75
-    return sum + 29
+  const totalYearlyAfterTrial = activeSubs.reduce((sum, s) => {
+    if (s.plan_interval === 'yearly' || s.plan_interval === 'year') return sum + 249
+    return sum + 29 * 12
   }, 0)
+  const totalMonthlyEquiv = Math.round(totalYearly / 12 * 100) / 100
+  const totalMonthlyEquivAfterTrial = Math.round(totalYearlyAfterTrial / 12 * 100) / 100
+
+  // What it would cost if all were monthly
+  const totalIfAllMonthly = activeSubs.filter(s => s.status !== 'trialing').length * 29
+  const totalIfAllMonthlyAfterTrial = activeSubs.length * 29
+  const yearlySavings = (totalIfAllMonthlyAfterTrial * 12) - totalYearlyAfterTrial
+  const hasYearlySub = activeSubs.some(s => s.plan_interval === 'yearly' || s.plan_interval === 'year')
 
   // Check if any sub is cancelled but still running
   const hasCancelledSub = allSubs.some(s => s.cancelled_at !== null)
@@ -200,16 +210,22 @@ export default function SubscriptionPage() {
                   {allTrialing ? (
                     <>
                       <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
-                        0<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span>
+                        0<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR</span>
                       </div>
-                      <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>Puis ~{totalAfterTrial.toFixed(0)}€/mois après l'essai</p>
+                      <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>
+                        Puis {totalYearlyAfterTrial}€/an après l'essai
+                        {hasYearlySub && <span style={{ color:'#059669' }}> · soit ~{totalMonthlyEquivAfterTrial.toFixed(0)}€/mois</span>}
+                      </p>
                     </>
                   ) : (
                     <>
                       <div style={{ fontFamily:'"Outfit",system-ui', fontWeight:800, fontSize:28, color:'#1a1a18', letterSpacing:'-0.03em', lineHeight:1 }}>
-                        ~{totalMonthly.toFixed(0)}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/mois</span>
+                        {totalYearly}<span style={{ fontSize:13, fontWeight:500, color:'#888' }}> EUR/an</span>
                       </div>
-                      <p style={{ fontSize:11, color:'#aaa', margin:'4px 0 0' }}>Tous établissements confondus</p>
+                      <p style={{ fontSize:11, color:'#888', margin:'4px 0 0' }}>
+                        soit ~{totalMonthlyEquiv.toFixed(0)}€/mois
+                        {yearlySavings > 0 && <span style={{ color:'#059669' }}> · {yearlySavings}€ économisés/an</span>}
+                      </p>
                     </>
                   )}
                 </div>
