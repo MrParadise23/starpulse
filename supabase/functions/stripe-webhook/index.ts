@@ -279,11 +279,22 @@ serve(async (req) => {
       // ===== SUBSCRIPTION DELETED =====
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription
+        const estId = subscription.metadata?.establishment_id
+
         await supabase
           .from("subscriptions")
           .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
           .eq("stripe_subscription_id", subscription.id)
         console.log(`Subscription ${subscription.id} cancelled`)
+
+        // Deactivate the establishment so it no longer appears in the selector
+        if (estId) {
+          await supabase
+            .from("establishments")
+            .update({ is_active: false })
+            .eq("id", estId)
+          console.log(`Establishment ${estId} deactivated`)
+        }
         break
       }
 
@@ -304,6 +315,20 @@ serve(async (req) => {
                 .update({ status: "refunded", cancelled_at: new Date().toISOString() })
                 .eq("stripe_subscription_id", subscriptionId)
               console.log(`Subscription ${subscriptionId} marked as refunded`)
+
+              // Deactivate the establishment
+              const { data: refSub } = await supabase
+                .from("subscriptions")
+                .select("establishment_id")
+                .eq("stripe_subscription_id", subscriptionId)
+                .single()
+              if (refSub?.establishment_id) {
+                await supabase
+                  .from("establishments")
+                  .update({ is_active: false })
+                  .eq("id", refSub.establishment_id)
+                console.log(`Establishment ${refSub.establishment_id} deactivated (refund)`)
+              }
 
               const { data: sub } = await supabase
                 .from("subscriptions")
