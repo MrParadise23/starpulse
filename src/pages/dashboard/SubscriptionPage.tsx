@@ -47,7 +47,7 @@ export default function SubscriptionPage() {
       .from('subscriptions')
       .select('*')
       .eq('user_id', session.user.id)
-      .in('status', ['active', 'trialing', 'canceling', 'past_due'])
+      .in('status', ['active', 'trialing', 'canceling', 'past_due', 'refunded'])
       .order('created_at', { ascending: false })
 
     if (subs && establishments) {
@@ -115,6 +115,9 @@ export default function SubscriptionPage() {
   }
 
   function getStatusInfo(sub: SubWithEst): { label: string; color: string; bg: string } {
+    if (sub.status === 'refunded') {
+      return { label: 'Remboursé', color: '#7c3aed', bg: '#ede9fe' }
+    }
     if (sub.cancelled_at) {
       return { label: 'Annulé', color: '#dc2626', bg: '#fee2e2' }
     }
@@ -231,11 +234,21 @@ export default function SubscriptionPage() {
                       </div>
 
                       {/* Cancellation notice */}
-                      {isCancelled && endDate && (
+                      {isCancelled && sub.status !== 'refunded' && endDate && (
                         <div style={{ marginTop:10, padding:'10px 14px', background:'#fff', borderRadius:10, display:'flex', alignItems:'center', gap:8 }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                           <p style={{ fontSize:13, color:'#92400e', margin:0 }}>
                             Abonnement annulé · {sub.status === 'trialing' ? 'Période d\'essai active' : 'Accès maintenu'} jusqu'au <span style={{ fontWeight:600 }}>{endDate}</span>
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Refund notice */}
+                      {sub.status === 'refunded' && (
+                        <div style={{ marginTop:10, padding:'10px 14px', background:'#f5f3ff', borderRadius:10, display:'flex', alignItems:'center', gap:8, border:'1px solid #e9e5ff' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                          <p style={{ fontSize:13, color:'#5b21b6', margin:0 }}>
+                            Abonnement remboursé{sub.cancelled_at ? ` le ${new Date(sub.cancelled_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })}` : ''} · Le montant a été recrédité sur votre moyen de paiement.
                           </p>
                         </div>
                       )}
