@@ -18,11 +18,23 @@ export default function RegisterPage() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
+    // Validate email format
+    const emailTrimmed = email.trim().toLowerCase()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/
+    if (!emailRegex.test(emailTrimmed)) { setError('Adresse email invalide.'); return }
+    // Check for common typos in email domains
+    const domain = emailTrimmed.split('@')[1]
+    const suspiciousTlds = ['comm', 'conn', 'orgg', 'nett', 'frr', 'coom', 'vom', 'con']
+    const tld = domain.split('.').pop() || ''
+    if (suspiciousTlds.includes(tld)) { setError(`L'adresse email semble contenir une faute de frappe (.${tld}). Veuillez vérifier.`); return }
+    // Check common domain typos
+    const suspiciousDomains = ['gmial.com', 'gmai.com', 'gamil.com', 'gnail.com', 'gmal.com', 'hotmal.com', 'outloo.com', 'yahooo.com']
+    if (suspiciousDomains.includes(domain)) { setError(`L'adresse email semble contenir une faute de frappe (${domain}). Veuillez vérifier.`); return }
     if (password.length < 6) { setError('Mot de passe : 6 caractères minimum.'); return }
     if (!acceptedTerms) { setError('Vous devez accepter les CGV et CGU pour continuer.'); return }
     setLoading(true); setError('')
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: email.trim(), password, options: { data: { full_name: fullName.trim() } }
+      email: emailTrimmed, password, options: { data: { full_name: fullName.trim() } }
     })
     if (authError) {
       setError(authError.message === 'User already registered' ? 'Un compte existe déjà avec cet email.' : 'Erreur lors de la création du compte.')
