@@ -18,6 +18,15 @@ export default function ReviewsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<ReviewFilter>('pending')
 
+  function formatDateTime(date: string) {
+    const d = new Date(date)
+    const isThisYear = d.getFullYear() === new Date().getFullYear()
+    const dateOpts: Intl.DateTimeFormatOptions = isThisYear
+      ? { day: 'numeric', month: 'short' }
+      : { day: 'numeric', month: 'short', year: 'numeric' }
+    return `${d.toLocaleDateString('fr-FR', dateOpts)} à ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+  }
+
   // Import Google Maps
   const [showImportModal, setShowImportModal] = useState(false)
   const [googleMapsUrl, setGoogleMapsUrl] = useState('')
@@ -467,7 +476,7 @@ export default function ReviewsPage() {
                         ))}
                       </div>
                       {review.review_date && (
-                        <span className="text-xs text-gray-400">{new Date(review.review_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {new Date(review.review_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-xs text-gray-400">{formatDateTime(review.review_date)}</span>
                       )}
                     </div>
                   </div>
@@ -520,7 +529,7 @@ export default function ReviewsPage() {
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
                       <span className="text-xs font-medium text-emerald-700">Réponse publiée</span>
                       {review.replied_at && (
-                        <span className="text-xs text-emerald-500">le {new Date(review.replied_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {new Date(review.replied_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-xs text-emerald-500">le {formatDateTime(review.replied_at)}</span>
                       )}
                     </div>
                     <p className="text-sm text-gray-700">{replyText}</p>
