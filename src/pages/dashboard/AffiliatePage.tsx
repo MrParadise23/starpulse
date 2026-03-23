@@ -299,13 +299,13 @@ export default function AffiliatePage() {
                     </div>
                   )}
 
-                  {/* Inactive subs — show establishment name + explicit per-commerce label */}
+                  {/* Inactive subs — show establishment name + explicit per-establishment label */}
                   {inactiveSubs.length > 0 && (
                     <div style={{ marginTop:8, paddingTop:8, borderTop: activeSubs.length > 0 ? '1px solid #f5f5f0' : 'none' }}>
                       {inactiveSubs.map(sub => (
                         <div key={sub.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'3px 0' }}>
                           <span style={{ fontSize:11, color:'#ccc' }}>{sub.establishment_name}</span>
-                          <span style={{ fontSize:9, color:'#aaa', background:'#f5f5f0', padding:'1px 6px', borderRadius:4, fontWeight:500 }}>Résilié pour ce commerce</span>
+                          <span style={{ fontSize:9, color:'#aaa', background:'#f5f5f0', padding:'1px 6px', borderRadius:4, fontWeight:500 }}>Résilié pour cet établissement</span>
                         </div>
                       ))}
                     </div>
@@ -340,7 +340,7 @@ export default function AffiliatePage() {
             <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
               <thead>
                 <tr style={{ borderBottom:'2px solid #f0f0ec' }}>
-                  <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:600, color:'#555' }}>Commerce</th>
+                  <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:600, color:'#555' }}>Établissement</th>
                   <th style={{ textAlign:'left', padding:'8px 12px', fontWeight:600, color:'#555' }}>Période</th>
                   <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:600, color:'#555' }}>Montant</th>
                   <th style={{ textAlign:'right', padding:'8px 12px', fontWeight:600, color:'#555' }}>Statut</th>
