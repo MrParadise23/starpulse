@@ -42,6 +42,11 @@ export default function DashboardLayout({ session }: { session: Session }) {
   const [activeEst, setActiveEst] = useState<Establishment | null>(null)
   const [estDropdownOpen, setEstDropdownOpen] = useState(false)
   const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [profileName, setProfileName] = useState(session.user.user_metadata?.full_name || '')
+  const [profileEmail, setProfileEmail] = useState(session.user.email || '')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileMsg, setProfileMsg] = useState('')
 
   const isAdmin = session.user.email === 'louis23rs@gmail.com'
 
@@ -116,6 +121,35 @@ export default function DashboardLayout({ session }: { session: Session }) {
   }
 
   const userName = session.user.user_metadata?.full_name || session.user.email
+
+  async function saveProfile() {
+    setProfileSaving(true)
+    setProfileMsg('')
+    try {
+      // Update name
+      const newName = profileName.trim()
+      if (newName && newName !== session.user.user_metadata?.full_name) {
+        const { error } = await supabase.auth.updateUser({ data: { full_name: newName } })
+        if (error) throw error
+        await supabase.from('profiles').update({ full_name: newName }).eq('id', session.user.id)
+      }
+      // Update email
+      const newEmail = profileEmail.trim().toLowerCase()
+      if (newEmail && newEmail !== session.user.email) {
+        const { error } = await supabase.auth.updateUser({ email: newEmail })
+        if (error) throw error
+        await supabase.from('profiles').update({ email: newEmail }).eq('id', session.user.id)
+        setProfileMsg('Un email de confirmation a été envoyé à votre nouvelle adresse.')
+        setProfileSaving(false)
+        return
+      }
+      setProfileMsg('Profil mis à jour !')
+      setTimeout(() => setProfileMsg(''), 3000)
+    } catch (err: any) {
+      setProfileMsg('Erreur : ' + (err.message || 'Impossible de mettre à jour'))
+    }
+    setProfileSaving(false)
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
@@ -212,12 +246,16 @@ export default function DashboardLayout({ session }: { session: Session }) {
             )}
           </nav>
           <div style={{ padding:'12px 8px', borderTop:'1px solid #f0f0ec' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', marginBottom:4 }}>
+            <button onClick={() => setProfileOpen(true)}
+              style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', marginBottom:4, width:'100%', border:'none', background:'transparent', cursor:'pointer', textAlign:'left', borderRadius:10, transition:'background 0.15s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f0' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
               <div style={{ width:32, height:32, borderRadius:10, background:'#f0f0ec', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                 <span style={{ fontSize:12, fontWeight:600, color:'#888' }}>{(userName || 'U').charAt(0).toUpperCase()}</span>
               </div>
               <span style={{ fontSize:13, fontWeight:500, color:'#1a1a18', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{userName}</span>
-            </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
             <button onClick={async () => { await supabase.auth.signOut(); navigate('/login') }}
               style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, width:'100%', border:'none', background:'transparent', cursor:'pointer', fontSize:13, color:'#999', transition:'all 0.15s', fontFamily:'inherit' }}
               onMouseEnter={(e) => { (e.target as HTMLElement).style.background = '#f5f5f0'; (e.target as HTMLElement).style.color = '#666' }}
@@ -260,6 +298,65 @@ export default function DashboardLayout({ session }: { session: Session }) {
           .lg\\:hidden { display: none !important; }
         }
       `}</style>
+      {/* Profile Modal */}
+      {profileOpen && (
+        <>
+          <div onClick={() => { setProfileOpen(false); setProfileMsg('') }} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.3)', zIndex:200 }}/>
+          <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)', background:'#fff', borderRadius:20, padding:32, width:'90%', maxWidth:420, zIndex:201, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
+              <h2 style={{ fontFamily:'"Outfit",system-ui', fontWeight:700, fontSize:20, color:'#1a1a18', margin:0 }}>Mon profil</h2>
+              <button onClick={() => { setProfileOpen(false); setProfileMsg('') }} style={{ background:'none', border:'none', cursor:'pointer', color:'#999', padding:4 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
+              <div style={{ width:48, height:48, borderRadius:14, background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <span style={{ fontSize:18, fontWeight:700, color:'#fff' }}>{(profileName || profileEmail || 'U').charAt(0).toUpperCase()}</span>
+              </div>
+              <div>
+                <p style={{ fontSize:15, fontWeight:600, color:'#1a1a18', margin:0 }}>{profileName || 'Utilisateur'}</p>
+                <p style={{ fontSize:13, color:'#888', margin:0 }}>{session.user.email}</p>
+              </div>
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Nom complet</label>
+              <input
+                type="text"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                style={{ width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #e8e8e4', fontSize:14, fontFamily:'inherit', color:'#1a1a18', background:'#fafaf8', outline:'none', boxSizing:'border-box', transition:'border-color 0.2s' }}
+                onFocus={(e) => { e.target.style.borderColor = '#2563eb' }}
+                onBlur={(e) => { e.target.style.borderColor = '#e8e8e4' }}
+              />
+            </div>
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#555', marginBottom:6 }}>Adresse email</label>
+              <input
+                type="email"
+                value={profileEmail}
+                onChange={(e) => setProfileEmail(e.target.value)}
+                style={{ width:'100%', padding:'12px 14px', borderRadius:12, border:'1.5px solid #e8e8e4', fontSize:14, fontFamily:'inherit', color:'#1a1a18', background:'#fafaf8', outline:'none', boxSizing:'border-box', transition:'border-color 0.2s' }}
+                onFocus={(e) => { e.target.style.borderColor = '#2563eb' }}
+                onBlur={(e) => { e.target.style.borderColor = '#e8e8e4' }}
+              />
+              <p style={{ fontSize:11, color:'#aaa', marginTop:6 }}>Un email de confirmation sera envoyé si vous changez d'adresse.</p>
+            </div>
+            {profileMsg && (
+              <p style={{ fontSize:13, color: profileMsg.startsWith('Erreur') ? '#dc2626' : '#059669', marginBottom:12, padding:'10px 14px', borderRadius:10, background: profileMsg.startsWith('Erreur') ? '#fef2f2' : '#f0fdf4' }}>{profileMsg}</p>
+            )}
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => { setProfileOpen(false); setProfileMsg('') }}
+                style={{ flex:1, padding:'12px', borderRadius:12, border:'1px solid #e8e8e4', background:'#fff', color:'#666', fontSize:14, fontWeight:500, fontFamily:'"Outfit",system-ui', cursor:'pointer' }}>
+                Annuler
+              </button>
+              <button onClick={saveProfile} disabled={profileSaving}
+                style={{ flex:1, padding:'12px', borderRadius:12, border:'none', background: profileSaving ? '#93a3b8' : 'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:14, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor: profileSaving ? 'wait' : 'pointer', boxShadow:'0 4px 12px rgba(37,99,235,0.25)' }}>
+                {profileSaving ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
