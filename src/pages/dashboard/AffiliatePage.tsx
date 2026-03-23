@@ -299,9 +299,9 @@ export default function AffiliatePage() {
                     </div>
                   )}
 
-                  {/* Inactive subs — show establishment name + explicit per-establishment label */}
+                  {/* Inactive subs — show establishment name + label */}
                   {inactiveSubs.length > 0 && (
-                    <div style={{ marginTop:8, paddingTop:8, borderTop: activeSubs.length > 0 ? '1px solid #f0f0ec' : 'none' }}>
+                    <div style={{ marginTop: activeSubs.length > 0 ? 8 : 0 }}>
                       {inactiveSubs.map(sub => (
                         <div key={sub.id} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px', background:'#f9f9f6', borderRadius:8, marginRight:6, marginBottom:4 }}>
                           <span style={{ fontSize:11, color:'#999' }}>{sub.establishment_name || 'Établissement'}</span>
