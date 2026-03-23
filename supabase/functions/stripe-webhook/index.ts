@@ -283,6 +283,20 @@ serve(async (req) => {
             .update({ status: "past_due" })
             .eq("stripe_subscription_id", invoice.subscription as string)
           console.log(`Subscription ${invoice.subscription} marked as past_due`)
+
+          // Send payment failed email
+          try {
+            const { data: sub } = await supabase.from("subscriptions").select("user_id, establishment_id").eq("stripe_subscription_id", invoice.subscription as string).single()
+            if (sub) {
+              const { data: profile } = await supabase.from("profiles").select("email").eq("id", sub.user_id).single()
+              const { data: est } = await supabase.from("establishments").select("name").eq("id", sub.establishment_id).single()
+              if (profile?.email) {
+                await sendEmail("payment_failed", profile.email, {
+                  establishment: est?.name || "",
+                })
+              }
+            }
+          } catch (e) { console.log("Email send error (non-blocking):", e) }
         }
         break
       }
