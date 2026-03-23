@@ -467,7 +467,7 @@ export default function ReviewsPage() {
                         ))}
                       </div>
                       {review.review_date && (
-                        <span className="text-xs text-gray-400">{new Date(review.review_date).toLocaleDateString('fr-FR')}</span>
+                        <span className="text-xs text-gray-400">{new Date(review.review_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {new Date(review.review_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                       )}
                     </div>
                   </div>
@@ -520,7 +520,7 @@ export default function ReviewsPage() {
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
                       <span className="text-xs font-medium text-emerald-700">Réponse publiée</span>
                       {review.replied_at && (
-                        <span className="text-xs text-emerald-500">le {new Date(review.replied_at).toLocaleDateString('fr-FR')}</span>
+                        <span className="text-xs text-emerald-500">le {new Date(review.replied_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {new Date(review.replied_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                       )}
                     </div>
                     <p className="text-sm text-gray-700">{replyText}</p>
