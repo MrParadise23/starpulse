@@ -169,6 +169,30 @@ function getTemplate(type: string, data: Record<string, string>): { subject: str
         </div>`,
       }
 
+    case "payment_failed":
+      return {
+        subject: "Problème de paiement sur votre abonnement StarPulse",
+        html: `<div style="${baseStyle}">
+          ${header}
+          <div style="${cardStyle}">
+            <h1 style="font-size:22px; font-weight:700; color:#1a1a18; margin:0 0 16px; text-align:center;">Échec de paiement</h1>
+            <p style="font-size:15px; color:#555; line-height:1.6; margin:0 0 16px;">
+              Le renouvellement de votre abonnement pour <strong>${data.establishment || ""}</strong> n'a pas pu être effectué.
+            </p>
+            <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
+              Cela peut arriver si votre carte a expiré ou si les fonds sont insuffisants. Votre accès reste actif pour le moment, mais il sera suspendu si le paiement n'est pas régularisé.
+            </p>
+            <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 24px;">
+              Veuillez mettre à jour vos informations de paiement pour continuer à utiliser StarPulse.
+            </p>
+            <div style="text-align:center;">
+              <a href="https://app.star-pulse.com/dashboard/subscription" style="${buttonStyle}">Mettre à jour mon paiement</a>
+            </div>
+          </div>
+          ${footer}
+        </div>`,
+      }
+
     default:
       return { subject: "StarPulse", html: `<p>${data.message || ""}</p>` }
   }
