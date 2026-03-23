@@ -47,6 +47,9 @@ export default function DashboardLayout({ session }: { session: Session }) {
   const [profileEmail, setProfileEmail] = useState(session.user.email || '')
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileMsg, setProfileMsg] = useState('')
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const isAdmin = session.user.email === 'louis23rs@gmail.com'
 
@@ -353,6 +356,54 @@ export default function DashboardLayout({ session }: { session: Session }) {
                 style={{ flex:1, padding:'12px', borderRadius:12, border:'none', background: profileSaving ? '#93a3b8' : 'linear-gradient(135deg,#2563eb,#1d4ed8)', color:'#fff', fontSize:14, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor: profileSaving ? 'wait' : 'pointer', boxShadow:'0 4px 12px rgba(37,99,235,0.25)' }}>
                 {profileSaving ? 'Enregistrement...' : 'Enregistrer'}
               </button>
+            </div>
+            {/* Delete account section */}
+            <div style={{ marginTop:24, paddingTop:20, borderTop:'1px solid #fecaca' }}>
+              {!deleteConfirmOpen ? (
+                <button onClick={() => setDeleteConfirmOpen(true)}
+                  style={{ width:'100%', padding:'10px', borderRadius:10, border:'1px solid #fca5a5', background:'#fff', color:'#dc2626', fontSize:13, fontWeight:500, fontFamily:'"Outfit",system-ui', cursor:'pointer', transition:'all 0.15s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#fff' }}>
+                  Supprimer mon compte
+                </button>
+              ) : (
+                <div>
+                  <p style={{ fontSize:13, color:'#dc2626', fontWeight:600, marginBottom:8 }}>Cette action est irréversible</p>
+                  <p style={{ fontSize:12, color:'#666', marginBottom:12 }}>Tous vos établissements, avis, tags et abonnements seront définitivement supprimés.</p>
+                  <p style={{ fontSize:12, color:'#333', marginBottom:8 }}>Tapez <strong>SUPPRIMER</strong> pour confirmer :</p>
+                  <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} placeholder="SUPPRIMER"
+                    style={{ width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #fca5a5', fontSize:13, fontFamily:'inherit', marginBottom:12, boxSizing:'border-box' }}/>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmText('') }}
+                      style={{ flex:1, padding:'10px', borderRadius:10, border:'1px solid #e5e5e5', background:'#fff', color:'#666', fontSize:13, fontWeight:500, fontFamily:'"Outfit",system-ui', cursor:'pointer' }}>
+                      Annuler
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (deleteConfirmText !== 'SUPPRIMER') return
+                        setDeleting(true)
+                        try {
+                          const { data: { session: s } } = await supabase.auth.getSession()
+                          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s?.access_token}` },
+                            body: JSON.stringify({ user_id: session.user.id })
+                          })
+                          if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Erreur') }
+                          await supabase.auth.signOut()
+                          navigate('/login', { state: { message: 'Votre compte a été supprimé avec succès.' } })
+                        } catch (err: any) {
+                          alert('Erreur : ' + (err.message || 'Impossible de supprimer le compte'))
+                          setDeleting(false)
+                        }
+                      }}
+                      disabled={deleteConfirmText !== 'SUPPRIMER' || deleting}
+                      style={{ flex:1, padding:'10px', borderRadius:10, border:'none', background: deleteConfirmText === 'SUPPRIMER' && !deleting ? '#dc2626' : '#e5e5e5', color: deleteConfirmText === 'SUPPRIMER' && !deleting ? '#fff' : '#999', fontSize:13, fontWeight:600, fontFamily:'"Outfit",system-ui', cursor: deleteConfirmText === 'SUPPRIMER' && !deleting ? 'pointer' : 'not-allowed' }}>
+                      {deleting ? 'Suppression...' : 'Confirmer'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </>
