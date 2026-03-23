@@ -182,7 +182,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
               {loading ? 'Redirection...' : session ? 'S\'abonner maintenant' : 'Commencer l\'essai gratuit'}
             </button>
             <p style={{ fontSize:12, color:'#bbb', marginTop:12 }}>
-              {session ? 'Paiement sécurisé par Stripe. Annulez à tout moment.' : 'Essai gratuit 7 jours. Aucune carte requise à l\'inscription.'}
+              {session ? 'Paiement sécurisé par Stripe. Annulez à tout moment.' : 'Essai gratuit 7 jours. Annulez à tout moment.'}
             </p>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function PricingPage({ session, establishmentId, embedded }: Prop
       {/* Garantie */}
       <div style={{ textAlign:'center', marginTop:40, padding:'20px', background:'#f5f5f0', borderRadius:16, maxWidth:500, margin:'40px auto 0' }}>
         <p style={{ fontSize:13, color:'#666', lineHeight:1.6, margin:0 }}>
-          <span style={{ fontWeight:600 }}>Garantie satisfait ou rembourse 30 jours.</span> Si StarPulse ne vous convient pas, on vous rembourse integralement. Sans condition.
+          <span style={{ fontWeight:600 }}>Garantie satisfait ou remboursé 30 jours.</span> Si StarPulse ne vous convient pas, on vous rembourse intégralement. Sans condition.
         </p>
       </div>
     </div>
