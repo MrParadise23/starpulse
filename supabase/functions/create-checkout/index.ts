@@ -132,20 +132,11 @@ serve(async (req) => {
 
       const priceInfo = priceMap[price_id]
 
-      // Build line_items: use price_data with custom product name if we have price info, otherwise fallback to price_id
-      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = priceInfo
-        ? [{
-            price_data: {
-              currency: "eur",
-              product_data: {
-                name: `StarPulse ${priceInfo.label} · ${establishmentName}`,
-              },
-              unit_amount: priceInfo.amount,
-              recurring: { interval: priceInfo.interval },
-            },
-            quantity: 1,
-          }]
-        : [{ price: price_id, quantity: 1 }]
+      // Build line_items: use the fixed price_id so that Stripe coupons apply correctly
+      // The establishment name goes in the subscription description, not in the product name
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+        { price: price_id, quantity: 1 }
+      ]
 
       const sessionParams: Stripe.Checkout.SessionCreateParams = {
         customer: customerId,
