@@ -290,8 +290,8 @@ export default function SubscriptionPage() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
                   <p style={{ fontSize:12, color:'#059669', margin:0, fontWeight:500 }}>
                     {allTrialing
-                      ? `Vous allez économiser ${savingsPerYear}€/an par rapport à un abonnement mensuel`
-                      : `${savingsPerYear}€ économisés par an par rapport à un abonnement mensuel`
+                      ? `Vous allez économiser ${savingsPerYear}€/an par rapport à ${yearlySubs.length > 1 ? 'des abonnements mensuels' : 'un abonnement mensuel'}`
+                      : `${savingsPerYear}€ économisés par an par rapport à ${yearlySubs.length > 1 ? 'des abonnements mensuels' : 'un abonnement mensuel'}`
                     }
                   </p>
                 </div>
