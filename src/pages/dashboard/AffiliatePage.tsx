@@ -301,11 +301,11 @@ export default function AffiliatePage() {
 
                   {/* Inactive subs — show establishment name + explicit per-establishment label */}
                   {inactiveSubs.length > 0 && (
-                    <div style={{ marginTop:8, paddingTop:8, borderTop: activeSubs.length > 0 ? '1px solid #f5f5f0' : 'none' }}>
+                    <div style={{ marginTop:8, paddingTop:8, borderTop: activeSubs.length > 0 ? '1px solid #f0f0ec' : 'none' }}>
                       {inactiveSubs.map(sub => (
-                        <div key={sub.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'3px 0' }}>
-                          <span style={{ fontSize:11, color:'#ccc' }}>{sub.establishment_name}</span>
-                          <span style={{ fontSize:9, color:'#aaa', background:'#f5f5f0', padding:'1px 6px', borderRadius:4, fontWeight:500 }}>Résilié pour cet établissement</span>
+                        <div key={sub.id} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px', background:'#f9f9f6', borderRadius:8, marginRight:6, marginBottom:4 }}>
+                          <span style={{ fontSize:11, color:'#999' }}>{sub.establishment_name || 'Établissement'}</span>
+                          <span style={{ fontSize:9, color:'#e57373', background:'#fef2f2', padding:'2px 6px', borderRadius:4, fontWeight:500 }}>Résilié</span>
                         </div>
                       ))}
                     </div>
