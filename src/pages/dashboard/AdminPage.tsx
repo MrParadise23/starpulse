@@ -72,6 +72,8 @@ export default function AdminPage() {
   const [allCommissions, setAllCommissions] = useState<CommissionRow[]>([])
   const [search, setSearch] = useState('')
   const [markingPaid, setMarkingPaid] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [actionResult, setActionResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   useEffect(() => {
     if (session.user.email !== ADMIN_EMAIL) { navigate('/dashboard'); return }
@@ -143,6 +145,42 @@ export default function AdminPage() {
     setMarkingPaid(null)
   }
 
+  async function adminAction(action: string, params: Record<string, string>) {
+    const key = `${action}_${params.target_user_id || params.subscription_id}`
+    setActionLoading(key)
+    setActionResult(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-action', {
+        body: { action, ...params }
+      })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      setActionResult({ type: 'success', message: data.message || 'Action effectuée' })
+      await loadAll()
+    } catch (err: any) {
+      setActionResult({ type: 'error', message: err.message || 'Erreur lors de l\'action' })
+    }
+    setActionLoading(null)
+  }
+
+  function handleDeleteUser(client: Client) {
+    const name = client.full_name || client.email
+    if (!confirm(`⚠️ SUPPRIMER DÉFINITIVEMENT le compte de ${name} ?\n\nCette action va :\n• Annuler tous ses abonnements Stripe\n• Supprimer tous ses établissements et données\n• Supprimer son compte\n\nCette action est IRRÉVERSIBLE.`)) return
+    if (!confirm(`Dernière confirmation : êtes-vous sûr de vouloir supprimer ${name} ?`)) return
+    adminAction('delete_user', { target_user_id: client.id })
+  }
+
+  function handleRefundSub(sub: SubRow & { establishment_name: string }) {
+    const yearly = sub.plan_interval === 'yearly' || sub.plan_interval === 'year'
+    if (!confirm(`Rembourser l'abonnement de "${sub.establishment_name}" (${yearly ? '249€/an' : '29€/mois'}) ?\n\nCela va :\n• Rembourser le dernier paiement sur Stripe\n• Annuler l'abonnement\n• Désactiver l'établissement\n• Annuler les commissions affiliées en attente`)) return
+    adminAction('refund_subscription', { subscription_id: sub.id })
+  }
+
+  function handleCancelSub(sub: SubRow & { establishment_name: string }) {
+    if (!confirm(`Annuler l'abonnement de "${sub.establishment_name}" SANS remboursement ?\n\nL'établissement sera désactivé immédiatement.`)) return
+    adminAction('cancel_subscription', { subscription_id: sub.id })
+  }
+
   if (session.user.email !== ADMIN_EMAIL) return null
 
   if (loading) return (
@@ -200,6 +238,20 @@ export default function AdminPage() {
         </div>
         <p style={{ fontSize:14, color:'#888', margin:0 }}>Gestion complète de StarPulse</p>
       </div>
+
+      {/* Action result banner */}
+      {actionResult && (
+        <div style={{
+          padding:'12px 18px', borderRadius:12, marginBottom:16, display:'flex', alignItems:'center', justifyContent:'space-between',
+          background: actionResult.type === 'success' ? '#dcfce7' : '#fee2e2',
+          border: `1px solid ${actionResult.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+        }}>
+          <span style={{ fontSize:13, fontWeight:500, color: actionResult.type === 'success' ? '#166534' : '#991b1b' }}>
+            {actionResult.message}
+          </span>
+          <button onClick={() => setActionResult(null)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:16, color:'#888', padding:'0 4px' }}>×</button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display:'flex', gap:4, marginBottom:20, overflowX:'auto', paddingBottom:4 }}>
@@ -329,9 +381,23 @@ export default function AdminPage() {
                             </span>
                           )}
                         </div>
-                        <span style={{ fontSize:14, fontWeight:700, color: isCancelled ? '#888' : '#1a1a18', fontFamily:'"Outfit",system-ui', textDecoration: isCancelled ? 'line-through' : 'none' }}>
-                          {yearly ? '249€/an' : '29€/mois'}
-                        </span>
+                        <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                          <span style={{ fontSize:14, fontWeight:700, color: isCancelled ? '#888' : '#1a1a18', fontFamily:'"Outfit",system-ui', textDecoration: isCancelled ? 'line-through' : 'none' }}>
+                            {yearly ? '249€/an' : '29€/mois'}
+                          </span>
+                          {!isCancelled && sub.status !== 'refunded' && sub.status !== 'cancelled' && (
+                            <>
+                              <button onClick={() => handleRefundSub(sub)} disabled={actionLoading === `refund_subscription_${sub.id}`}
+                                style={{ padding:'4px 10px', borderRadius:6, border:'none', background:'#ede9fe', color:'#7c3aed', fontSize:10, fontWeight:600, cursor:'pointer', fontFamily:'"Outfit",system-ui', whiteSpace:'nowrap' }}>
+                                {actionLoading === `refund_subscription_${sub.id}` ? '...' : 'Rembourser'}
+                              </button>
+                              <button onClick={() => handleCancelSub(sub)} disabled={actionLoading === `cancel_subscription_${sub.id}`}
+                                style={{ padding:'4px 10px', borderRadius:6, border:'none', background:'#fee2e2', color:'#dc2626', fontSize:10, fontWeight:600, cursor:'pointer', fontFamily:'"Outfit",system-ui', whiteSpace:'nowrap' }}>
+                                {actionLoading === `cancel_subscription_${sub.id}` ? '...' : 'Annuler'}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
@@ -344,6 +410,16 @@ export default function AdminPage() {
                 <p style={{ fontSize:11, color:'#aaa', margin:'8px 0 0' }}>
                   Établissements : {c.establishments.map(e => e.name).join(', ')}
                 </p>
+              )}
+
+              {/* Admin actions */}
+              {c.email !== ADMIN_EMAIL && (
+                <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #f0f0ec', display:'flex', justifyContent:'flex-end' }}>
+                  <button onClick={() => handleDeleteUser(c)} disabled={actionLoading === `delete_user_${c.id}`}
+                    style={{ padding:'6px 14px', borderRadius:8, border:'1px solid #fee2e2', background:'#fff', color:'#dc2626', fontSize:11, fontWeight:600, cursor:'pointer', fontFamily:'"Outfit",system-ui' }}>
+                    {actionLoading === `delete_user_${c.id}` ? 'Suppression...' : 'Supprimer le client'}
+                  </button>
+                </div>
               )}
             </section>
           ))}
