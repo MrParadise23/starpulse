@@ -36,8 +36,11 @@ export default function RetourPrivesPage() {
     const timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     if (hours < 1) return `Il y a moins d'1h (${timeStr})`
     if (hours < 24) return `Il y a ${hours}h (${timeStr})`
-    const dateStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-    return `${dateStr} à ${timeStr}`
+    const isThisYear = d.getFullYear() === new Date().getFullYear()
+    const dateOpts: Intl.DateTimeFormatOptions = isThisYear
+      ? { day: 'numeric', month: 'short' }
+      : { day: 'numeric', month: 'short', year: 'numeric' }
+    return `${d.toLocaleDateString('fr-FR', dateOpts)} à ${timeStr}`
   }
 
   return (
