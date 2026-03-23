@@ -30,11 +30,14 @@ export default function RetourPrivesPage() {
   }
 
   function timeAgo(date: string) {
-    const diff = Date.now() - new Date(date).getTime()
+    const d = new Date(date)
+    const diff = Date.now() - d.getTime()
     const hours = Math.floor(diff / (1000 * 60 * 60))
-    if (hours < 1) return 'Il y a moins d\'1h'
-    if (hours < 24) return `Il y a ${hours}h`
-    return `Il y a ${Math.floor(hours / 24)}j`
+    const timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    if (hours < 1) return `Il y a moins d'1h (${timeStr})`
+    if (hours < 24) return `Il y a ${hours}h (${timeStr})`
+    const dateStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    return `${dateStr} à ${timeStr}`
   }
 
   return (
